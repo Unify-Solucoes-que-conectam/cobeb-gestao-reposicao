@@ -1,5 +1,31 @@
-import { createRoot } from "react-dom/client";
-import App from "./App.tsx";
-import "./index.css";
+import { createRoot } from 'react-dom/client'
 
-createRoot(document.getElementById("root")!).render(<App />);
+import { RouterProvider } from 'react-router-dom'
+
+import { Toaster } from './components/ui/sonner'
+import './index.css'
+import { AuthProvider } from './providers/AuthProvider'
+import ThemeProvider from './providers/ThemeProvider'
+import router from './routes'
+
+createRoot(document.getElementById('root')!).render(
+  <AuthProvider>
+    <ThemeProvider defaultTheme='light' storageKey='theme'>
+      <RouterProvider router={router} />
+
+      <Toaster
+        className='pointer-events-auto'
+        position='bottom-right'
+        visibleToasts={3}
+        expand={false}
+        richColors
+        toastOptions={{
+          classNames: {
+            toast:
+              '!bg-neutral-100 border !border-neutral-200 dark:!bg-neutral-800 dark:!border-neutral-700',
+          },
+        }}
+      />
+    </ThemeProvider>
+  </AuthProvider>
+)
