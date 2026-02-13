@@ -1,11 +1,11 @@
 import type { RouteObject } from 'react-router-dom'
 
-import AdminDashboard from '@/pages/admin/dashboard'
+import AdminAvarias from '@/pages/admin/avarias'
 
 export const adminRoutes: RouteObject[] = [
   {
-    path: 'dashboard',
-    element: <AdminDashboard />,
+    path: 'avarias',
+    element: <AdminAvarias />,
   },
   // Adicione outras rotas de admin aqui
 ]
