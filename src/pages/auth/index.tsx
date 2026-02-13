@@ -19,15 +19,15 @@ import Loader from '@/components/custom/loader'
 import { Logo } from '@/components/custom/logo'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import { defaultValues, schema, type Schema } from './schemas'
 import { formatCPF } from '@/utils/formatters'
+import { defaultValues, schema, type Schema } from './schemas'
 
 export default function AuthPage() {
 
   const params = new URLSearchParams(window.location.search)
 
   const form = useForm<Schema>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema(params.get('register') === 'true')),
     defaultValues: defaultValues,
     mode: 'onSubmit',
   })
@@ -58,7 +58,7 @@ export default function AuthPage() {
       }
     } else {
       try {
-        const { success, message } = await signIn(data.cpf, data.password)
+        const { success, message } = await signIn(data.cpf, data.senha)
 
         if (!success) {
           toast.error(message)
@@ -94,6 +94,26 @@ export default function AuthPage() {
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(handleSubmit)} className='space-y-6'>
 
+                  {
+                    params.get('register') === 'true' && (
+                      <FormField
+                        control={form.control}
+                        name='nome'
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel required>Nome</FormLabel>
+
+                            <FormControl>
+                              <Input placeholder='Digite seu nome' className='h-12' {...field} />
+                            </FormControl>
+
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )
+                  }
+
                   <FormField
                     control={form.control}
                     name='cpf'
@@ -120,7 +140,7 @@ export default function AuthPage() {
 
                   <FormField
                     control={form.control}
-                    name='password'
+                    name='senha'
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel required>Senha</FormLabel>
@@ -135,7 +155,7 @@ export default function AuthPage() {
                   />
 
                   <Field>
-                    <Button type='submit'>
+                    <Button type='submit' className='cursor-pointer' onClick={form.handleSubmit(handleSubmit)}>
                       Entrar
                     </Button>
                   </Field>

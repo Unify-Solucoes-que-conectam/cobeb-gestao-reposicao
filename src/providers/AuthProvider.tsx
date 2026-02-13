@@ -16,7 +16,7 @@ interface AuthState {
 interface AuthContextType extends AuthState {
   setLoading: (loading: boolean) => void
   refreshAuth: () => Promise<void>
-  signIn: (email: string, password: string) => Promise<{ success: boolean; message: string }>
+  signIn: (cpf: string, senha: string) => Promise<{ success: boolean; message: string }>
   signUp: (signUpData: Schema) => Promise<{ success: boolean; message: string }>
   signOut: () => Promise<void>
   isAuthenticated: boolean
@@ -94,14 +94,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const signIn = async (
     cpf: string,
-    password: string
+    senha: string
   ): Promise<{ success: boolean; message: string }> => {
     try {
       const response = await axios.post<
         ApiResponse<{ user: User; access_token: string }>
       >(`${API_URL}/auth/login`, {
         cpf,
-        password
+        senha
       })
 
       const { data, message } = response.data
@@ -145,16 +145,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const signUp = async (signUpData: Schema): Promise<{ success: boolean; message: string }> => {
     try {
       const response = await axios.post<ApiResponse>(`${API_URL}/setup`, {
-        name: signUpData.name,
+        nome: signUpData.nome,
         cpf: signUpData.cpf,
-        password: signUpData.password,
-        password_confirmation: signUpData.password,
+        senha: signUpData.senha,
+        role: 'monitoramento'
       })
 
       const { message } = response.data
       if (!response.data.success) throw new Error(message || 'Erro ao registrar')
 
-      const loginResult = await signIn(signUpData.cpf, signUpData.password)
+      const loginResult = await signIn(signUpData.cpf, signUpData.senha)
       return loginResult
     } catch (error: any) {
       return { success: false, message: error.message }
