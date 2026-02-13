@@ -98,7 +98,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   ): Promise<{ success: boolean; message: string }> => {
     try {
       const response = await axios.post<
-        ApiResponse<{ user: User; access_token: string }>
+        ApiResponse<{ usuario: User; token: string }>
       >(`${API_URL}/auth/login`, {
         cpf,
         senha
@@ -109,11 +109,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (!response.data.success) throw new Error(message || 'Erro ao fazer login')
 
       // Salvando no localStorage para persistência
-      localStorage.setItem('auth_token', data.access_token)
+      localStorage.setItem('auth_token', data.token)
 
       setState({
-        user: data.user,
-        token: data.access_token,
+        user: data.usuario,
+        token: data.token,
         loading: false,
       })
 
