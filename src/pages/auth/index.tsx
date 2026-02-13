@@ -21,6 +21,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { formatCPF } from '@/utils/formatters'
 import { defaultValues, schema, type Schema } from './schemas'
+import { useState } from 'react'
 
 export default function AuthPage() {
 
@@ -35,6 +36,8 @@ export default function AuthPage() {
   const navigate = useNavigate()
   const { signIn, signUp, loading, isAuthenticated } = useAuth()
 
+  const [spinner, setSpinner] = useState(false)
+
   // Redirect if already authenticated
   if (isAuthenticated) {
     navigate('/admin/dashboard')
@@ -42,6 +45,7 @@ export default function AuthPage() {
   }
 
   const handleSubmit = async (data: Schema) => {
+    setSpinner(true)
     if (params.get('register') === 'true') {
       try {
         const { success, message } = await signUp(data)
@@ -55,6 +59,8 @@ export default function AuthPage() {
       } catch (error) {
         console.error('Register error:', error)
         toast.error('Não foi possível fazer registro. Tente novamente.')
+      } finally {
+        setSpinner(false)
       }
     } else {
       try {
@@ -69,6 +75,8 @@ export default function AuthPage() {
       } catch (error) {
         console.error('Login error:', error)
         toast.error('Não foi possível fazer login. Tente novamente.')
+      } finally {
+        setSpinner(false)
       }
     }
   }
@@ -155,7 +163,7 @@ export default function AuthPage() {
                   />
 
                   <Field>
-                    <Button type='submit' className='cursor-pointer' onClick={form.handleSubmit(handleSubmit)}>
+                    <Button type='submit' className='cursor-pointer' onClick={form.handleSubmit(handleSubmit)} loading={spinner} disabled={spinner}>
                       Entrar
                     </Button>
                   </Field>
