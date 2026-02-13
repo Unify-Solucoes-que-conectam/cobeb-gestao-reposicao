@@ -76,23 +76,23 @@ const HeaderNotifications = () => {
   const [open, setOpen] = useState(false)
   const [notifications, setNotifications] = useState<Notification[]>([])
 
-  const unreadCount = notifications.filter((n) => !n.read).length
+  const unreadCount = notifications.filter((n) => !n.lida).length
 
   const markAsRead = (id: string) => {
-    setNotifications(notifications.map((n) => (n.id === id ? { ...n, read: true } : n)))
+    setNotifications(notifications.map((n) => (n.id === id ? { ...n, lida: true } : n)))
 
-    axios.post('notifications/read', { id: [id] })
+    axios.post('notificacoes/lida', { id: [id] })
   }
 
   const markAllAsRead = () => {
-    setNotifications(notifications.map((n) => ({ ...n, read: true })))
+    setNotifications(notifications.map((n) => ({ ...n, lida: true })))
 
-    axios.post('notifications/read', { id: notifications.map((n) => n.id) })
+    axios.post('notificacoes/lida', { id: notifications.map((n) => n.id) })
   }
 
   const fetchOldNotifications = async () => {
     try {
-      const res = await axios.get<ApiResponse<Notification[]>>('notifications')
+      const res = await axios.get<ApiResponse<Notification[]>>('notificacoes')
 
       if (res.data.success) {
         const oldNotifications = res.data.data!
@@ -132,12 +132,12 @@ const HeaderNotifications = () => {
             console.log('[HeaderNotifications] Processando mensagem:', message)
             return {
               id: message.id,
-              title: message.title,
-              message: message.message,
-              type: message.type,
+              titulo: message.titulo,
+              mensagem: message.mensagem,
+              tipo: message.tipo,
               link: message.link,
-              sent_at: message.sent_at,
-              read: message.read,
+              data_envio: message.data_envio,
+              lida: message.lida,
             }
           }),
         ]
@@ -207,24 +207,24 @@ const HeaderNotifications = () => {
                     >
                       <div
                         className={cn({
-                          'border-l-4 border-blue-500': !notification.read,
+                          'border-l-4 border-blue-500': !notification.lida,
                           'cursor-pointer': notification.link,
                         })}
                       >
                         <div
                           className={cn(
                             'flex gap-3 border-b p-4 transition-colors hover:bg-muted/50',
-                            notification.read ? 'opacity-70' : ''
+                            notification.lida ? 'opacity-70' : ''
                           )}
                           onClick={() => markAsRead(notification.id)}
                         >
                           <div className='shrink-0 pt-1'>
                             <span
                               className={cn('block h-3 w-3 rounded-full', {
-                                'bg-blue-500': notification.type === 'info',
-                                'bg-amber-500': notification.type === 'warning',
-                                'bg-red-500': notification.type === 'error',
-                                'bg-green-500': notification.type === 'success',
+                                'bg-blue-500': notification.tipo === 'info',
+                                'bg-amber-500': notification.tipo === 'warning',
+                                'bg-red-500': notification.tipo === 'error',
+                                'bg-green-500': notification.tipo === 'success',
                               })}
                             />
                           </div>
@@ -233,22 +233,22 @@ const HeaderNotifications = () => {
                               <p
                                 className={cn(
                                   'text-sm font-medium',
-                                  !notification.read && 'font-semibold'
+                                  !notification.lida && 'font-semibold'
                                 )}
                               >
-                                {notification.title || 'Notificação'}
+                                {notification.titulo || 'Notificação'}
                               </p>
 
                               <span
                                 className='text-[10px] text-muted-foreground whitespace-nowrap'
-                                title={dayjs(notification.sent_at).format('DD/MM/YYYY HH:mm:ss')}
+                                title={dayjs(notification.data_envio).format('DD/MM/YYYY HH:mm:ss')}
                               >
-                                {dayjs(notification.sent_at).fromNow()}
+                                {dayjs(notification.data_envio).fromNow()}
                               </span>
                             </div>
 
                             <p className='mt-1 text-xs text-muted-foreground'>
-                              {notification.message}
+                              {notification.mensagem}
                             </p>
                           </div>
                         </div>

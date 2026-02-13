@@ -38,7 +38,7 @@ export function SidebarUser() {
                 {loading ? (
                   <Skeleton className='p-2 mb-1 w-22' />
                 ) : (
-                  <span className='truncate font-medium'>{user?.name.toUpperCase()}</span>
+                  <span className='truncate font-medium'>{user?.nome.toUpperCase()}</span>
                 )}
                 {loading ? (
                   <Skeleton className='p-1' />
@@ -62,7 +62,7 @@ export function SidebarUser() {
                   {loading ? (
                     <Skeleton className='p-2 mb-1 w-22' />
                   ) : (
-                    <span className='truncate font-medium'>{user?.name.toUpperCase()}</span>
+                    <span className='truncate font-medium'>{user?.nome.toUpperCase()}</span>
                   )}
                   {loading ? (
                     <Skeleton className='p-1' />
