@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/select";
 import { useTheme } from "@/hooks/use-theme";
 import { cn } from "@/lib/utils";
-import { MapPinIcon, PackageIcon, TriangleAlertIcon, UsersIcon } from "lucide-react";
+import { ArrowRightLeftIcon, SquaresSubtractIcon, Trash2Icon } from "lucide-react";
 
 interface Dashboard {
   total: number
@@ -34,28 +34,22 @@ export default function AdminAvarias() {
 
   const dashboards: Dashboard[] = [
     {
-      total: 150,
-      title: "Total Avarias",
-      icon: <TriangleAlertIcon size={20} />,
+      total: 0,
+      title: "Avariados",
+      icon: <Trash2Icon size={20} />,
       className: "bg-red-400/20 text-red-500"
     },
     {
-      total: 150,
-      title: "Motoristas",
-      icon: <UsersIcon size={20} />,
+      total: 0,
+      title: "Faltantes",
+      icon: <SquaresSubtractIcon size={20} />,
       className: "bg-blue-400/20 text-blue-500"
     },
     {
-      total: 150,
-      title: "Produtos",
-      icon: <PackageIcon size={20} />,
+      total: 0,
+      title: "Inversões",
+      icon: <ArrowRightLeftIcon size={20} />,
       className: "bg-orange-400/20 text-orange-500"
-    },
-    {
-      total: 150,
-      title: "Rotas",
-      icon: <MapPinIcon size={20} />,
-      className: "bg-green-400/20 text-green-500"
     },
   ]
 
