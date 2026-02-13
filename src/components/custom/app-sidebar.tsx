@@ -21,13 +21,8 @@ import { SidebarUser } from './sidebar-user'
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   const { loading, menus } = useAuth()
-  
+
   const data = {
-    user: {
-      name: 'shadcn',
-      email: 'm@example.com',
-      avatar: '/avatars/shadcn.jpg',
-    },
     sidebarPrimary: menus,
     sidebarSecondary: [],
   }
