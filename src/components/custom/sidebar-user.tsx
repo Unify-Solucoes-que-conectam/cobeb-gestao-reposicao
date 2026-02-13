@@ -33,7 +33,7 @@ export function SidebarUser() {
               size='lg'
               className='data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground'
             >
-              <Logo />
+              <Logo className='w-30'/>
               <div className='grid flex-1 text-left text-sm leading-tight'>
                 {loading ? (
                   <Skeleton className='p-2 mb-1 w-22' />
@@ -57,7 +57,7 @@ export function SidebarUser() {
           >
             <DropdownMenuLabel className='p-0 font-normal'>
               <div className='flex items-center gap-2 px-1 py-1.5 text-left text-sm'>
-                <Logo />
+                <Logo className='w-30'/>
                 <div className='grid flex-1 text-left text-sm leading-tight'>
                   {loading ? (
                     <Skeleton className='p-2 mb-1 w-22' />

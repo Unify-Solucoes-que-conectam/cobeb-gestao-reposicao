@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
 
-import { useAuth } from '@/hooks/use-auth'
 import { ThemeProviderContext } from '@/hooks/use-theme'
 
 type Theme = 'light' | 'dark' | 'system'

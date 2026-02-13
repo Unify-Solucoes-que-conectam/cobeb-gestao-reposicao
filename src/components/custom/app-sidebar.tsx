@@ -1,6 +1,6 @@
 import * as React from 'react'
 
-import { LayoutDashboardIcon, SettingsIcon } from 'lucide-react'
+import { LayoutDashboardIcon } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Skeleton } from '../ui/skeleton'
 
@@ -10,15 +10,14 @@ import {
   SidebarFooter,
   SidebarHeader,
   SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
+  SidebarMenuItem
 } from '@/components/ui/sidebar'
 import { useAuth } from '@/hooks/use-auth'
 
 import { Logo } from './logo'
+import { SidebarMain } from './sidebar-main'
 import { SidebarSecondary } from './sidebar-secondary'
 import { SidebarUser } from './sidebar-user'
-import { SidebarMain } from './sidebar-main'
 
 const data = {
   user: {
@@ -33,13 +32,7 @@ const data = {
       icon: LayoutDashboardIcon,
     },
   ],
-  sidebarSecondary: [
-    {
-      title: 'Configurações',
-      url: '/admin/settings',
-      icon: SettingsIcon,
-    },
-  ],
+  sidebarSecondary: [],
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -50,16 +43,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild className='data-[slot=sidebar-menu-button]:p-1.5!'>
-              <Link to='/admin/dashboard'>
-                <Logo />
-                {loading ? (
-                  <Skeleton className='w-full p-2' />
-                ) : (
-                  <span className='text-base font-semibold'>Monitoramento</span>
-                )}
-              </Link>
-            </SidebarMenuButton>
+            <Link to='/admin/dashboard' className='flex flex-col gap-3'>
+              <Logo className='w-40' variant='light' />
+              {loading ? (
+                <Skeleton className='w-full p-2' />
+              ) : (
+                <p className='text-base font-semibold'>Monitoramento</p>
+              )}
+            </Link>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>

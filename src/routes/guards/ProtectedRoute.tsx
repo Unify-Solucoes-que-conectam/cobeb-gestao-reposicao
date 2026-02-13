@@ -17,7 +17,11 @@ export function ProtectedRoute({ allowedRoles }: ProtectedRouteProps) {
   const location = useLocation()
 
   if (loading) {
-    return <Loader />
+    return (
+      <div className='h-full flex items-center justify-center'>
+        <Loader />
+      </div>
+    )
   }
 
   if (!isAuthenticated) {

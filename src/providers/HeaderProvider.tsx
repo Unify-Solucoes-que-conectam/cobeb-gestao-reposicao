@@ -1,16 +1,21 @@
 import { createContext, type ReactNode, useState } from 'react'
 
+type Breadcrumb = {
+  title: string
+  href: string
+}
+
 type HeaderContextData = {
-  pageTitle: string | null
-  setPageTitle: (title: string | null) => void
+  pageBreadcrumbs: Breadcrumb[]
+  setPageBreadcrumbs: (breadcrumbs: Breadcrumb[]) => void
 }
 
 export const HeaderContext = createContext<HeaderContextData | undefined>(undefined)
 
 export function HeaderProvider({ children }: { children: ReactNode }) {
-  const [pageTitle, setPageTitle] = useState<string | null>(null)
+  const [pageBreadcrumbs, setPageBreadcrumbs] = useState<Breadcrumb[]>([])
 
   return (
-    <HeaderContext.Provider value={{ pageTitle, setPageTitle }}>{children}</HeaderContext.Provider>
+    <HeaderContext.Provider value={{ pageBreadcrumbs, setPageBreadcrumbs }}>{children}</HeaderContext.Provider>
   )
 }
