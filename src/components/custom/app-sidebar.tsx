@@ -1,6 +1,5 @@
 import * as React from 'react'
 
-import { LayoutDashboardIcon } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Skeleton } from '../ui/skeleton'
 
@@ -19,24 +18,19 @@ import { SidebarMain } from './sidebar-main'
 import { SidebarSecondary } from './sidebar-secondary'
 import { SidebarUser } from './sidebar-user'
 
-const data = {
-  user: {
-    name: 'shadcn',
-    email: 'm@example.com',
-    avatar: '/avatars/shadcn.jpg',
-  },
-  sidebarPrimary: [
-    {
-      title: 'Dashboard',
-      url: '/admin/dashboard',
-      icon: LayoutDashboardIcon,
-    },
-  ],
-  sidebarSecondary: [],
-}
-
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { loading } = useAuth()
+
+  const { loading, menus } = useAuth()
+  
+  const data = {
+    user: {
+      name: 'shadcn',
+      email: 'm@example.com',
+      avatar: '/avatars/shadcn.jpg',
+    },
+    sidebarPrimary: menus,
+    sidebarSecondary: [],
+  }
 
   return (
     <Sidebar collapsible='offcanvas' {...props}>

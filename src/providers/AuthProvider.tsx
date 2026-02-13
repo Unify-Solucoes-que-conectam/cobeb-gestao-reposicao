@@ -5,12 +5,13 @@ import { toast } from 'sonner'
 import axios from '@/lib/axios'
 import type { Schema } from '@/pages/auth/schemas'
 import { ApiResponse } from '@/types/api-response'
-import { User } from '@/types/consults'
+import { Menu, User } from '@/types/consults'
 
 interface AuthState {
   user: User | null
   token: string | null
   loading: boolean
+  menus: Menu[],
 }
 
 interface AuthContextType extends AuthState {
@@ -35,6 +36,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     user: null,
     token: localStorage.getItem('auth_token'),
     loading: true,
+    menus: []
   })
 
   const setLoading = (loading: boolean) => {
@@ -51,7 +53,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     try {
       // Busca dados do usuário autenticado
-      const userResponse = await axios.get<ApiResponse<User>>(
+      const userResponse = await axios.get<ApiResponse<{ usuario: User; menus: Menu[] }>>(
         `${API_URL}/auth/me`
       )
 
@@ -60,9 +62,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
 
       setState({
-        user: userResponse.data.data,
+        user: userResponse.data.data.usuario,
         token,
         loading: false,
+        menus: userResponse.data.data.menus
       })
     } catch (error) {
       console.error('Erro ao carregar dados de autenticação:', error)
@@ -73,6 +76,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         user: null,
         token: null,
         loading: false,
+        menus: []
       })
     }
   }
@@ -89,6 +93,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       user: null,
       token: null,
       loading: false,
+      menus: []
     })
   }
 
@@ -98,7 +103,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   ): Promise<{ success: boolean; message: string }> => {
     try {
       const response = await axios.post<
-        ApiResponse<{ usuario: User; token: string }>
+        ApiResponse<{ usuario: User; token: string; menus: Menu[] }>
       >(`${API_URL}/auth/login`, {
         cpf,
         senha
@@ -115,6 +120,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         user: data.usuario,
         token: data.token,
         loading: false,
+        menus: data.menus,
       })
 
       return { success: true, message: 'Login realizado com sucesso!' }

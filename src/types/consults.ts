@@ -8,7 +8,7 @@ export type User = {
   first_access: boolean;
 }
 
-export interface Notification {
+export type Notification = {
   id: string
   titulo: string
   mensagem: string
@@ -16,4 +16,13 @@ export interface Notification {
   link: string | null
   data_envio: string
   lida: boolean
+}
+
+export type Menu = {
+  id: string
+  titulo: string
+  icone: string
+  rota: string
+  ordem: number
+  sub_menus: Menu[]
 }
