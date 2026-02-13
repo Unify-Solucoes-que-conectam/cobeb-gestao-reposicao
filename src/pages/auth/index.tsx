@@ -123,12 +123,12 @@ export default function AuthPage() {
 
                         <FormControl>
                           <Input
-                            {...field}
                             placeholder="000.000.000-00"
                             className="h-12"
+                            value={formatCPF(field.value || '')}
                             onChange={(e) => {
-                              const formatted = formatCPF(e.target.value)
-                              field.onChange(formatted)
+                              const onlyNumbers = e.target.value.replace(/\D/g, '')
+                              field.onChange(onlyNumbers)
                             }}
                           />
                         </FormControl>
