@@ -68,7 +68,7 @@ const HeaderNotifications = () => {
 
   // Só inicializa o Echo quando o user estiver carregado
   const { messages, clearMessages } = useEcho({
-    channelName: user ? `barber.${user.id}.notifications` : '',
+    channelName: user ? `notifications.${user.id}` : '',
     mode: 'event',
     eventName: 'appointment.created',
   })

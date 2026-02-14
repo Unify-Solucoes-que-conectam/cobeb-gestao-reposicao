@@ -96,13 +96,6 @@ const useEcho = ({ channelName, mode, eventName }: UseEchoOptions) => {
                 const token = localStorage.getItem('auth_token')
                 return token ? `Bearer ${token}` : ''
               },
-              get 'X-Barbershop-Id'() {
-                return (
-                  localStorage.getItem('active_barbershop_id') ||
-                  sessionStorage.getItem('active_barbershop_id') ||
-                  ''
-                )
-              },
               'Accept': 'application/json',
             },
           },
@@ -259,12 +252,29 @@ const useEcho = ({ channelName, mode, eventName }: UseEchoOptions) => {
 
   const clearMessages = () => setMessages([])
 
+  const disconnect = () => {
+    if (echoRef.current) {
+      try {
+        echoRef.current.disconnect()
+      } catch {
+        // Ignore disconnect errors
+      }
+    }
+  }
+
   return {
     messages,
     connectionStatus,
     isConnected: connectionStatus === 'connected',
     error,
     clearMessages,
+    disconnect,
+    private: (channelSuffix: string) => {
+      if (!echoRef.current) {
+        throw new Error('Echo não está inicializado')
+      }
+      return echoRef.current.private(`${channelName}.${channelSuffix}`)
+    }
   }
 }
 

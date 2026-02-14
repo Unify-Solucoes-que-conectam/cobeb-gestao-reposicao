@@ -49,11 +49,11 @@ export function SidebarMain({
   const renderMenuItems = (menuItems: Menu[]) =>
     [...menuItems]
       .sort((a, b) => a.ordem - b.ordem)
-      .map((item) => {
+      .map((item, index) => {
         const hasSubMenus = item.sub_menus && item.sub_menus.length > 0
 
         return (
-          <SidebarMenuItem key={item.id ?? item.titulo}>
+          <SidebarMenuItem key={item.id ?? index}>
             <SidebarMenuButton
               tooltip={item.titulo}
               onClick={() => item.rota && navigate(item.rota)}
