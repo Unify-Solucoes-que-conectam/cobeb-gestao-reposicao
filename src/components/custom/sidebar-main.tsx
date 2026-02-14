@@ -11,7 +11,7 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from '@/components/ui/sidebar'
-import { Menu } from '@/types/consults'
+import { Menu } from '@/types/app'
 import DynamicIcon from './dynamic-icon'
 
 export function SidebarMain({

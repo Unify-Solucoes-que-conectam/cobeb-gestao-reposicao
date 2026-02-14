@@ -1,4 +1,4 @@
-import type { User } from '@/types/consults'
+import type { User } from '@/types/app'
 
 type UserRole = User['role']
 

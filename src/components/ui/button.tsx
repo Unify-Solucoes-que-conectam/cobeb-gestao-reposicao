@@ -54,7 +54,7 @@ const buttonVariants = cva(
         variant: 'solid',
         color: 'warning',
         class:
-          'bg-amber-500 text-white hover:bg-amber-600 focus-visible:ring-amber-500/20 dark:bg-amber-600 dark:hover:bg-amber-700 dark:focus-visible:ring-amber-400/30',
+          'bg-yellow-500 text-white hover:bg-yellow-600 focus-visible:ring-yellow-500/20 dark:bg-yellow-600 dark:hover:bg-yellow-700 dark:focus-visible:ring-yellow-400/30',
       },
       {
         variant: 'solid',
@@ -91,7 +91,7 @@ const buttonVariants = cva(
         variant: 'outline',
         color: 'warning',
         class:
-          'border-amber-200 text-amber-700 hover:bg-amber-50 hover:text-amber-800 focus-visible:ring-amber-500/20 dark:border-amber-800 dark:text-amber-300 dark:hover:bg-amber-950 dark:hover:text-amber-200 dark:focus-visible:ring-amber-400/30',
+          'border-amber-200 text-amber-500 bg-amber-50 hover:bg-amber-50 hover:text-amber-600 focus-visible:ring-amber-500/20 dark:border-amber-800 dark:text-amber-300 dark:hover:bg-amber-950 dark:hover:text-amber-200 dark:focus-visible:ring-amber-400/30',
       },
       {
         variant: 'outline',

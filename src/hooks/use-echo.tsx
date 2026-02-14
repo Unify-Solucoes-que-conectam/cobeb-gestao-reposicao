@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 
 import Echo, { type Broadcaster } from 'laravel-echo'
 
-import type { Notification } from '@/types/consults'
+import type { Notification } from '@/types/app'
 
 type UseEchoOptions = {
   channelName: string
@@ -66,7 +66,7 @@ const useEcho = ({ channelName, mode, eventName }: UseEchoOptions) => {
         const Echo = (await import('laravel-echo')).default
         const Pusher = (await import('pusher-js')).default
 
-        ;(window as any).Pusher = Pusher
+          ; (window as any).Pusher = Pusher
 
         // helpers
         const envPort = import.meta.env.VITE_REVERB_PORT

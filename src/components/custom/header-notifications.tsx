@@ -13,7 +13,7 @@ import axios from '@/lib/axios'
 import dayjs from '@/lib/dayjs'
 import { cn } from '@/lib/utils'
 import type { ApiResponse } from '@/types/api-response'
-import { type Notification } from '@/types/consults'
+import { type Notification } from '@/types/app'
 
 const HeaderNotifications = () => {
   const scrollRef = useRef<HTMLDivElement>(null)

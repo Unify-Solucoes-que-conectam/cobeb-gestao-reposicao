@@ -5,7 +5,7 @@ import { toast } from 'sonner'
 import axios from '@/lib/axios'
 import type { Schema } from '@/pages/auth/schemas'
 import { ApiResponse } from '@/types/api-response'
-import { Menu, User } from '@/types/consults'
+import { Menu, User } from '@/types/app'
 
 interface AuthState {
   user: User | null
