@@ -1,8 +1,11 @@
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 import { useAuth } from '@/hooks/use-auth';
 import useEcho from '@/hooks/use-echo';
+import { CheckCircle2, Loader2, XCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
-type ImportBatch = {
+export type ImportBatch = {
   id: string;
   type: string;
   status: string;
@@ -13,49 +16,71 @@ type ImportBatch = {
   current_step: string | null;
 };
 
-export function ImportProgressPanel() {
-  const [imports, setImports] = useState<ImportBatch[]>([]);
-  const { user, token } = useAuth();
+type ImportProgressPanelProps = {
+  batchId?: string | null;
+  initialBatch?: ImportBatch | null;
+  onUpdate?: (batch: ImportBatch) => void;
+};
 
-  const echo = useEcho({
-    channelName: user ? `notifications.${user.id}` : '',
+export function ImportProgressPanel({ batchId, initialBatch, onUpdate }: ImportProgressPanelProps) {
+  const [batch, setBatch] = useState<ImportBatch | null>(initialBatch ?? null);
+  const { token } = useAuth();
+
+  const { messages, disconnect } = useEcho({
+    channelName: batchId ? `imports.${batchId}` : '',
     mode: 'event',
-    eventName: 'appointment.created',
-  })
+    eventName: 'import.progress.updated',
+  });
 
   useEffect(() => {
-    // Load running batches on page load
-    fetch('/api/imports', {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => res.json())
-      .then((data) => setImports(data.data ?? []));
-
-    return () => {
-      echo.disconnect();
-    };
-  }, [echo, token]);
+    setBatch(initialBatch ?? null);
+  }, [initialBatch]);
 
   useEffect(() => {
-    // Subscribe to each batch channel
-    imports.forEach((batch) => {
-      echo.private(`imports.${batch.id}`).listen('.import.progress.updated', (payload: ImportBatch) => {
-        setImports((prev) =>
-          prev.map((item) => (item.id === payload.id ? { ...item, ...payload } : item))
-        );
-      });
-    });
-  }, [echo, imports]);
+    if (!messages.length) return;
+    const latest = messages[messages.length - 1] as unknown as ImportBatch;
+    setBatch(latest);
+    onUpdate?.(latest);
+  }, [messages, onUpdate]);
+
+  useEffect(() => () => {
+    if (token) {
+      disconnect();
+    }
+  }, [disconnect, token]);
+
+  if (!batch) return null;
+
+  const isCompleted = batch.status === 'completed';
+  const isFailed = batch.status === 'failed';
+  const isActive = batch.status === 'pending' || batch.status === 'processing';
+
+  const statusLabel = {
+    pending: 'Pendente',
+    processing: 'Processando',
+    completed: 'Concluído',
+    failed: 'Falhou',
+  }[batch.status] ?? batch.status;
+
+  const statusVariant = isCompleted ? 'default' : isFailed ? 'destructive' : 'secondary';
 
   return (
-    <div>
-      {imports.map((batch) => (
-        <div key={batch.id}>
-          <strong>{batch.type}</strong>
-          <div>{batch.percentage}%</div>
-          <div>{batch.last_log}</div>
-        </div>
-      ))}
+    <div className={`text-xs space-y-2 p-3 rounded border ${isCompleted ? 'bg-green-50 border-green-200 dark:bg-green-950/20 dark:border-green-800' : isFailed ? 'bg-red-50 border-red-200 dark:bg-red-950/20 dark:border-red-800' : 'bg-muted border-transparent'}`}>
+      <div className="flex items-center gap-2 flex-wrap">
+        {isActive && <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />}
+        {isCompleted && <CheckCircle2 className="h-3.5 w-3.5 text-green-600" />}
+        {isFailed && <XCircle className="h-3.5 w-3.5 text-red-600" />}
+        <Badge variant={statusVariant} className="text-xs">{statusLabel}</Badge>
+        <span className="text-muted-foreground ml-auto">
+          {batch.processed_rows}/{batch.total_rows} registros
+        </span>
+      </div>
+      {(isActive || batch.percentage > 0) && (
+        <Progress value={batch.percentage} className="h-1.5" />
+      )}
+      {batch.last_log && (
+        <p className="text-muted-foreground truncate">{batch.last_log}</p>
+      )}
     </div>
   );
 }
