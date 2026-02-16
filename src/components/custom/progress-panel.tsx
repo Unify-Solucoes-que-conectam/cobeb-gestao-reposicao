@@ -65,7 +65,7 @@ export function ImportProgressPanel({ batchId, initialBatch, onUpdate }: ImportP
   const statusVariant = isCompleted ? 'default' : isFailed ? 'destructive' : 'secondary';
 
   return (
-    <div className={`text-xs space-y-2 p-3 rounded border ${isCompleted ? 'bg-green-50 border-green-200 dark:bg-green-950/20 dark:border-green-800' : isFailed ? 'bg-red-50 border-red-200 dark:bg-red-950/20 dark:border-red-800' : 'bg-muted border-transparent'}`}>
+    <div className={`text-xs space-y-2 p-3 rounded-md border ${isCompleted ? 'bg-green-50 border-green-200 dark:bg-green-950/20 dark:border-green-800' : isFailed ? 'bg-red-50 border-red-200 dark:bg-red-950/20 dark:border-red-800' : 'bg-muted border-transparent'}`}>
       <div className="flex items-center gap-2 flex-wrap">
         {isActive && <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />}
         {isCompleted && <CheckCircle2 className="h-3.5 w-3.5 text-green-600" />}

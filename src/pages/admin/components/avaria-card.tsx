@@ -69,20 +69,20 @@ export default function AvariaCard({ data }: AvariaCardProps) {
   return (
     <Card className="overflow-hidden">
       {/* Header do Card */}
-      <CardHeader className="p-4 border-b border-slate-50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <CardHeader className="p-4 border-b flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <CardTitle className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <Badge className="text-[10px] font-bold bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded uppercase tracking-wider">
+            <Badge className="text-[10px] font-bold bg-slate-800 hover:bg-slate-800 text-slate-200 px-1.5 py-0.5 rounded uppercase tracking-wider">
               Cód. {cliente.codigo}
             </Badge>
-            <h3 className="text-base font-bold text-slate-800 truncate uppercase">
+            <h3 className="text-base font-bold dark:text-slate-400 truncate uppercase">
               {cliente.nome_fantasia || cliente.razao_social}
             </h3>
           </div>
           <div className="flex items-center text-slate-500 text-xs gap-3">
             <span className="flex items-center gap-1">
               <FileTextIcon size={14} className="text-slate-400" />
-              NF: <span className="font-semibold text-slate-700">{nf}</span>
+              NF: <span className="font-semibold text-slate-600">{nf}</span>
             </span>
             <span className="flex items-center gap-1">
               <CalendarIcon size={14} className="text-slate-400" />
@@ -102,7 +102,7 @@ export default function AvariaCard({ data }: AvariaCardProps) {
       </CardHeader>
 
       {/* Conteúdo Principal */}
-      <CardContent className="px-4 py-3 grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50/30">
+      <CardContent className="px-4 py-3 grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Coluna 1: Lista de Produtos */}
         <div className="flex items-start gap-3">
           <div className="p-2 bg-blue-50 rounded-lg shrink-0">
@@ -113,7 +113,7 @@ export default function AvariaCard({ data }: AvariaCardProps) {
             <div className="space-y-1.5">
               {visibleProducts.map((p, index) => (
                 <div key={index} className="flex justify-between items-center text-sm gap-2">
-                  <span className="text-slate-700 truncate font-medium" title={p.descricao}>
+                  <span className="text-slate-500 truncate font-medium" title={p.descricao}>
                     {p.descricao}
                   </span>
                   <span className="text-[10px] font-bold bg-white border border-slate-200 text-slate-500 px-1.5 py-0.5 rounded shrink-0">
@@ -132,12 +132,12 @@ export default function AvariaCard({ data }: AvariaCardProps) {
 
         {/* Coluna 2: Informações do Motorista */}
         <div className="flex items-start gap-3">
-          <div className="p-2 bg-slate-100 rounded-lg shrink-0">
+          <div className="p-2 rounded-lg shrink-0">
             <TruckIcon size={18} className="text-slate-600" />
           </div>
           <div className="min-w-0">
             <p className="text-[10px] text-slate-400 uppercase font-bold mb-1.5 tracking-tight">{motorista.cluster.descricao}</p>
-            <p className="text-sm font-medium text-slate-700 truncate">
+            <p className="text-sm font-medium text-slate-500 truncate">
               <span className="text-slate-400 font-normal mr-1">[{motorista.codigo}]</span>
               {motorista.nome}
             </p>
@@ -149,7 +149,7 @@ export default function AvariaCard({ data }: AvariaCardProps) {
       </CardContent>
 
       {/* Footer / Ações */}
-      <CardFooter className="px-4 py-3 flex items-center justify-end gap-2 border-t border-slate-100 bg-white">
+      <CardFooter className="px-4 py-3 flex items-center justify-end gap-2 border-t">
         <Button
           onClick={handleSendMessage}
           color='success'

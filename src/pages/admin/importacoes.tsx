@@ -305,9 +305,9 @@ export default function AdminImportacoes() {
 
       <Tabs defaultValue="auxiliares" className="w-full">
         <TabsList className="w-full grid grid-cols-3">
-          <TabsTrigger value="auxiliares">Auxiliares</TabsTrigger>
-          <TabsTrigger value="entidades">Cadastros</TabsTrigger>
-          <TabsTrigger value="notas">Notas Fiscais</TabsTrigger>
+          <TabsTrigger className="dark:data-[state=active]:bg-primary!" value="auxiliares">Auxiliares</TabsTrigger>
+          <TabsTrigger className="dark:data-[state=active]:bg-primary!" value="entidades">Cadastros</TabsTrigger>
+          <TabsTrigger className="dark:data-[state=active]:bg-primary!" value="notas">Notas Fiscais</TabsTrigger>
         </TabsList>
 
         <TabsContent value="auxiliares" className="space-y-3 mt-4">
