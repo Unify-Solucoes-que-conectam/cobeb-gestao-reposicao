@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/use-auth";
+import { useHeader } from "@/hooks/use-header";
 import axios from "@/lib/axios";
 import { IMPORTER_CONFIGS, generateTemplate, type ImporterConfig } from "@/lib/xlsx-helpers";
 import { DownloadIcon, UploadIcon } from "lucide-react";
@@ -208,10 +209,17 @@ function ImporterCard({
   );
 }
 
-export default function DataImportV2() {
+export default function AdminImportacoes() {
+
+  // ================ STATE & REFS ================
   const apiUrl = import.meta.env.VITE_API_URL as string | undefined;
-  const { token } = useAuth();
   const [activeBatches, setActiveBatches] = useState<Record<string, ImportBatch>>({});
+
+  // ================ HOOKS ================
+  const { token } = useAuth();
+  const { setPageBreadcrumbs } = useHeader();
+
+  // ================ CALLBACKS ================
 
   const lookupConfigs = IMPORTER_CONFIGS.filter((c) =>
     ["filiais", "clusters", "tipos_marca", "embalagens", "categorias", "tipos_pessoa"].includes(c.key)
@@ -273,6 +281,15 @@ export default function DataImportV2() {
   const handleBatchChange = useCallback((type: string, batch: ImportBatch) => {
     setActiveBatches((prev) => ({ ...prev, [type]: batch }));
   }, []);
+
+  // ================ TITLE & BREADCRUMBS ================
+  useEffect(() => {
+
+    // definir título da página
+    setPageBreadcrumbs([
+      { title: "Importações", href: "/admin/importacoes" }
+    ]);
+  }, [])
 
   return (
     <div className="space-y-4">
