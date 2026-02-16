@@ -31,6 +31,7 @@ export function SidebarMain({
           <SidebarMenuSubItem key={item.id ?? item.titulo}>
             <SidebarMenuSubButton asChild>
               <button
+                className='w-full'
                 type='button'
                 onClick={() => item.rota && navigate(item.rota)}
               >
