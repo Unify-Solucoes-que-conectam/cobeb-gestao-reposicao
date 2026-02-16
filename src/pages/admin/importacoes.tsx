@@ -18,6 +18,11 @@ const API_IMPORT_TYPES = new Set([
   "embalagens",
   "clusters",
   "categorias",
+  "clientes",
+  "produtos",
+  "motoristas",
+  "notas_fiscais",
+  "produtos_nf",
 ]);
 
 function ImporterCard({
