@@ -4,7 +4,12 @@ export const schema = (editing?: boolean) => z.object({
   tipo: z.enum(['monitoramento', 'motorista'], {
     message: 'O tipo é obrigatório',
   }),
-  cpf: z.string().optional(),
+  cpf: z.string().min(1, 'O CPF é obrigatório').refine(
+    (cpf) => /^\d{11}$/.test(cpf),
+    {
+      message: 'CPF deve conter exatamente 11 dígitos numéricos',
+    }
+  ),
   nome: z.string().min(1, 'O nome é obrigatório'),
   senha: z.string().optional(),
   confirmar_senha: z.string().optional(),

@@ -22,7 +22,7 @@ import { Usuario } from "@/types/app";
 import { capitalizeName, formatCPF } from "@/utils/formatters";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Edit2Icon, PlusIcon } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { password_validations, schema, Schema } from "../schemas";
@@ -52,8 +52,11 @@ export default function GerenciarUsuario({ user, onSubmit }: GerenciarUsuarioPro
     mode: 'onSubmit',
   })
 
+  // ============== HANDLERS ==============
+
   const handleSubmit = async (values: Schema) => {
     try {
+
       setLoading(true);
 
       if (user) {
@@ -89,11 +92,42 @@ export default function GerenciarUsuario({ user, onSubmit }: GerenciarUsuarioPro
     }
   }
 
-  // ============= HANDLERS ==============
   const handleOpenChange = (isOpen: boolean) => {
     form.reset();
     setOpen(isOpen);
   }
+
+  const findUser = async () => {
+    try {
+
+      const response = await axios.get<ApiResponse<Usuario[]>>(`/usuarios/${form.getValues('cpf')}`);
+      const { data } = response;
+
+      if (data.success) {
+
+        if (form.getValues('cpf') === user?.cpf || form.getValues('cpf') === '') {
+          form.clearErrors('cpf');
+          return;
+        };
+
+        form.setError('cpf', {
+          type: 'manual',
+          message: 'CPF já cadastrado para outro usuário',
+        });
+      } else {
+        form.clearErrors('cpf');
+      }
+    } catch {
+      form.clearErrors('cpf');
+    }
+  };
+
+  // ============== VALIDAÇÕES =============
+  const userExists = form.watch('cpf');
+
+  useEffect(() => {
+    if (form.getValues('cpf').length === 11) findUser();
+  }, [userExists])
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -252,7 +286,7 @@ export default function GerenciarUsuario({ user, onSubmit }: GerenciarUsuarioPro
               )
             }
 
-            <Button className="w-full" loading={loading} disabled={loading} type="submit">
+            <Button className="w-full" loading={loading} disabled={loading || !form.formState.isValid || !form.formState.isDirty} type="submit">
               Salvar
             </Button>
           </form>
