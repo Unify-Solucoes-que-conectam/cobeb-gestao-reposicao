@@ -42,13 +42,13 @@ export default function UserManagement() {
     fetchUsers();
   }, []);
 
-  const fetchUsers = async () => {
+  const fetchUsers = async (role: string = 'monitoramento') => {
     try {
 
       setLoading(true);
 
       const response = await axios.get<ApiResponse<Usuario[]>>('/usuarios', {
-        params: { role: 'monitoramento' }
+        params: { role: role === 'todos' ? undefined : role }
       });
       const { data } = response;
 
@@ -81,7 +81,7 @@ export default function UserManagement() {
           <InputGroupAddon align="inline-end">{users.length} {users.length === 1 ? "resultado" : "resultados"}</InputGroupAddon>
         </InputGroup>
 
-        <Select defaultValue="todos">
+        <Select defaultValue="todos" onValueChange={(value) => fetchUsers(value)}>
           <SelectTrigger className="w-45">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
@@ -95,28 +95,32 @@ export default function UserManagement() {
         </Select>
       </div>
 
-      {loading && <div className="text-center py-8 text-muted-foreground">Carregando...</div>}
-
-      <div className="grid gap-3 md:grid-cols-2">
-        {users.map((user) => (
-          <Card key={user.id}>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center bg-primary/10">
-                    <Shield className="h-5 w-5 text-primary" />
+      {
+        loading ? (
+          <div className="text-center py-8 text-muted-foreground">Carregando...</div>
+        ) : (
+          <div className="grid gap-3 md:grid-cols-2">
+            {users.map((user) => (
+              <Card key={user.id}>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center bg-primary/10">
+                        <Shield className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-medium">{capitalizeName(user.nome)}</p>
+                        <p className="text-xs text-muted-foreground">CPF: {formatCPF(user.cpf)}</p>
+                      </div>
+                    </div>
+                    <Badge variant="default">{user.role.charAt(0).toUpperCase() + user.role.slice(1)}</Badge>
                   </div>
-                  <div>
-                    <p className="font-medium">{capitalizeName(user.nome)}</p>
-                    <p className="text-xs text-muted-foreground">CPF: {formatCPF(user.cpf)}</p>
-                  </div>
-                </div>
-                <Badge variant="default">{user.role.charAt(0).toUpperCase() + user.role.slice(1)}</Badge>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )
+      }
     </div>
   );
 }
