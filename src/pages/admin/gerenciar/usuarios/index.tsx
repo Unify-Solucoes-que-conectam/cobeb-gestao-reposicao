@@ -3,16 +3,46 @@ import { Card, CardContent } from "@/components/ui/card";
 import axios from "@/lib/axios";
 import { ApiResponse } from "@/types/api-response";
 import { Usuario } from "@/types/app";
-import { formatCPF } from "@/utils/formatters";
-import { Shield } from "lucide-react";
+import { capitalizeName, formatCPF } from "@/utils/formatters";
+import { SearchIcon, Shield } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
+import { useTheme } from "@/hooks/use-theme";
+import { cn } from "@/lib/utils";
+import { useHeader } from "@/hooks/use-header";
+
 export default function UserManagement() {
+
+  // =============== STATES ===============
   const [users, setUsers] = useState<Usuario[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => { fetchUsers(); }, []);
+  // =============== HOOKS  ===============
+  const { setPageBreadcrumbs } = useHeader();
+  const { theme } = useTheme();
+
+  // =============== EFFECTS ===============
+
+  useEffect(() => {
+
+    // setar título da página
+    setPageBreadcrumbs([
+      { title: "Gerenciar", href: "#" },
+      { title: "Usuários", href: "/admin/gerenciar/usuarios" }
+    ]);
+
+    fetchUsers();
+  }, []);
 
   const fetchUsers = async () => {
     try {
@@ -40,7 +70,30 @@ export default function UserManagement() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Usuários do Monitoramento</h1>
+        <h1 className="text-2xl font-bold">Usuários</h1>
+      </div>
+
+      <div className="flex justify-between items-center gap-3">
+        <InputGroup className="h-10">
+          <InputGroupInput placeholder="Search..." />
+          <InputGroupAddon>
+            <SearchIcon />
+          </InputGroupAddon>
+          <InputGroupAddon align="inline-end">{users.length} {users.length === 1 ? "resultado" : "resultados"}</InputGroupAddon>
+        </InputGroup>
+
+        <Select defaultValue="todos">
+          <SelectTrigger className="w-45">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent className={cn({ "bg-white text-dark": theme !== "dark" })}>
+            <SelectGroup>
+              <SelectItem value="todos">Todos</SelectItem>
+              <SelectItem value="monitoramento">Monitoramento</SelectItem>
+              <SelectItem value="motoristas">Motoristas</SelectItem>
+            </SelectGroup>
+          </SelectContent>
+        </Select>
       </div>
 
       {loading && <div className="text-center py-8 text-muted-foreground">Carregando...</div>}
@@ -55,11 +108,11 @@ export default function UserManagement() {
                     <Shield className="h-5 w-5 text-primary" />
                   </div>
                   <div>
-                    <p className="font-medium">{user.nome}</p>
+                    <p className="font-medium">{capitalizeName(user.nome)}</p>
                     <p className="text-xs text-muted-foreground">CPF: {formatCPF(user.cpf)}</p>
                   </div>
                 </div>
-                <Badge variant="default">{user.role}</Badge>
+                <Badge variant="default">{user.role.charAt(0).toUpperCase() + user.role.slice(1)}</Badge>
               </div>
             </CardContent>
           </Card>
