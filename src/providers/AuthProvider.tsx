@@ -5,10 +5,10 @@ import { toast } from 'sonner'
 import axios from '@/lib/axios'
 import type { Schema } from '@/pages/auth/schemas'
 import { ApiResponse } from '@/types/api-response'
-import { Menu, User } from '@/types/app'
+import { Menu, Usuario } from '@/types/app'
 
 interface AuthState {
-  user: User | null
+  user: Usuario | null
   token: string | null
   loading: boolean
   menus: Menu[],
@@ -53,7 +53,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     try {
       // Busca dados do usuário autenticado
-      const userResponse = await axios.get<ApiResponse<{ usuario: User; menus: Menu[] }>>(
+      const userResponse = await axios.get<ApiResponse<{ usuario: Usuario; menus: Menu[] }>>(
         `${API_URL}/auth/me`
       )
 
@@ -103,7 +103,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   ): Promise<{ success: boolean; message: string }> => {
     try {
       const response = await axios.post<
-        ApiResponse<{ usuario: User; token: string; menus: Menu[] }>
+        ApiResponse<{ usuario: Usuario; token: string; menus: Menu[] }>
       >(`${API_URL}/auth/login`, {
         cpf,
         senha

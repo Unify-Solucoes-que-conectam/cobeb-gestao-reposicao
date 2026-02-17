@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 
 import Echo, { type Broadcaster } from 'laravel-echo'
 
-import type { Notification } from '@/types/app'
+import type { Notificacao } from '@/types/app'
 
 type UseEchoOptions = {
   channelName: string
@@ -20,7 +20,7 @@ const useEcho = ({ channelName, mode, eventName }: UseEchoOptions) => {
   const lastErrorLogRef = useRef<number>(0)
   const isUnmountedRef = useRef(false)
 
-  const [messages, setMessages] = useState<Notification[]>([])
+  const [messages, setMessages] = useState<Notificacao[]>([])
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('disconnected')
   const [error, setError] = useState<string | null>(null)
 
@@ -150,7 +150,7 @@ const useEcho = ({ channelName, mode, eventName }: UseEchoOptions) => {
         const channel = echo.private(channelName)
 
         if (mode === 'notification') {
-          channel.notification((notification: Notification) => {
+          channel.notification((notification: Notificacao) => {
             console.log('[Echo] Notificação recebida:', notification)
             if (!isUnmountedRef.current) {
               setMessages((prev) => [...prev, notification])
@@ -171,7 +171,7 @@ const useEcho = ({ channelName, mode, eventName }: UseEchoOptions) => {
             }
 
             if (!isUnmountedRef.current) {
-              setMessages((prev) => [...prev, parsedData as Notification])
+              setMessages((prev) => [...prev, parsedData as Notificacao])
             }
           })
         } else {

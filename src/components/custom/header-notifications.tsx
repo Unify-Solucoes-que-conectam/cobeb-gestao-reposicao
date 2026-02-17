@@ -13,7 +13,7 @@ import axios from '@/lib/axios'
 import dayjs from '@/lib/dayjs'
 import { cn } from '@/lib/utils'
 import type { ApiResponse } from '@/types/api-response'
-import { type Notification } from '@/types/app'
+import { type Notificacao } from '@/types/app'
 
 const HeaderNotifications = () => {
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -74,7 +74,7 @@ const HeaderNotifications = () => {
   })
 
   const [open, setOpen] = useState(false)
-  const [notifications, setNotifications] = useState<Notification[]>([])
+  const [notifications, setNotifications] = useState<Notificacao[]>([])
 
   const unreadCount = notifications.filter((n) => !n.lida).length
 
@@ -92,7 +92,7 @@ const HeaderNotifications = () => {
 
   const fetchOldNotifications = async () => {
     try {
-      const res = await axios.get<ApiResponse<Notification[]>>('notificacoes')
+      const res = await axios.get<ApiResponse<Notificacao[]>>('notificacoes')
 
       if (res.data.success) {
         const oldNotifications = res.data.data!

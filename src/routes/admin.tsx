@@ -1,10 +1,10 @@
 import type { RouteObject } from 'react-router-dom'
 
-import AdminAvarias from '@/pages/admin/avarias'
-import AdminImportacoes from '@/pages/admin/importacoes'
-import AdminMapas from '@/pages/admin/gerenciar/mapas'
-import AdminMotoristas from '@/pages/admin/gerenciar/motoristas'
-import AdminUsuarios from '@/pages/admin/gerenciar/usuarios'
+import AdminAvarias from '@/pages/admin/avarias/avarias'
+import AdminMapas from '@/pages/admin/gerenciar/mapas/mapas'
+import AdminMotoristas from '@/pages/admin/gerenciar/motoristas/motoristas'
+import AdminUsuarios from '@/pages/admin/gerenciar/usuarios/usuarios'
+import AdminImportacoes from '@/pages/admin/importacoes/importacoes'
 
 export const adminRoutes: RouteObject[] = [
   {

@@ -1,14 +1,14 @@
 import { NotificationType } from "@/hooks/use-echo";
 
-export type User = {
+export type Usuario = {
   id: string;
   cpf: string;
   nome: string;
   role: 'monitoramento' | 'motorista';
-  first_access: boolean;
+  primeiro_acesso: boolean;
 }
 
-export type Notification = {
+export type Notificacao = {
   id: string
   titulo: string
   mensagem: string

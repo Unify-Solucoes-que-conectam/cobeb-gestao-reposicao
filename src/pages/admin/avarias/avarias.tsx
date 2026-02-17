@@ -15,10 +15,10 @@ import {
 } from "@/components/ui/select";
 import { useTheme } from "@/hooks/use-theme";
 import { cn } from "@/lib/utils";
-import { avarias_demo } from "@/pages/admin/avarias-demo";
 import { Avaria } from "@/types/consults";
 import { ArrowDownUpIcon, ArrowRightLeftIcon, Building2Icon, SearchIcon, SquaresSubtractIcon, Trash2Icon } from "lucide-react";
-import AvariaCard from "./components/avaria-card";
+import AvariaCard from "../components/avaria-card";
+import { avarias_demo } from "./avarias-demo";
 
 interface Dashboard {
   total: number
