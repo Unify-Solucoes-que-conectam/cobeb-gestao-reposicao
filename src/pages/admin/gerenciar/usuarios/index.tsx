@@ -8,6 +8,7 @@ import { SearchIcon, Shield } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
+import { Button } from "@/components/ui/button";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import {
   Select,
@@ -19,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import { useHeader } from "@/hooks/use-header";
 import GerenciarUsuario from "./components/gerenciar-usuario";
+import Loader from "@/components/custom/loader";
 
 export default function UserManagement() {
 
@@ -28,6 +30,12 @@ export default function UserManagement() {
 
   // =============== HOOKS  ===============
   const { setPageBreadcrumbs } = useHeader();
+
+  // =============== FILTERS  ===============
+  const [filters, setFilters] = useState({
+    nome: '',
+    role: 'todos'
+  });
 
   // =============== EFFECTS ===============
 
@@ -42,13 +50,18 @@ export default function UserManagement() {
     fetchUsers();
   }, []);
 
-  const fetchUsers = async (role: string = 'monitoramento') => {
+  useEffect(() => { fetchUsers() }, [filters]);
+
+  const fetchUsers = async () => {
     try {
 
       setLoading(true);
 
       const response = await axios.get<ApiResponse<Usuario[]>>('/usuarios', {
-        params: { role: role === 'todos' ? undefined : role }
+        params: {
+          nome: filters.nome,
+          role: filters.role === 'todos' ? undefined : filters.role
+        }
       });
       const { data } = response;
 
@@ -74,14 +87,18 @@ export default function UserManagement() {
 
       <div className="flex justify-between items-center gap-3">
         <InputGroup className="h-10">
-          <InputGroupInput placeholder="Search..." />
+          <InputGroupInput onKeyDown={(key) => ['Enter', 'NumpadEnter'].includes(key.code) && fetchUsers()} placeholder="Search..." value={filters.nome} onChange={(e) => setFilters((prev) => ({ ...prev, nome: e.target.value }))} />
           <InputGroupAddon>
             <SearchIcon />
           </InputGroupAddon>
           <InputGroupAddon align="inline-end">{users.length} {users.length === 1 ? "resultado" : "resultados"}</InputGroupAddon>
         </InputGroup>
 
-        <Select defaultValue="todos" onValueChange={(value) => fetchUsers(value)}>
+        <Button size="icon" onClick={() => fetchUsers()}>
+          <SearchIcon />
+        </Button>
+
+        <Select defaultValue="todos" onValueChange={(value) => setFilters((prev) => ({ ...prev, role: value }))}>
           <SelectTrigger className="w-45">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
@@ -97,27 +114,33 @@ export default function UserManagement() {
 
       {
         loading ? (
-          <div className="text-center py-8 text-muted-foreground">Carregando...</div>
+          <Loader showMessage/>
         ) : (
-          <div className="grid gap-3 md:grid-cols-2">
-            {users.map((user) => (
-              <Card key={user.id}>
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full flex items-center justify-center bg-primary/10">
-                        <Shield className="h-5 w-5 text-primary" />
+          <div className="space-y-4">
+            {
+              users.length > 0 ? (
+                users.map((user) => (
+                  <Card key={user.id}>
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full flex items-center justify-center bg-primary/10">
+                            <Shield className="h-5 w-5 text-primary" />
+                          </div>
+                          <div>
+                            <p className="font-medium">{capitalizeName(user.nome)}</p>
+                            <p className="text-xs text-muted-foreground">CPF: {formatCPF(user.cpf)}</p>
+                          </div>
+                        </div>
+                        <Badge variant="default">{user.role.charAt(0).toUpperCase() + user.role.slice(1)}</Badge>
                       </div>
-                      <div>
-                        <p className="font-medium">{capitalizeName(user.nome)}</p>
-                        <p className="text-xs text-muted-foreground">CPF: {formatCPF(user.cpf)}</p>
-                      </div>
-                    </div>
-                    <Badge variant="default">{user.role.charAt(0).toUpperCase() + user.role.slice(1)}</Badge>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                    </CardContent>
+                  </Card>
+                ))
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">Nenhum usuário encontrado</div>
+              )
+            }
           </div>
         )
       }
