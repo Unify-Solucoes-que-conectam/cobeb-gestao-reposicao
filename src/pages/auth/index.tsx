@@ -133,6 +133,7 @@ export default function AuthPage() {
                           <Input
                             placeholder="000.000.000-00"
                             className="h-12"
+                            maxLength={14}
                             value={formatCPF(field.value || '')}
                             onChange={(e) => {
                               const onlyNumbers = e.target.value.replace(/\D/g, '')

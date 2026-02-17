@@ -17,9 +17,8 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
-import { useTheme } from "@/hooks/use-theme";
-import { cn } from "@/lib/utils";
 import { useHeader } from "@/hooks/use-header";
+import GerenciarUsuario from "./components/gerenciar-usuario";
 
 export default function UserManagement() {
 
@@ -29,7 +28,6 @@ export default function UserManagement() {
 
   // =============== HOOKS  ===============
   const { setPageBreadcrumbs } = useHeader();
-  const { theme } = useTheme();
 
   // =============== EFFECTS ===============
 
@@ -71,6 +69,7 @@ export default function UserManagement() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Usuários</h1>
+        <GerenciarUsuario />
       </div>
 
       <div className="flex justify-between items-center gap-3">
@@ -86,7 +85,7 @@ export default function UserManagement() {
           <SelectTrigger className="w-45">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
-          <SelectContent className={cn({ "bg-white text-dark": theme !== "dark" })}>
+          <SelectContent>
             <SelectGroup>
               <SelectItem value="todos">Todos</SelectItem>
               <SelectItem value="monitoramento">Monitoramento</SelectItem>

@@ -2,7 +2,8 @@ import { z } from 'zod'
 
 export const schema = (registering?: boolean) => z.object({
   nome: z.string().optional(),
-  cpf: z.string().min(1, 'O CPF é obrigatório'),
+  cpf: 
+    z.string().min(1, 'O CPF é obrigatório'),
   senha: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres'),
 }).refine(
   (data) => {

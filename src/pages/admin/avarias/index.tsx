@@ -13,7 +13,6 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
-import { useTheme } from "@/hooks/use-theme";
 import { cn } from "@/lib/utils";
 import { Avaria } from "@/types/consults";
 import { ArrowDownUpIcon, ArrowRightLeftIcon, Building2Icon, SearchIcon, SquaresSubtractIcon, Trash2Icon } from "lucide-react";
@@ -31,7 +30,6 @@ export default function AdminAvarias() {
 
   // =============== HOOKS   ===============
   const { setPageBreadcrumbs } = useHeader();
-  const { theme } = useTheme();
 
   // ============== FILTERS ===============
   const [fromDate, setFromDate] = useState<Date>();
@@ -98,7 +96,7 @@ export default function AdminAvarias() {
           <SelectTrigger className="w-45">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
-          <SelectContent className={cn({ "bg-white text-dark": theme !== "dark" })}>
+          <SelectContent>
             <SelectGroup>
               <SelectItem value="todas">Todas</SelectItem>
               <SelectItem value="aguardando_analise">Aguardando Análise</SelectItem>
@@ -113,7 +111,7 @@ export default function AdminAvarias() {
             <Building2Icon size={18} className="text-muted-foreground" />
             <SelectValue placeholder="Filiais" />
           </SelectTrigger>
-          <SelectContent className={cn({ "bg-white text-dark": theme !== "dark" })}>
+          <SelectContent>
 
             <SelectGroup>
               <SelectItem value="000">Todas Filiais</SelectItem>
