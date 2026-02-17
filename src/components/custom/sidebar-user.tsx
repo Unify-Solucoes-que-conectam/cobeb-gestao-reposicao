@@ -55,7 +55,7 @@ export function SidebarUser() {
                 {loading ? (
                   <Skeleton className='p-1' />
                 ) : (
-                  <span className='text-muted-foreground truncate text-xs'>{formatCPF(user?.cpf || '')}</span>
+                  <span className='text-muted/50 dark:text-muted-foreground truncate text-xs'>{formatCPF(user?.cpf || '')}</span>
                 )}
               </div>
               <EllipsisVerticalIcon className='ml-auto size-4' />
