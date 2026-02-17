@@ -19,18 +19,19 @@ import axios from "@/lib/axios";
 import { cn } from "@/lib/utils";
 import { ApiResponse } from "@/types/api-response";
 import { Usuario } from "@/types/app";
-import { formatCPF } from "@/utils/formatters";
+import { capitalizeName, formatCPF } from "@/utils/formatters";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { PlusIcon } from "lucide-react";
+import { Edit2Icon, PlusIcon } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { password_validations, schema, Schema } from "../schemas";
 
 interface GerenciarUsuarioProps {
-  initialData?: Usuario
+  user?: Usuario
+  onSubmit?: () => void
 }
-export default function GerenciarUsuario({ initialData }: GerenciarUsuarioProps) {
+export default function GerenciarUsuario({ user, onSubmit }: GerenciarUsuarioProps) {
 
   // ============== HOOKS ==============
   const [open, setOpen] = useState(false);
@@ -40,13 +41,13 @@ export default function GerenciarUsuario({ initialData }: GerenciarUsuarioProps)
 
   // ============== FORM ==============
   const form = useForm<Schema>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema(!!user)),
     defaultValues: {
-      cpf: initialData?.cpf || '',
-      nome: initialData?.nome || '',
+      cpf: user?.cpf || '',
+      nome: user?.nome || '',
       senha: '',
       confirmar_senha: '',
-      tipo: initialData?.role || 'monitoramento',
+      tipo: user?.role || 'monitoramento',
     },
     mode: 'onSubmit',
   })
@@ -55,12 +56,17 @@ export default function GerenciarUsuario({ initialData }: GerenciarUsuarioProps)
     try {
       setLoading(true);
 
-      if (initialData) {
-        const response = await axios.patch<ApiResponse>(`/usuarios/${initialData.id}`, values);
+      if (user) {
+        const response = await axios.patch<ApiResponse>(`/usuarios/${user.id}`, values);
         const { data } = response;
 
         if (data.success) {
+          form.reset();
           toast.success(data.message || 'Usuário atualizado com sucesso!');
+          setOpen(false);
+          onSubmit?.();
+        } else {
+          toast.error(data.debug_errors?.cpf?.[0] || data.message || 'Erro ao editar usuário');
         }
       } else {
         const response = await axios.post<ApiResponse>('/auth/register', values);
@@ -70,6 +76,7 @@ export default function GerenciarUsuario({ initialData }: GerenciarUsuarioProps)
           form.reset();
           toast.success(data.message || 'Usuário criado com sucesso!');
           setOpen(false);
+          onSubmit?.();
         } else {
           toast.error(data.debug_errors?.cpf?.[0] || data.message || 'Erro ao criar usuário');
         }
@@ -91,10 +98,22 @@ export default function GerenciarUsuario({ initialData }: GerenciarUsuarioProps)
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button><PlusIcon className="h-4 w-4 mr-2" /> Novo Usuário</Button>
+        {
+          !user ? (
+            <Button>
+              <PlusIcon className="h-4 w-4 mr-2" />
+              Novo Usuário
+            </Button>
+          ) : (
+            <Button color='warning'>
+              <Edit2Icon className="h-4 w-4 mr-2" />
+              Editar
+            </Button>
+          )
+        }
       </DialogTrigger>
       <DialogContent>
-        <DialogHeader><DialogTitle>Cadastrar Usuário</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>{user ? 'Editar' : 'Cadastrar'} Usuário</DialogTitle></DialogHeader>
         <Form {...form}>
           <form className="space-y-4" onSubmit={form.handleSubmit(handleSubmit)}>
 
@@ -132,7 +151,7 @@ export default function GerenciarUsuario({ initialData }: GerenciarUsuarioProps)
                   <FormLabel required>Nome</FormLabel>
 
                   <FormControl>
-                    <Input {...field} placeholder='Digite seu nome' className='h-12' />
+                    <Input value={capitalizeName(field.value) || ''} onChange={(e) => field.onChange(e.target.value.toLowerCase())} placeholder='Digite seu nome' className='h-12' />
                   </FormControl>
 
                   <FormMessage />
@@ -165,63 +184,76 @@ export default function GerenciarUsuario({ initialData }: GerenciarUsuarioProps)
               )}
             />
 
-            <FormField
-              control={form.control}
-              name='senha'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel required>Senha</FormLabel>
+            {
+              !user && (
+                <FormField
+                  control={form.control}
+                  name='senha'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel required>Senha</FormLabel>
 
-                  <FormControl>
-                    <PasswordInput {...field} placeholder='Digite sua senha' className='h-12' />
-                  </FormControl>
+                      <FormControl>
+                        <PasswordInput {...field} placeholder='Digite sua senha' className='h-12' />
+                      </FormControl>
 
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )
+            }
 
-            <FormField
-              control={form.control}
-              name='confirmar_senha'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel required>Confirmar Senha</FormLabel>
+            {
+              !user && (
+                <FormField
+                  control={form.control}
+                  name='confirmar_senha'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel required>Confirmar Senha</FormLabel>
 
-                  <FormControl>
-                    <PasswordInput {...field} placeholder='Digite sua senha' className='h-12' />
-                  </FormControl>
+                      <FormControl>
+                        <PasswordInput {...field} placeholder='Digite sua senha' className='h-12' />
+                      </FormControl>
 
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )
+            }
 
             {/* info de preenchimento de senha */}
-            <Card className='p-3 gap-3'>
-              <CardHeader className='p-0'>
-                <CardTitle className="text-md pb-3">Sua nova senha precisa:</CardTitle>
-              </CardHeader>
-              <CardContent className='p-0'>
-                <ul className='text-sm text-muted-foreground space-y-1'>
-                  {password_validations(form.watch('senha'), form.watch('confirmar_senha')).map(
-                    (validation) => (
-                      <li
-                        key={validation.title}
-                        className={cn({
-                          'text-green-600 dark:text-green-500': validation.validation,
-                          'text-red-600 dark:text-red-500': !validation.validation,
-                        })}
-                      >
-                        {validation.validation ? '✅' : '❌'} {validation.message}
-                      </li>
-                    )
-                  )}
-                </ul>
-              </CardContent>
-            </Card>
+            {
+              !user && (
+                <Card className='p-3 gap-3'>
+                  <CardHeader className='p-0'>
+                    <CardTitle className="text-md pb-3">Sua nova senha precisa:</CardTitle>
+                  </CardHeader>
+                  <CardContent className='p-0'>
+                    <ul className='text-sm text-muted-foreground space-y-1'>
+                      {password_validations(form.watch('senha') || '', form.watch('confirmar_senha') || '').map(
+                        (validation) => (
+                          <li
+                            key={validation.title}
+                            className={cn({
+                              'text-green-600 dark:text-green-500': validation.validation,
+                              'text-red-600 dark:text-red-500': !validation.validation,
+                            })}
+                          >
+                            {validation.validation ? '✅' : '❌'} {validation.message}
+                          </li>
+                        )
+                      )}
+                    </ul>
+                  </CardContent>
+                </Card>
+              )
+            }
+
             <Button className="w-full" loading={loading} disabled={loading} type="submit">
-              Adicionar
+              Salvar
             </Button>
           </form>
         </Form>

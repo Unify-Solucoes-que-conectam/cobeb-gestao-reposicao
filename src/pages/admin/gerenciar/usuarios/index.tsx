@@ -1,4 +1,3 @@
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import axios from "@/lib/axios";
 import { ApiResponse } from "@/types/api-response";
@@ -8,6 +7,7 @@ import { SearchIcon, Shield } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
+import Loader from "@/components/custom/loader";
 import { Button } from "@/components/ui/button";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import {
@@ -20,7 +20,6 @@ import {
 } from "@/components/ui/select";
 import { useHeader } from "@/hooks/use-header";
 import GerenciarUsuario from "./components/gerenciar-usuario";
-import Loader from "@/components/custom/loader";
 
 export default function UserManagement() {
 
@@ -114,7 +113,7 @@ export default function UserManagement() {
 
       {
         loading ? (
-          <Loader showMessage/>
+          <Loader showMessage />
         ) : (
           <div className="space-y-4">
             {
@@ -132,7 +131,8 @@ export default function UserManagement() {
                             <p className="text-xs text-muted-foreground">CPF: {formatCPF(user.cpf)}</p>
                           </div>
                         </div>
-                        <Badge variant="default">{user.role.charAt(0).toUpperCase() + user.role.slice(1)}</Badge>
+
+                        <GerenciarUsuario user={user} onSubmit={fetchUsers} />
                       </div>
                     </CardContent>
                   </Card>

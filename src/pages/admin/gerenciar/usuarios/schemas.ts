@@ -1,16 +1,38 @@
-import { z } from 'zod'
+import { z } from 'zod';
 
-export const schema = z.object({
+export const schema = (editing?: boolean) => z.object({
   tipo: z.enum(['monitoramento', 'motorista'], {
     message: 'O tipo é obrigatório',
   }),
   cpf: z.string().optional(),
   nome: z.string().min(1, 'O nome é obrigatório'),
-  senha: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres'),
-  confirmar_senha: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres'),
-})
+  senha: z.string().optional(),
+  confirmar_senha: z.string().optional(),
+}).refine(
+  (data) => {
+    if (!editing) {
+      return !!data.senha && data.senha.trim().length > 0
+    }
+    return true
+  },
+  {
+    message: 'A senha é obrigatória',
+    path: ['senha'],
+  }
+).refine(
+  (data) => {
+    if (!editing) {
+      return !!data.confirmar_senha && data.confirmar_senha.trim().length > 0
+    }
+    return true
+  },
+  {
+    message: 'A confirmação de senha é obrigatória',
+    path: ['confirmar_senha'],
+  }
+)
 
-export type Schema = z.infer<typeof schema>
+export type Schema = z.infer<ReturnType<typeof schema>>;
 
 export const password_validations = (
   senha: string,
