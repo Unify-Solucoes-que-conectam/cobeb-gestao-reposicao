@@ -1,6 +1,7 @@
 import { Separator } from '@/components/ui/separator'
 import { SidebarTrigger } from '@/components/ui/sidebar'
 import { useHeader } from '@/hooks/use-header'
+import React from 'react'
 import HeaderNotifications from './header-notifications'
 
 import {
@@ -26,14 +27,22 @@ export function AppHeader() {
           <Breadcrumb>
             <BreadcrumbList>
               {pageBreadcrumbs.map((breadcrumb, index) => (
-                <BreadcrumbItem key={index}>
-                  <BreadcrumbLink className='cursor-pointer' onClick={() => navigate(breadcrumb.href)}>
-                    <BreadcrumbPage>{breadcrumb.title}</BreadcrumbPage>
-                  </BreadcrumbLink>
+                <React.Fragment key={index}>
+                  <BreadcrumbItem>
+                    {
+                      index < pageBreadcrumbs.length - 1 ? (
+                        <BreadcrumbLink className='cursor-pointer' onClick={() => navigate(breadcrumb.href)}>
+                          {breadcrumb.title}
+                        </BreadcrumbLink>
+                      ) : (
+                        <BreadcrumbPage>{breadcrumb.title}</BreadcrumbPage>
+                      )
+                    }
+                  </BreadcrumbItem>
                   {index < pageBreadcrumbs.length - 1 && (
                     <BreadcrumbSeparator />
                   )}
-                </BreadcrumbItem>
+                </React.Fragment>
               ))}
             </BreadcrumbList>
           </Breadcrumb>
