@@ -11,13 +11,14 @@ import { CalendarIcon, ChevronDownIcon } from "lucide-react"
 import { useEffect, useState } from "react"
 
 interface DatePickerProps {
+  className?: string
   placeholder?: string
   minDate?: Date
   maxDate?: Date
   date?: Date
   onSelect?: (date: Date | undefined) => void
 }
-export function DatePicker({ placeholder, minDate, maxDate, date, onSelect }: DatePickerProps) {
+export function DatePicker({ className, placeholder, minDate, maxDate, date, onSelect }: DatePickerProps) {
 
   const [open, setOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(date);
@@ -32,7 +33,7 @@ export function DatePicker({ placeholder, minDate, maxDate, date, onSelect }: Da
         <Button
           variant="outline"
           data-empty={!selectedDate}
-          className="data-[empty=true]:text-muted-foreground w-53 justify-between text-left font-normal"
+          className={`data-[empty=true]:text-muted-foreground w-53 justify-between text-left font-normal ${className}`}
         >
           <div className="flex gap-3 items-center">
             <CalendarIcon />
@@ -54,6 +55,7 @@ export function DatePicker({ placeholder, minDate, maxDate, date, onSelect }: Da
           locale={ptBR}
           disabled={(date) => ((minDate && date < minDate) || (maxDate && date > maxDate)) ?? false}
           required
+          captionLayout="dropdown"
         />
       </PopoverContent>
     </Popover>

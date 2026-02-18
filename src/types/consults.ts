@@ -58,8 +58,10 @@ export type Contato = Base & {
 export type Motorista = Base & {
   codigo: string
   nome: string
-  status: string
+  cpf: string
+  status: "ativo" | "inativo"
   celular_corporativo: string
+  data_admissao: string
   filial: Filial
   cluster: Cluster
 }

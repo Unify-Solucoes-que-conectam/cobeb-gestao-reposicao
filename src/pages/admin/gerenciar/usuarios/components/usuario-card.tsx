@@ -72,7 +72,7 @@ export default function UserCard({ user, fetchUsers }: UserCardProps) {
             >
               <Tooltip content="Clique para remover" color="destructive">
                 <Button color="destructive" size="icon" loading={loading} disabled={loading}>
-                  <Trash2Icon />
+                  {!loading && <Trash2Icon />}
                 </Button>
               </Tooltip>
             </Alert>
