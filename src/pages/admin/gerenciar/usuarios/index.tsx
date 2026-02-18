@@ -1,9 +1,7 @@
-import { Card, CardContent } from "@/components/ui/card";
 import axios from "@/lib/axios";
 import { ApiResponse } from "@/types/api-response";
 import { Usuario } from "@/types/app";
-import { capitalizeName, formatCPF } from "@/utils/formatters";
-import { SearchIcon, Shield, TruckIcon } from "lucide-react";
+import { SearchIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -20,7 +18,7 @@ import {
 } from "@/components/ui/select";
 import { useHeader } from "@/hooks/use-header";
 import GerenciarUsuario from "./components/gerenciar-usuario";
-import { cn } from "@/lib/utils";
+import UserCard from "./components/user-card";
 
 export default function UserManagement() {
 
@@ -116,34 +114,7 @@ export default function UserManagement() {
           <div className="space-y-4">
             {
               users.length > 0 ? (
-                users.map((user) => (
-                  <Card key={user.id}>
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className={cn("w-10 h-10 rounded-full flex items-center justify-center", {
-                            "bg-primary/10": user.role === 'monitoramento',
-                            "bg-yellow-500/10": user.role === 'motorista'
-                          })}>
-                            {
-                              user.role === 'monitoramento' ? (
-                                <Shield className="h-5 w-5 text-primary" />
-                              ) : (
-                                <TruckIcon className="h-5 w-5 text-yellow-500" />
-                              )
-                            }
-                          </div>
-                          <div>
-                            <p className="font-medium">{capitalizeName(user.nome)}</p>
-                            <p className="text-xs text-muted-foreground">CPF: {formatCPF(user.cpf)}</p>
-                          </div>
-                        </div>
-
-                        <GerenciarUsuario user={user} onSubmit={fetchUsers} />
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))
+                users.map((user) => <UserCard key={user.id} user={user} fetchUsers={fetchUsers} />)
               ) : (
                 <div className="text-center py-8 text-muted-foreground">Nenhum usuário encontrado</div>
               )
