@@ -77,7 +77,7 @@ export default function UserManagement() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Usuários</h1>
-        <GerenciarUsuario />
+        <GerenciarUsuario onSubmit={fetchUsers}/>
       </div>
 
       <div className="flex justify-between items-center gap-3">
