@@ -15,6 +15,7 @@ import {
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input, PasswordInput } from "@/components/ui/input";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tooltip } from "@/components/ui/tooltip";
 import axios from "@/lib/axios";
 import { cn } from "@/lib/utils";
 import { ApiResponse } from "@/types/api-response";
@@ -140,10 +141,11 @@ export default function GerenciarUsuario({ user, onSubmit }: GerenciarUsuarioPro
               Novo Usuário
             </Button>
           ) : (
-            <Button color='warning'>
-              <Edit2Icon className="h-4 w-4 mr-2" />
-              Editar
-            </Button>
+            <Tooltip content="Clique para editar" color="warning">
+              <Button color='warning' size="icon">
+                <Edit2Icon />
+              </Button>
+            </Tooltip>
           )
         }
       </DialogTrigger>
@@ -186,7 +188,7 @@ export default function GerenciarUsuario({ user, onSubmit }: GerenciarUsuarioPro
                   <FormLabel required>Nome</FormLabel>
 
                   <FormControl>
-                    <Input 
+                    <Input
                       value={field.value || ''}
                       onChange={(e) => field.onChange(e.target.value)}
                       placeholder='Digite seu nome'
