@@ -126,6 +126,7 @@ export default function GerenciarUsuario({ user, onSubmit }: GerenciarUsuarioPro
   const userExists = form.watch('cpf');
 
   useEffect(() => {
+    if (!open) return;
     if (form.getValues('cpf').length === 11) findUser();
   }, [userExists])
 
