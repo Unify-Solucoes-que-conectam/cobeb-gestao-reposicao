@@ -47,7 +47,7 @@ export default function GerenciarUsuario({ user, onSubmit }: GerenciarUsuarioPro
       nome: capitalizeName(user?.nome || ''),
       senha: '',
       confirmar_senha: '',
-      tipo: user?.role || 'monitoramento',
+      role: user?.role || 'monitoramento',
     },
     mode: 'onSubmit',
   })
@@ -154,7 +154,7 @@ export default function GerenciarUsuario({ user, onSubmit }: GerenciarUsuarioPro
 
             <FormField
               control={form.control}
-              name='tipo'
+              name='role'
               render={({ field }) => (
                 <FormItem>
                   <FormLabel required>Tipo</FormLabel>

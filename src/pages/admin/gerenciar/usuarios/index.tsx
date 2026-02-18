@@ -3,7 +3,7 @@ import axios from "@/lib/axios";
 import { ApiResponse } from "@/types/api-response";
 import { Usuario } from "@/types/app";
 import { capitalizeName, formatCPF } from "@/utils/formatters";
-import { SearchIcon, Shield } from "lucide-react";
+import { SearchIcon, Shield, TruckIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import { useHeader } from "@/hooks/use-header";
 import GerenciarUsuario from "./components/gerenciar-usuario";
+import { cn } from "@/lib/utils";
 
 export default function UserManagement() {
 
@@ -120,8 +121,17 @@ export default function UserManagement() {
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full flex items-center justify-center bg-primary/10">
-                            <Shield className="h-5 w-5 text-primary" />
+                          <div className={cn("w-10 h-10 rounded-full flex items-center justify-center", {
+                            "bg-primary/10": user.role === 'monitoramento',
+                            "bg-yellow-500/10": user.role === 'motorista'
+                          })}>
+                            {
+                              user.role === 'monitoramento' ? (
+                                <Shield className="h-5 w-5 text-primary" />
+                              ) : (
+                                <TruckIcon className="h-5 w-5 text-yellow-500" />
+                              )
+                            }
                           </div>
                           <div>
                             <p className="font-medium">{capitalizeName(user.nome)}</p>

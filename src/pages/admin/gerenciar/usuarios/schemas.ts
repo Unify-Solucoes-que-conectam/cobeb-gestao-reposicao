@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const schema = (editing?: boolean) => z.object({
-  tipo: z.enum(['monitoramento', 'motorista'], {
+  role: z.enum(['monitoramento', 'motorista'], {
     message: 'O tipo é obrigatório',
   }),
   cpf: z.string().min(1, 'O CPF é obrigatório').refine(
