@@ -45,15 +45,12 @@ export default function UserManagement() {
       { title: "Gerenciar", href: "#" },
       { title: "Usuários", href: "/admin/gerenciar/usuarios" }
     ]);
-
-    fetchUsers();
   }, []);
 
   useEffect(() => { fetchUsers() }, [filters]);
 
   const fetchUsers = async () => {
     try {
-
       setLoading(true);
 
       const response = await axios.get<ApiResponse<Usuario[]>>('/usuarios', {
