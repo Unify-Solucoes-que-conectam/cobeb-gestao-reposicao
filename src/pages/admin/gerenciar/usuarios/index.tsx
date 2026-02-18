@@ -10,7 +10,7 @@ import { useHeader } from "@/hooks/use-header";
 import GerenciarUsuario from "./components/gerenciar-usuario";
 import UserCard from "./components/user-card";
 
-export default function UserManagement() {
+export default function AdminUsuarios() {
 
   // =============== STATES ===============
   const [users, setUsers] = useState<Usuario[]>([]);
