@@ -16,7 +16,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Avaria } from "@/types/consults";
 import { ArrowDownUpIcon, ArrowRightLeftIcon, Building2Icon, SearchIcon, SquaresSubtractIcon, Trash2Icon } from "lucide-react";
-import AvariaCard from "../components/avaria-card";
+import AvariaCard from "./components/avaria-card";
 import { avarias_demo } from "./avarias-demo";
 
 interface Dashboard {
