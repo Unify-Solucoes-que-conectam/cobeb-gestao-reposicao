@@ -125,7 +125,7 @@ const tooltipVariants = cva(
 
 function TooltipContent({
   className,
-  color,
+  color = "default",
   size,
   sideOffset = 0,
   children,
@@ -146,7 +146,7 @@ function TooltipContent({
         {children}
         <TooltipPrimitive.Arrow className={cn("z-50 size-2.5 translate-y-[calc(-50%-2px)] rotate-45 rounded-[2px]", {
           "bg-primary fill-primary": color === 'default',
-          "bg-red-500 fill-destructive": color === 'destructive',
+          "bg-red-500 fill-red-500": color === 'destructive',
           "bg-green-500 fill-green-500": color === 'success',
           "bg-yellow-500 fill-yellow-500": color === 'warning',
           "bg-blue-500 fill-blue-500": color === 'info',
