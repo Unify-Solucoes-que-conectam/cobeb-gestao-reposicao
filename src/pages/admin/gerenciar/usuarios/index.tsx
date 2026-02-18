@@ -103,7 +103,7 @@ export default function UserManagement() {
             <SelectGroup>
               <SelectItem value="todos">Todos</SelectItem>
               <SelectItem value="monitoramento">Monitoramento</SelectItem>
-              <SelectItem value="motoristas">Motoristas</SelectItem>
+              <SelectItem value="motorista">Motoristas</SelectItem>
             </SelectGroup>
           </SelectContent>
         </Select>
