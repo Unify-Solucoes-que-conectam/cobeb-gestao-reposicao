@@ -44,7 +44,7 @@ export default function GerenciarUsuario({ user, onSubmit }: GerenciarUsuarioPro
     resolver: zodResolver(schema(!!user)),
     defaultValues: {
       cpf: user?.cpf || '',
-      nome: user?.nome || '',
+      nome: capitalizeName(user?.nome || ''),
       senha: '',
       confirmar_senha: '',
       tipo: user?.role || 'monitoramento',
@@ -185,7 +185,12 @@ export default function GerenciarUsuario({ user, onSubmit }: GerenciarUsuarioPro
                   <FormLabel required>Nome</FormLabel>
 
                   <FormControl>
-                    <Input value={capitalizeName(field.value) || ''} onChange={(e) => field.onChange(e.target.value.toLowerCase())} placeholder='Digite seu nome' className='h-12' />
+                    <Input 
+                      value={field.value || ''}
+                      onChange={(e) => field.onChange(e.target.value)}
+                      placeholder='Digite seu nome'
+                      className='h-12'
+                    />
                   </FormControl>
 
                   <FormMessage />
