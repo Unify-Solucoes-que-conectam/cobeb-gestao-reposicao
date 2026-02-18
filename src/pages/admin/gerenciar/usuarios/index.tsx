@@ -8,7 +8,7 @@ import Loader from "@/components/custom/loader";
 import SearchPanel from "@/components/custom/search-panel";
 import { useHeader } from "@/hooks/use-header";
 import GerenciarUsuario from "./components/gerenciar-usuario";
-import UserCard from "./components/user-card";
+import UserCard from "./components/usuario-card";
 
 export default function AdminUsuarios() {
 
