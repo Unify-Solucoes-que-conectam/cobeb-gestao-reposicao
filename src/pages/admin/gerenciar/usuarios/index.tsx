@@ -1,21 +1,11 @@
 import axios from "@/lib/axios";
 import { ApiResponse } from "@/types/api-response";
 import { Usuario } from "@/types/app";
-import { SearchIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import Loader from "@/components/custom/loader";
-import { Button } from "@/components/ui/button";
-import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select";
+import SearchPanel from "@/components/custom/search-panel";
 import { useHeader } from "@/hooks/use-header";
 import GerenciarUsuario from "./components/gerenciar-usuario";
 import UserCard from "./components/user-card";
@@ -31,7 +21,7 @@ export default function UserManagement() {
 
   // =============== FILTERS  ===============
   const [filters, setFilters] = useState({
-    nome: '',
+    busca: '',
     role: 'todos'
   });
 
@@ -46,7 +36,7 @@ export default function UserManagement() {
     ]);
   }, []);
 
-  useEffect(() => { fetchUsers() }, [filters]);
+  useEffect(() => { fetchUsers() }, [filters.role]);
 
   const fetchUsers = async () => {
     try {
@@ -54,7 +44,7 @@ export default function UserManagement() {
 
       const response = await axios.get<ApiResponse<Usuario[]>>('/usuarios', {
         params: {
-          nome: filters.nome,
+          search: filters.busca,
           role: filters.role === 'todos' ? undefined : filters.role
         }
       });
@@ -77,35 +67,23 @@ export default function UserManagement() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Usuários</h1>
-        <GerenciarUsuario onSubmit={fetchUsers}/>
+        <GerenciarUsuario onSubmit={fetchUsers} />
       </div>
 
-      <div className="flex justify-between items-center gap-3">
-        <InputGroup className="h-10">
-          <InputGroupInput onKeyDown={(key) => ['Enter', 'NumpadEnter'].includes(key.code) && fetchUsers()} placeholder="Search..." value={filters.nome} onChange={(e) => setFilters((prev) => ({ ...prev, nome: e.target.value }))} />
-          <InputGroupAddon>
-            <SearchIcon />
-          </InputGroupAddon>
-          <InputGroupAddon align="inline-end">{users.length} {users.length === 1 ? "resultado" : "resultados"}</InputGroupAddon>
-        </InputGroup>
-
-        <Button size="icon" onClick={() => fetchUsers()}>
-          <SearchIcon />
-        </Button>
-
-        <Select defaultValue="todos" onValueChange={(value) => setFilters((prev) => ({ ...prev, role: value }))}>
-          <SelectTrigger className="w-45">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              <SelectItem value="todos">Todos</SelectItem>
-              <SelectItem value="monitoramento">Monitoramento</SelectItem>
-              <SelectItem value="motorista">Motoristas</SelectItem>
-            </SelectGroup>
-          </SelectContent>
-        </Select>
-      </div>
+      <SearchPanel
+        total={users.length}
+        placeholder="Pesquise usuários pelo nome ou cpf"
+        search={filters.busca}
+        onSearchChange={(search) => setFilters({ ...filters, busca: search })}
+        defaultFilter={filters.role}
+        filters={[
+          { label: "Todos", value: "todos" },
+          { label: "Monitoramento", value: "monitoramento" },
+          { label: "Motoristas", value: "motorista" }
+        ]}
+        onFilterChange={(newFilters) => setFilters({ ...filters, role: newFilters[0].value })}
+        fetchData={fetchUsers}
+      />
 
       {
         loading ? (
