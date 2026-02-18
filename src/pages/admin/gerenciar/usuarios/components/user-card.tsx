@@ -1,15 +1,16 @@
 import Alert from "@/components/custom/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Tooltip } from "@/components/ui/tooltip";
 import axios from "@/lib/axios";
 import { cn } from "@/lib/utils";
+import { ApiResponse } from "@/types/api-response";
 import { Usuario } from "@/types/app";
 import { capitalizeName, formatCPF } from "@/utils/formatters";
-import { ShieldIcon, TruckIcon } from "lucide-react";
+import { ShieldIcon, Trash2Icon, TruckIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import GerenciarUsuario from "./gerenciar-usuario";
-import { ApiResponse } from "@/types/api-response";
 
 interface UserCardProps {
   user: Usuario;
@@ -69,9 +70,11 @@ export default function UserCard({ user, fetchUsers }: UserCardProps) {
                 onClick: handleRemove
               }}
             >
-              <Button color="destructive" loading={loading} disabled={loading}>
-                Excluir
-              </Button>
+              <Tooltip content="Clique para remover" color="destructive">
+                <Button color="destructive" size="icon" loading={loading} disabled={loading}>
+                  <Trash2Icon />
+                </Button>
+              </Tooltip>
             </Alert>
             <GerenciarUsuario user={user} onSubmit={fetchUsers} />
           </div>
