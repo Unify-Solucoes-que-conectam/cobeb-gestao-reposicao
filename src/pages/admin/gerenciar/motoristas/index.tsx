@@ -36,7 +36,7 @@ export default function AdminMotoristas() {
     ]);
   }, []);
 
-  useEffect(() => { fetchDrivers() }, []);
+  useEffect(() => { fetchDrivers() }, [filters.status]);
 
   const fetchDrivers = async () => {
     try {
@@ -45,6 +45,7 @@ export default function AdminMotoristas() {
       const response = await axios.get<ApiResponse<Motorista[]>>('/motoristas', {
         params: {
           search: filters.busca,
+          status: filters.status !== 'todos' ? filters.status : undefined
         }
       });
       const { data } = response;
