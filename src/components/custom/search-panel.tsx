@@ -36,8 +36,9 @@ export default function SearchPanel({ total, placeholder, fetchData, search, onS
         <InputGroupAddon align="inline-end">{total || 0} {total === 1 ? "resultado" : "resultados"}</InputGroupAddon>
       </InputGroup>
 
-      <Button size="icon" onClick={() => fetchData()}>
+      <Button onClick={() => fetchData()}>
         <SearchIcon />
+        Buscar
       </Button>
 
       <Select defaultValue={defaultFilter} onValueChange={(value) => onFilterChange([{ ...filters.find(f => f.value === value)!, value }])}>
