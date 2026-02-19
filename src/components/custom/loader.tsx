@@ -10,8 +10,8 @@ interface LoaderProps {
 
 export default function Loader(props: LoaderProps) {
   return (
-    <div className={cn('w-full flex', props.className)}>
-      <div className='flex flex-col items-center justify-center mx-auto'>
+    <div className='w-full flex'>
+      <div className={cn('flex flex-col items-center justify-center mx-auto', props.className)}>
         <LoaderCircleIcon className='animate-spin' />
         {props.showMessage && <p>{props.message || 'Carregando...'}</p>}
       </div>

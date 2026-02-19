@@ -1,3 +1,5 @@
+import { DatePicker } from "@/components/custom/date-picker";
+import Loader from "@/components/custom/loader";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -21,7 +23,6 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { defaultValues, schema, Schema } from "../schemas";
-import { DatePicker } from "@/components/custom/date-picker";
 
 interface GerenciarMotoristaProps {
   driver?: Motorista
@@ -344,19 +345,23 @@ export default function GerenciarMotorista({ driver, onSubmit }: GerenciarMotori
                     <Select
                       defaultValue={field.value ? String(field.value) : ""}
                       onValueChange={(v) => field.onChange(v)}
+                      disabled={loading.filiais}
                     >
                       <SelectTrigger
                         loadingMessage="Carregando Filiais"
                         className="w-full truncate h-12!"
                       >
+                        {loading.filiais && <Loader className="mx-0 flex-row gap-3" showMessage message="Carregando filiais"/>}
                         <SelectValue placeholder="Selecione uma filial" />
                       </SelectTrigger>
                       <SelectContent>
-                        {filiais.map((filial) => (
-                          <SelectItem key={filial.id} value={String(filial.id)}>
-                            {filial.descricao}
-                          </SelectItem>
-                        ))}
+                        {
+                          !loading.filiais && filiais.map((filial) => (
+                            <SelectItem key={filial.id} value={String(filial.id)}>
+                              {filial.descricao}
+                            </SelectItem>
+                          ))
+                        }
                       </SelectContent>
                     </Select>
                   </FormControl>
@@ -376,19 +381,25 @@ export default function GerenciarMotorista({ driver, onSubmit }: GerenciarMotori
                     <Select
                       defaultValue={field.value ? String(field.value) : ""}
                       onValueChange={(v) => field.onChange(v)}
+                      disabled={loading.clusters}
                     >
                       <SelectTrigger
                         loadingMessage="Carregando Clusters"
                         className="w-full truncate h-12!"
                       >
+                        {loading.clusters && <Loader className="mx-0 flex-row gap-3" showMessage message="Carregando clusters"/>}
                         <SelectValue placeholder="Selecione um cluster" />
                       </SelectTrigger>
                       <SelectContent>
-                        {clusters.map((cluster) => (
-                          <SelectItem key={cluster.id} value={String(cluster.id)}>
-                            {cluster.descricao}
-                          </SelectItem>
-                        ))}
+                        {
+                          !loading.clusters && (
+                            clusters.map((cluster) => (
+                              <SelectItem key={cluster.id} value={String(cluster.id)}>
+                                {cluster.descricao}
+                              </SelectItem>
+                            ))
+                          )
+                        }
                       </SelectContent>
                     </Select>
                   </FormControl>
