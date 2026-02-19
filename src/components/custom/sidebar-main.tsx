@@ -1,8 +1,9 @@
-import { useNavigate } from 'react-router'
+import { ChevronRight, LoaderCircle } from "lucide-react";
 
+import { Badge } from "@/components/ui/badge";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   SidebarGroup,
-  SidebarGroupContent,
   SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
@@ -10,74 +11,102 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
-} from '@/components/ui/sidebar'
-import { Menu } from '@/types/app'
-import DynamicIcon from './dynamic-icon'
+  useSidebar,
+} from "@/components/ui/sidebar";
+import { useAuth } from "@/hooks/use-auth";
+import { Menu } from "@/types/app";
+import DynamicIcon from "./dynamic-icon";
+import dayjs from "@/lib/dayjs";
+import { Link } from "react-router";
+import { cn } from "@/lib/utils";
 
-export function SidebarMain({
-  items,
-}: {
-  items: Menu[]
-}) {
-  const navigate = useNavigate()
+export const SidebarMain = () => {
 
-  const renderSubMenuItems = (menuItems: Menu[]) =>
-    [...menuItems]
-      .sort((a, b) => a.ordem - b.ordem)
-      .map((item) => {
-        const hasSubMenus = item.sub_menus && item.sub_menus.length > 0
+  const { open } = useSidebar();
+  const { loading, menus } = useAuth();
 
-        return (
-          <SidebarMenuSubItem key={item.id ?? item.titulo}>
-            <SidebarMenuSubButton asChild>
-              <button
-                className='w-full'
-                type='button'
-                onClick={() => item.rota && navigate(item.rota)}
-              >
-                {item.icone && <DynamicIcon iconName={item.icone} />}
-                <span>{item.titulo}</span>
-              </button>
-            </SidebarMenuSubButton>
+  if (!menus) return;
 
-            {hasSubMenus && (
-              <SidebarMenuSub>{renderSubMenuItems(item.sub_menus)}</SidebarMenuSub>
-            )}
-          </SidebarMenuSubItem>
-        )
-      })
+  const recursiveMenu = (menu: Menu) => {
+    if (menu.sub_menus && menu.sub_menus.length > 0) {
+      return (
+        <Collapsible key={menu.id} asChild className="group/collapsible">
+          <SidebarMenuItem>
+            <CollapsibleTrigger asChild>
+              <SidebarMenuButton openOnClick tooltip={menu.titulo}>
+                {menu.icone && <DynamicIcon iconName={menu.icone} />}
 
-  const renderMenuItems = (menuItems: Menu[]) =>
-    [...menuItems]
-      .sort((a, b) => a.ordem - b.ordem)
-      .map((item, index) => {
-        const hasSubMenus = item.sub_menus && item.sub_menus.length > 0
+                <div className="flex items-center justify-between gap-1 flex-1 min-w-0">
+                  <span
+                    className="text-ellipsis whitespace-nowrap overflow-hidden min-w-0"
+                    title={menu.titulo}
+                  >
+                    {menu.titulo}
+                  </span>
 
-        return (
-          <SidebarMenuItem key={item.id ?? index}>
-            <SidebarMenuButton
-              tooltip={item.titulo}
-              onClick={() => item.rota && navigate(item.rota)}
-            >
-              {item.icone && <DynamicIcon iconName={item.icone} />}
-              <span>{item.titulo}</span>
-            </SidebarMenuButton>
+                  {dayjs().diff(dayjs(menu.created_at), "day") < 5 && (
+                    <Badge className="text-[0.55rem] px-1 shrink-0">
+                      Novo
+                    </Badge>
+                  )}
+                </div>
 
-            {hasSubMenus && (
-              <SidebarMenuSub>{renderSubMenuItems(item.sub_menus)}</SidebarMenuSub>
-            )}
+                <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+              </SidebarMenuButton>
+            </CollapsibleTrigger>
+
+            <CollapsibleContent>
+              <SidebarMenuSub>
+                {menu.sub_menus.map((submenu) => recursiveMenu(submenu))}
+              </SidebarMenuSub>
+            </CollapsibleContent>
           </SidebarMenuItem>
-        )
-      })
+        </Collapsible>
+      );
+    }
+
+    return (
+      <SidebarMenuSubItem key={menu.id}>
+        <SidebarMenuSubButton asChild>
+          <Link to={menu.rota || "#"}>
+            {menu.icone && <DynamicIcon iconName={menu.icone} />}
+
+            <div className="flex items-center justify-between gap-1 flex-1 min-w-0">
+              <span
+                className="text-ellipsis whitespace-nowrap overflow-hidden min-w-0"
+                title={menu.titulo}
+              >
+                {menu.titulo}
+              </span>
+
+              {dayjs().diff(dayjs(menu.created_at), "day") < 5 && (
+                <Badge className="text-[0.55rem] px-1 shrink-0">
+                  Novo
+                </Badge>
+              )}
+            </div>
+          </Link>
+        </SidebarMenuSubButton>
+      </SidebarMenuSubItem>
+    );
+  };
+
+  if (loading) {
+    return (
+      <div className="flex flex-col gap-3 items-center justify-center w-full h-full">
+        <LoaderCircle
+          className={cn("animate-spin text-muted-foreground", open ? "w-12 h-12 " : "w-6 h-6")}
+        />
+        {open && "Carregando Menus..."}
+      </div>
+    );
+  }
 
   return (
     <SidebarGroup>
       <SidebarGroupLabel>Menus</SidebarGroupLabel>
-      <SidebarGroupContent className='flex flex-col gap-2'>
-        <SidebarMenu>
-          {renderMenuItems(items)}
-        </SidebarMenu>
-      </SidebarGroupContent>
+
+      <SidebarMenu>{menus.map((menu) => recursiveMenu(menu))}</SidebarMenu>
     </SidebarGroup>
-  )
-}
+  );
+};
