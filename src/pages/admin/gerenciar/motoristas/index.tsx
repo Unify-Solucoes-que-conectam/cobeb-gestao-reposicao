@@ -6,15 +6,24 @@ import { toast } from "sonner";
 import Loader from "@/components/custom/loader";
 import SearchPanel from "@/components/custom/search-panel";
 import { useHeader } from "@/hooks/use-header";
-import { Motorista } from "@/types/consults";
+import { Cluster, Filial, Motorista } from "@/types/consults";
+import SelectFilterAddon from "./components/addons/select-filter";
 import GerenciarUsuario from "./components/gerenciar-motorista";
 import DriverCard from "./components/motorista-card";
 
 export default function AdminMotoristas() {
 
   // =============== STATES ===============
+  const [spinners, setSpinners] = useState({
+    geral: false,
+    filiais: false,
+    clusters: false,
+  });
+
+  // =============== DATA ===============
   const [drivers, setDrivers] = useState<Motorista[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [filiais, setFiliais] = useState<Filial[]>([]);
+  const [clusters, setClusters] = useState<Cluster[]>([]);
 
   // =============== HOOKS  ===============
   const { setPageBreadcrumbs } = useHeader();
@@ -22,7 +31,9 @@ export default function AdminMotoristas() {
   // =============== FILTERS  ===============
   const [filters, setFilters] = useState({
     busca: '',
-    status: 'ativo'
+    status: 'ativo',
+    filial: 'todos',
+    cluster: 'todos'
   });
 
   // =============== EFFECTS ===============
@@ -34,18 +45,22 @@ export default function AdminMotoristas() {
       { title: "Gerenciar", href: "#" },
       { title: "Motoristas", href: "/admin/gerenciar/motoristas" }
     ]);
-  }, []);
 
-  useEffect(() => { fetchDrivers() }, [filters.status]);
+    // carregar dados iniciais
+    fetchFiliais()
+    fetchClusters()
+  }, []);
 
   const fetchDrivers = async () => {
     try {
-      setLoading(true);
+      setSpinners((prev) => ({ ...prev, geral: true }));
 
       const response = await axios.get<ApiResponse<Motorista[]>>('/motoristas', {
         params: {
           search: filters.busca,
-          status: filters.status !== 'todos' ? filters.status : undefined
+          status: filters.status !== 'todos' ? filters.status : undefined,
+          filial: filters.filial !== 'todos' ? filters.filial : undefined,
+          cluster: filters.cluster !== 'todos' ? filters.cluster : undefined,
         }
       });
       const { data } = response;
@@ -59,7 +74,47 @@ export default function AdminMotoristas() {
       toast.error("Erro ao carregar motoristas");
       console.error("Error loading motoristas:", error);
     } finally {
-      setLoading(false);
+      setSpinners((prev) => ({ ...prev, geral: false }));
+    }
+  };
+
+  const fetchFiliais = async () => {
+    try {
+      setSpinners((prev) => ({ ...prev, filiais: true }));
+
+      const response = await axios.get<ApiResponse<Filial[]>>('/filiais');
+      const { data } = response;
+
+      if (data.success) {
+        setFiliais(data.data);
+      } else {
+        toast.error(data.message || "Erro ao carregar filiais");
+      }
+    } catch (error) {
+      toast.error("Erro ao carregar filiais");
+      console.error("Error loading filiais:", error);
+    } finally {
+      setSpinners((prev) => ({ ...prev, filiais: false }));
+    }
+  };
+
+  const fetchClusters = async () => {
+    try {
+      setSpinners((prev) => ({ ...prev, clusters: true }));
+
+      const response = await axios.get<ApiResponse<Cluster[]>>('/clusters');
+      const { data } = response;
+
+      if (data.success) {
+        setClusters(data.data);
+      } else {
+        toast.error(data.message || "Erro ao carregar clusters");
+      }
+    } catch (error) {
+      toast.error("Erro ao carregar clusters");
+      console.error("Error loading clusters:", error);
+    } finally {
+      setSpinners((prev) => ({ ...prev, clusters: false }));
     }
   };
 
@@ -77,16 +132,40 @@ export default function AdminMotoristas() {
         onSearchChange={(search) => setFilters({ ...filters, busca: search })}
         defaultFilter={filters.status}
         filters={[
-          { label: "Todos", value: "todos" },
+          { label: "Todos os status", value: "todos" },
           { label: "Ativos", value: "ativo" },
           { label: "Inativos", value: "inativo" }
         ]}
         onFilterChange={(newFilters) => setFilters({ ...filters, status: newFilters[0].value })}
         fetchData={fetchDrivers}
+        addons={
+          <div className="flex gap-3">
+            <SelectFilterAddon
+              disabled={spinners.filiais}
+              loading={spinners.filiais}
+              defaultFilter="todos"
+              filters={[
+                { label: "Todas as filiais", value: "todos" },
+                ...filiais.map(filial => ({ label: filial.descricao, value: filial.id }))
+              ]}
+              onFilterChange={(newFilters) => setFilters({ ...filters, filial: newFilters[0].value })}
+            />
+            <SelectFilterAddon
+              disabled={spinners.clusters}
+              loading={spinners.clusters}
+              defaultFilter="todos"
+              filters={[
+                { label: "Todos os clusters", value: "todos" },
+                ...clusters.map(cluster => ({ label: cluster.descricao, value: cluster.id }))
+              ]}
+              onFilterChange={(newFilters) => setFilters({ ...filters, cluster: newFilters[0].value })}
+            />
+          </div>
+        }
       />
 
       {
-        loading ? (
+        spinners.geral ? (
           <Loader showMessage />
         ) : (
           <div className="space-y-4">

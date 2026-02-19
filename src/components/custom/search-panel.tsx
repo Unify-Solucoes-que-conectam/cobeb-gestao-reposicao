@@ -24,8 +24,9 @@ interface SearchPanelProps {
   defaultFilter: string;
   filters: Filter[];
   onFilterChange: (filters: Filter[]) => void;
+  addons?: React.ReactElement;
 }
-export default function SearchPanel({ total, placeholder, fetchData, search, onSearchChange, defaultFilter, filters, onFilterChange }: SearchPanelProps) {
+export default function SearchPanel({ total, placeholder, fetchData, search, onSearchChange, defaultFilter, filters, onFilterChange, addons }: SearchPanelProps) {
   return (
     <div className="flex justify-between items-center gap-3">
       <InputGroup className="h-10">
@@ -55,6 +56,8 @@ export default function SearchPanel({ total, placeholder, fetchData, search, onS
           </SelectGroup>
         </SelectContent>
       </Select>
+
+      {addons}
     </div>
   )
 }
