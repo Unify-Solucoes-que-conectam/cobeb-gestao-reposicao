@@ -11,6 +11,7 @@ import { ShieldIcon, Trash2Icon, TruckIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import GerenciarUsuario from "./gerenciar-usuario";
+import PasswordChangerDialog from "@/components/custom/password-changer";
 
 interface UserCardProps {
   user: Usuario;
@@ -63,6 +64,7 @@ export default function UserCard({ user, fetchUsers }: UserCardProps) {
           </div>
 
           <div className="flex gap-3">
+            <PasswordChangerDialog user_id={user.id} onSuccess={fetchUsers} />
             <Alert
               title="Você tem certeza que deseja excluir este usuário?"
               description="Esta ação não pode ser desfeita."

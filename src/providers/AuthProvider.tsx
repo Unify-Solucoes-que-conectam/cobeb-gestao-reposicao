@@ -3,9 +3,10 @@ import { createContext, useEffect, useState, type ReactNode } from 'react'
 import { toast } from 'sonner'
 
 import axios from '@/lib/axios'
-import type { Schema } from '@/pages/auth/schemas'
+import type { Schema as SignUpSchema } from '@/pages/auth/schemas'
 import { ApiResponse } from '@/types/api-response'
 import { Menu, Usuario } from '@/types/app'
+import { Schema as ChangePasswordSchema } from '@/components/custom/password-changer/schemas'
 
 interface AuthState {
   user: Usuario | null
@@ -18,14 +19,13 @@ interface AuthContextType extends AuthState {
   setLoading: (loading: boolean) => void
   refreshAuth: () => Promise<void>
   signIn: (cpf: string, senha: string) => Promise<{ success: boolean; message: string }>
-  signUp: (signUpData: Schema) => Promise<{ success: boolean; message: string }>
+  signUp: (signUpData: SignUpSchema) => Promise<{ success: boolean; message: string }>
   signOut: () => Promise<void>
+  changePassword: (changePasswordData: ChangePasswordSchema) => Promise<{ success: boolean; message: string }>
   isAuthenticated: boolean
 }
 
 export const AuthContext = createContext<AuthContextType | null>(null)
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
 
 interface AuthProviderProps {
   children: ReactNode
@@ -54,7 +54,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       // Busca dados do usuário autenticado
       const userResponse = await axios.get<ApiResponse<{ usuario: Usuario; menus: Menu[] }>>(
-        `${API_URL}/auth/me`
+        '/auth/me'
       )
 
       if (!userResponse.data.success) {
@@ -104,7 +104,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       const response = await axios.post<
         ApiResponse<{ usuario: Usuario; token: string; menus: Menu[] }>
-      >(`${API_URL}/auth/login`, {
+      >('/auth/login', {
         cpf,
         senha
       })
@@ -131,7 +131,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const signOut = async () => {
     try {
-      const response = await axios.get<ApiResponse>(`${API_URL}/auth/logout`)
+      const response = await axios.get<ApiResponse>('/auth/logout')
 
       if (response.data.success) {
         window.location.href = '/auth/login'
@@ -148,9 +148,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }
 
-  const signUp = async (signUpData: Schema): Promise<{ success: boolean; message: string }> => {
+  const signUp = async (signUpData: SignUpSchema): Promise<{ success: boolean; message: string }> => {
     try {
-      const response = await axios.post<ApiResponse>(`${API_URL}/setup`, {
+      const response = await axios.post<ApiResponse>('/setup', {
         nome: signUpData.nome,
         cpf: signUpData.cpf,
         senha: signUpData.senha,
@@ -167,6 +167,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }
 
+  const changePassword = async (changePasswordData: ChangePasswordSchema): Promise<{ success: boolean; message: string }> => {
+    try {
+      const response = await axios.patch<ApiResponse>(`/usuarios/alterar-senha/${changePasswordData.id}`, {
+        senha: changePasswordData.senha,
+        confirmar_senha: changePasswordData.confirmar_senha,
+      })
+
+      const { message } = response.data
+      if (!response.data.success) throw new Error(message || 'Erro ao alterar a senha do usuário')
+
+      return response.data
+    } catch (error: any) {
+      return { success: false, message: error.message }
+    }
+  }
+
   const value: AuthContextType = {
     ...state,
     refreshAuth: loadAuthData,
@@ -174,6 +190,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     signIn,
     signUp,
     signOut,
+    changePassword,
     isAuthenticated: !!state.token && !!state.user,
   }
 
