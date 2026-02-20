@@ -49,6 +49,7 @@ export default function AdminMotoristas() {
     // carregar dados iniciais
     fetchFiliais()
     fetchClusters()
+    fetchDrivers()
   }, []);
 
   const fetchDrivers = async () => {
