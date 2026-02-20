@@ -162,8 +162,8 @@ export default function GerenciarUsuario({ user, onSubmit }: GerenciarUsuarioPro
                   <FormLabel required>Tipo</FormLabel>
 
                   <FormControl>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger>
+                    <Select disabled={!!user} value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger className="w-full">
                         <SelectValue placeholder="Tipo" />
                       </SelectTrigger>
                       <SelectContent>
@@ -173,27 +173,6 @@ export default function GerenciarUsuario({ user, onSubmit }: GerenciarUsuarioPro
                         </SelectGroup>
                       </SelectContent>
                     </Select>
-                  </FormControl>
-
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name='nome'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel required>Nome</FormLabel>
-
-                  <FormControl>
-                    <Input
-                      value={field.value || ''}
-                      onChange={(e) => field.onChange(e.target.value)}
-                      placeholder='Digite seu nome'
-                      className='h-12'
-                    />
                   </FormControl>
 
                   <FormMessage />
@@ -218,6 +197,28 @@ export default function GerenciarUsuario({ user, onSubmit }: GerenciarUsuarioPro
                         const onlyNumbers = e.target.value.replace(/\D/g, '')
                         field.onChange(onlyNumbers)
                       }}
+                      disabled={!!user}
+                    />
+                  </FormControl>
+
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name='nome'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel required>Nome</FormLabel>
+
+                  <FormControl>
+                    <Input
+                      value={field.value || ''}
+                      onChange={(e) => field.onChange(e.target.value)}
+                      placeholder='Digite seu nome'
+                      className='h-12'
                     />
                   </FormControl>
 

@@ -84,3 +84,17 @@ export type Cliente = Base & {
   pdv_ativo: boolean
   contatos: Contato[]
 }
+
+export type NotaFiscal = Base & {
+  codigo: string
+  pedido: string
+  mapa: string
+  cliente: Cliente
+  produtos: Produto[]
+  data_operacao: string
+  data_emissao: string
+  valor_bruto: number
+  total_desconto: number
+  valor_total: number
+  status: string
+}

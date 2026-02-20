@@ -223,27 +223,6 @@ export default function GerenciarMotorista({ driver, onSubmit }: GerenciarMotori
 
             <FormField
               control={form.control}
-              name='nome'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel required>Nome</FormLabel>
-
-                  <FormControl>
-                    <Input
-                      value={field.value || ''}
-                      onChange={(e) => field.onChange(e.target.value)}
-                      placeholder='Digite seu nome'
-                      className='h-12'
-                    />
-                  </FormControl>
-
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
               name='cpf'
               render={({ field }) => (
                 <FormItem>
@@ -259,6 +238,28 @@ export default function GerenciarMotorista({ driver, onSubmit }: GerenciarMotori
                         const onlyNumbers = e.target.value.replace(/\D/g, '')
                         field.onChange(onlyNumbers)
                       }}
+                      disabled={!!driver}
+                    />
+                  </FormControl>
+
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name='nome'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel required>Nome</FormLabel>
+
+                  <FormControl>
+                    <Input
+                      value={field.value || ''}
+                      onChange={(e) => field.onChange(e.target.value)}
+                      placeholder='Digite seu nome'
+                      className='h-12'
                     />
                   </FormControl>
 
