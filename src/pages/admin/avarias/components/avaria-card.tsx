@@ -116,9 +116,9 @@ export default function AvariaCard({ data }: AvariaCardProps) {
                   <span className="text-slate-500 truncate font-medium" title={p.descricao}>
                     {p.descricao}
                   </span>
-                  <span className="text-[10px] font-bold bg-white border border-slate-200 text-slate-500 px-1.5 py-0.5 rounded shrink-0">
+                  <Badge className="text-[10px] font-bold px-1.5 py-0.5 rounded shrink-0">
                     {p.quantidade} un
-                  </span>
+                  </Badge>
                 </div>
               ))}
               {remainingCount > 0 && (
@@ -132,8 +132,8 @@ export default function AvariaCard({ data }: AvariaCardProps) {
 
         {/* Coluna 2: Informações do Motorista */}
         <div className="flex items-start gap-3">
-          <div className="p-2 rounded-lg shrink-0">
-            <TruckIcon size={18} className="text-slate-600" />
+          <div className="p-2 bg-blue-50 rounded-lg shrink-0">
+            <TruckIcon size={18} className="text-blue-600" />
           </div>
           <div className="min-w-0">
             <p className="text-[10px] text-slate-400 uppercase font-bold mb-1.5 tracking-tight">{motorista.cluster.descricao}</p>

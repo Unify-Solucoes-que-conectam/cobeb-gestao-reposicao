@@ -95,8 +95,8 @@ export default function MapaCard({ data }: MapaCardProps) {
 
         {/* Coluna 2: Informações do Motorista */}
         <div className="flex items-start gap-3">
-          <div className="p-2 bg-neutral-100 rounded-lg shrink-0 ">
-            <TruckIcon size={18} className="text-slate-600" />
+          <div className="p-2 bg-blue-50 rounded-lg shrink-0 ">
+            <TruckIcon size={18} className="text-blue-600" />
           </div>
           <div className="">
             <p className="text-[10px] text-slate-400 uppercase font-bold tracking-tight">{motorista.cluster}</p>
