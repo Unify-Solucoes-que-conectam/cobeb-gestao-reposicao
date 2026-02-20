@@ -9,6 +9,7 @@ import { Trash2Icon, TruckIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import GerenciarMotorista from "./gerenciar-motorista";
+import { cn } from "@/lib/utils";
 
 interface DriverCardProps {
   driver: Motorista;
@@ -42,8 +43,14 @@ export default function DriverCard({ driver, fetchMotoristas }: DriverCardProps)
       <CardContent className="p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full flex items-center justify-center bg-yellow-500/10">
-              <TruckIcon className="h-5 w-5 text-yellow-500" />
+            <div className={cn("w-10 h-10 rounded-full flex items-center justify-center", {
+              "bg-yellow-500/10": driver.status === "ativo",
+              "bg-gray-500/10": driver.status === "inativo"
+            })}>
+              <TruckIcon className={cn("h-5 w-5", {
+                "text-yellow-500": driver.status === "ativo",
+                "text-gray-500": driver.status === "inativo"
+              })} />
             </div>
             <div className="flex flex-col">
               <p className="text-[10px] text-slate-600 uppercase font-bold tracking-tight">
