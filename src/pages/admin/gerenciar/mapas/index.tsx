@@ -50,7 +50,7 @@ export default function AdminUsuarios() {
       const response = await axios.get<ApiResponse<Mapa[]>>('/mapas', {
         params: {
           search: filters.busca,
-          filial: filters.filial !== 'todos' ? filters.filial : undefined,
+          filial: filters.filial !== 'todas' ? filters.filial : undefined,
         }
       });
       const { data } = response;
@@ -99,9 +99,9 @@ export default function AdminUsuarios() {
         placeholder="Pesquise mapas pelo nome ou código"
         search={filters.busca}
         onSearchChange={(search) => setFilters({ ...filters, busca: search })}
-        defaultFilter={""}
+        defaultFilter={"todas"}
         filters={[
-          { label: "Todas as filiais", value: "todos" },
+          { label: "Todas as filiais", value: "todas" },
           ...filiais.map(filial => ({ label: filial.descricao, value: filial.id }))
         ]}
         onFilterChange={(newFilters) => setFilters({ ...filters, filial: newFilters[0].value })}
