@@ -23,6 +23,7 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { defaultValues, schema, Schema } from "../schemas";
+import { useTheme } from "@/hooks/use-theme";
 
 interface GerenciarMotoristaProps {
   driver?: Motorista
@@ -32,6 +33,7 @@ export default function GerenciarMotorista({ driver, onSubmit }: GerenciarMotori
 
   // ============== HOOKS ==============
   const [open, setOpen] = useState(false);
+  const { theme } = useTheme();
 
   // ============== STATES ==============
   const [loading, setLoading] = useState({
@@ -187,8 +189,8 @@ export default function GerenciarMotorista({ driver, onSubmit }: GerenciarMotori
               Novo Motorista
             </Button>
           ) : (
-            <Tooltip content="Clique para editar" color="warning">
-              <Button color='warning' size="icon">
+            <Tooltip content="Clique para editar" color="warning" variant={ theme === 'dark' ? 'outline' : 'solid'}>
+              <Button color='warning' size="icon" variant={ theme === 'dark' ? 'outline' : 'solid'}>
                 <Edit2Icon />
               </Button>
             </Tooltip>

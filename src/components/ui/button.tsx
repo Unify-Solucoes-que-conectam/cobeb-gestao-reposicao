@@ -79,19 +79,19 @@ const buttonVariants = cva(
         variant: 'outline',
         color: 'destructive',
         class:
-          'border-red-200 text-red-700 hover:bg-red-50 hover:text-red-800 focus-visible:ring-red-500/20 dark:border-red-800 dark:text-red-300 dark:hover:bg-red-950 dark:hover:text-red-200 dark:focus-visible:ring-red-400/30',
+          'border-red-500 text-red-500 bg-red-50 hover:bg-red-50 hover:text-red-600 focus-visible:ring-red-500/20 dark:bg-red-500/10 dark:border-red-600 dark:text-red-500 dark:hover:bg-red-500/20 dark:hover:text-red-400 dark:focus-visible:ring-red-400/30',
       },
       {
         variant: 'outline',
         color: 'success',
         class:
-          'border-green-200 text-green-700 hover:bg-green-50 hover:text-green-800 focus-visible:ring-green-500/20 dark:border-green-800 dark:text-green-300 dark:hover:bg-green-950 dark:hover:text-green-200 dark:focus-visible:ring-green-400/30',
+          'border-green-500 text-green-500 bg-green-50 hover:bg-green-50 hover:text-green-600 focus-visible:ring-green-500/20 dark:bg-green-500/10 dark:border-green-600 dark:text-green-500 dark:hover:bg-green-500/20 dark:hover:text-green-200 dark:focus-visible:ring-green-400/30',
       },
       {
         variant: 'outline',
         color: 'warning',
         class:
-          'border-amber-200 text-amber-500 bg-amber-50 hover:bg-amber-50 hover:text-amber-600 focus-visible:ring-amber-500/20 dark:border-amber-800 dark:text-amber-300 dark:hover:bg-amber-950 dark:hover:text-amber-200 dark:focus-visible:ring-amber-400/30',
+          'border-yellow-500 text-yellow-500 bg-yellow-50 hover:bg-yellow-50 hover:text-yellow-600 focus-visible:ring-yellow-500/20 dark:bg-yellow-500/10 dark:border-yellow-600 dark:text-yellow-500 dark:hover:bg-yellow-500/20 dark:hover:text-yellow-200 dark:focus-visible:ring-yellow-400/30',
       },
       {
         variant: 'outline',
@@ -128,7 +128,7 @@ const buttonVariants = cva(
         variant: 'ghost',
         color: 'warning',
         class:
-          'text-amber-600 hover:bg-amber-50 hover:text-amber-700 focus-visible:ring-amber-500/20 dark:text-amber-400 dark:hover:bg-amber-950 dark:hover:text-amber-300 dark:focus-visible:ring-amber-400/30',
+          'text-yellow-600 hover:bg-yellow-50 hover:text-yellow-700 focus-visible:ring-yellow-500/20 dark:text-yellow-400 dark:hover:bg-yellow-950 dark:hover:text-yellow-300 dark:focus-visible:ring-yellow-400/30',
       },
       {
         variant: 'ghost',

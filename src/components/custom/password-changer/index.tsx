@@ -18,10 +18,13 @@ import Loader from '@/components/custom/loader'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Tooltip } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 import { password_validations } from '@/pages/admin/gerenciar/usuarios/schemas'
+import { KeyRoundIcon } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { schema, type Schema } from './schemas'
+import { useTheme } from '@/hooks/use-theme'
 
 interface PasswordChangerDialogProps {
   user_id: string;
@@ -45,6 +48,7 @@ export default function PasswordChangerDialog({
 
   // =============== HOOKS ===============
   const { changePassword, user, signOut, loading } = useAuth()
+  const { theme } = useTheme()
 
   // =============== STATES ===============
   const [spinner, setSpinner] = useState(false)
@@ -57,7 +61,7 @@ export default function PasswordChangerDialog({
       const { success, message } = await changePassword(data)
 
       if (success) {
-        
+
         // validando se o usuário que teve a senha alterada é o mesmo que está logado, para deslogar caso seja
         if (user?.id === user_id) {
           toast.warning(message || 'Sua senha foi alterada. Por favor, faça login novamente.')
@@ -97,9 +101,11 @@ export default function PasswordChangerDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
-          Alterar senha
-        </Button>
+        <Tooltip content="Clique para alterar a senha" color='warning' variant={ theme === 'dark' ? 'outline' : 'solid'}>
+          <Button variant={ theme === 'dark' ? 'outline' : 'solid'} color='warning' size="icon">
+            <KeyRoundIcon />
+          </Button>
+        </Tooltip>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>

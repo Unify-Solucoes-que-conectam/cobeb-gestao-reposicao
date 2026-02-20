@@ -10,6 +10,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import GerenciarMotorista from "./gerenciar-motorista";
 import { cn } from "@/lib/utils";
+import { useTheme } from "@/hooks/use-theme";
 
 interface DriverCardProps {
   driver: Motorista;
@@ -17,8 +18,13 @@ interface DriverCardProps {
 }
 export default function DriverCard({ driver, fetchMotoristas }: DriverCardProps) {
 
+  // ============== STATE ==============
   const [loading, setLoading] = useState(false);
 
+  // ============== HOOKS ==============
+  const { theme } = useTheme();
+
+  // ============== HANDLERS ==============
   const handleRemove = async () => {
     try {
       setLoading(true);
@@ -67,6 +73,7 @@ export default function DriverCard({ driver, fetchMotoristas }: DriverCardProps)
           </div>
 
           <div className="flex gap-3">
+            <GerenciarMotorista driver={driver} onSubmit={fetchMotoristas} />
             <Alert
               title="Você tem certeza que deseja excluir este motorista?"
               description="Esta ação não pode ser desfeita."
@@ -74,13 +81,12 @@ export default function DriverCard({ driver, fetchMotoristas }: DriverCardProps)
                 onClick: handleRemove
               }}
             >
-              <Tooltip content="Clique para remover" color="destructive">
-                <Button color="destructive" size="icon" loading={loading} disabled={loading}>
+              <Tooltip content="Clique para remover" color="destructive" variant={ theme === 'dark' ? 'outline' : 'solid'}>
+                <Button variant={ theme === 'dark' ? 'outline' : 'solid'} color="destructive" size="icon" loading={loading} disabled={loading}>
                   {!loading && <Trash2Icon />}
                 </Button>
               </Tooltip>
             </Alert>
-            <GerenciarMotorista driver={driver} onSubmit={fetchMotoristas} />
           </div>
         </div>
       </CardContent>

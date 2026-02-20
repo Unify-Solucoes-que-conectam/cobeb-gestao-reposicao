@@ -12,6 +12,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import GerenciarUsuario from "./gerenciar-usuario";
 import PasswordChangerDialog from "@/components/custom/password-changer";
+import { useTheme } from "@/hooks/use-theme";
 
 interface UserCardProps {
   user: Usuario;
@@ -19,8 +20,13 @@ interface UserCardProps {
 }
 export default function UserCard({ user, fetchUsers }: UserCardProps) {
 
+  // =============== HOOKS ===============
+  const { theme } = useTheme();
+
+  // =============== STATES ===============
   const [loading, setLoading] = useState(false);
 
+  // =============== HANDLERS ===============
   const handleRemove = async () => {
     try {
       setLoading(true);
@@ -64,6 +70,7 @@ export default function UserCard({ user, fetchUsers }: UserCardProps) {
           </div>
 
           <div className="flex gap-3">
+            <GerenciarUsuario user={user} onSubmit={fetchUsers} />
             <PasswordChangerDialog user_id={user.id} onSuccess={fetchUsers} />
             <Alert
               title="Você tem certeza que deseja excluir este usuário?"
@@ -72,13 +79,12 @@ export default function UserCard({ user, fetchUsers }: UserCardProps) {
                 onClick: handleRemove
               }}
             >
-              <Tooltip content="Clique para remover" color="destructive">
-                <Button color="destructive" size="icon" loading={loading} disabled={loading}>
+              <Tooltip content="Clique para remover" color="destructive" variant={ theme === 'dark' ? 'outline' : 'solid'}>
+                <Button variant={ theme === 'dark' ? 'outline' : 'solid'} color="destructive" size="icon" loading={loading} disabled={loading}>
                   {!loading && <Trash2Icon />}
                 </Button>
               </Tooltip>
             </Alert>
-            <GerenciarUsuario user={user} onSubmit={fetchUsers} />
           </div>
         </div>
       </CardContent>

@@ -27,6 +27,7 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { password_validations, schema, Schema } from "../schemas";
+import { useTheme } from "@/hooks/use-theme";
 
 interface GerenciarUsuarioProps {
   user?: Usuario
@@ -36,6 +37,7 @@ export default function GerenciarUsuario({ user, onSubmit }: GerenciarUsuarioPro
 
   // ============== HOOKS ==============
   const [open, setOpen] = useState(false);
+  const { theme } = useTheme();
 
   // ============== STATES ==============
   const [loading, setLoading] = useState(false)
@@ -54,7 +56,6 @@ export default function GerenciarUsuario({ user, onSubmit }: GerenciarUsuarioPro
   })
 
   // ============== HANDLERS ==============
-
   const handleSubmit = async (values: Schema) => {
     try {
 
@@ -141,8 +142,8 @@ export default function GerenciarUsuario({ user, onSubmit }: GerenciarUsuarioPro
               Novo Usuário
             </Button>
           ) : (
-            <Tooltip content="Clique para editar" color="warning">
-              <Button color='warning' size="icon">
+            <Tooltip content="Clique para editar" color="warning" variant={ theme === 'dark' ? 'outline' : 'solid'}>
+              <Button variant={ theme === 'dark' ? 'outline' : 'solid'} color='warning' size="icon">
                 <Edit2Icon />
               </Button>
             </Tooltip>
