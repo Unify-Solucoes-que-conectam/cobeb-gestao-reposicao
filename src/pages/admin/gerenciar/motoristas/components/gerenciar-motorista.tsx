@@ -69,7 +69,7 @@ export default function GerenciarMotorista({ driver, onSubmit }: GerenciarMotori
           toast.error(data.debug_errors?.cpf?.[0] || data.message || 'Erro ao editar motorista');
         }
       } else {
-        const response = await axios.post<ApiResponse>('/auth/register', values);
+        const response = await axios.post<ApiResponse>('/motoristas', values);
         const { data } = response;
 
         if (data.success) {
@@ -410,7 +410,7 @@ export default function GerenciarMotorista({ driver, onSubmit }: GerenciarMotori
               )}
             />
 
-            <Button className="w-full" loading={loading.geral} disabled={loading.geral || !form.formState.isDirty} type="submit">
+            <Button className="w-full" loading={loading.geral} disabled={loading.geral || !form.formState.isValid || !form.formState.isDirty} type="submit">
               Salvar
             </Button>
           </form>
