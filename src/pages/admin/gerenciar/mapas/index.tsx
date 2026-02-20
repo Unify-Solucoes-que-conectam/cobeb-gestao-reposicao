@@ -1,24 +1,128 @@
+import axios from "@/lib/axios";
+import { ApiResponse } from "@/types/api-response";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+
+import Loader from "@/components/custom/loader";
+import SearchPanel from "@/components/custom/search-panel";
 import { useHeader } from "@/hooks/use-header";
-import { useEffect } from "react";
+import { Filial, Mapa } from "@/types/consults";
+import MapaCard from "./components/mapa-card";
 
-export default function AdminMapas() {
+export default function AdminUsuarios() {
 
-  // =============== HOOKS   ===============
+  // =============== STATES ===============
+  const [maps, setMaps] = useState<Mapa[]>([]);
+  const [spinners, setSpinners] = useState({ geral: true, filiais: false });
+
+  // =============== HOOKS  ===============
   const { setPageBreadcrumbs } = useHeader();
 
+  // =============== FILTERS  ===============
+  const [filters, setFilters] = useState({
+    busca: '',
+    filial: 'todas',
+  });
+
+  // =============== DATA ===============
+  const [filiais, setFiliais] = useState<Filial[]>([]);
+
+  // =============== EFFECTS ===============
   useEffect(() => {
-    // definir título da página
+
+    // setar título da página
     setPageBreadcrumbs([
       { title: "Gerenciar", href: "#" },
       { title: "Mapas", href: "/admin/gerenciar/mapas" }
     ]);
-  }, [])
+  }, []);
+
+  useEffect(() => {
+    fetchMaps()
+    fetchFiliais()
+  }, []);
+
+  // =============== HANDLERS ===============
+  const fetchMaps = async () => {
+    try {
+      setSpinners((prev) => ({ ...prev, geral: true }));
+
+      const response = await axios.get<ApiResponse<Mapa[]>>('/mapas', {
+        params: {
+          search: filters.busca,
+          filial: filters.filial !== 'todos' ? filters.filial : undefined,
+        }
+      });
+      const { data } = response;
+
+      if (data.success) {
+        setMaps(data.data);
+      } else {
+        toast.error(data.message || "Erro ao carregar mapas");
+      }
+    } catch (error) {
+      toast.error("Erro ao carregar mapas");
+      console.error("Error loading mapas:", error);
+    } finally {
+      setSpinners((prev) => ({ ...prev, geral: false }));
+    }
+  };
+
+  const fetchFiliais = async () => {
+    try {
+      setSpinners((prev) => ({ ...prev, filiais: true }));
+
+      const response = await axios.get<ApiResponse<Filial[]>>('/filiais');
+      const { data } = response;
+
+      if (data.success) {
+        setFiliais(data.data);
+      } else {
+        toast.error(data.message || "Erro ao carregar filiais");
+      }
+    } catch (error) {
+      toast.error("Erro ao carregar filiais");
+      console.error("Error loading filiais:", error);
+    } finally {
+      setSpinners((prev) => ({ ...prev, filiais: false }));
+    }
+  };
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className='flex items-center'>
-        <h1 className='text-2xl font-bold'>Mapas</h1>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Mapas</h1>
       </div>
+
+      <SearchPanel
+        total={maps.length}
+        placeholder="Pesquise mapas pelo nome ou código"
+        search={filters.busca}
+        onSearchChange={(search) => setFilters({ ...filters, busca: search })}
+        defaultFilter={""}
+        filters={[
+          { label: "Todas as filiais", value: "todos" },
+          ...filiais.map(filial => ({ label: filial.descricao, value: filial.id }))
+        ]}
+        onFilterChange={(newFilters) => setFilters({ ...filters, filial: newFilters[0].value })}
+        fetchData={fetchMaps}
+      />
+
+      {
+        spinners.geral ? (
+          <Loader showMessage />
+        ) : (
+          <div className="space-y-4">
+            {
+              maps.length > 0 ? (
+                maps.map((mapa) => <MapaCard key={mapa.mapa} data={mapa} />)
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">Nenhum mapa encontrado</div>
+              )
+            }
+          </div>
+        )
+      }
     </div>
-  )
+  );
 }

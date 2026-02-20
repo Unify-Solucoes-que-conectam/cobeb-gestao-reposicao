@@ -98,3 +98,32 @@ export type NotaFiscal = Base & {
   valor_total: number
   status: string
 }
+
+export type Mapa = {
+  mapa: string
+  qntd_notas: number
+  qntd_clientes: number
+  motorista: {
+    id: string
+    codigo: string
+    nome: string
+    cluster: string
+    filial: string
+  }
+  clientes: {
+    id: string
+    nome: string
+    notas_fiscais: {
+      id: string
+      numero_nota: string
+      valor_total_nota: string
+      produtos: {
+        id: string
+        descricao: string
+        quantidade: number
+        valor_unitario: number
+        valor_total: number
+      }[]
+    }[]
+  }[]
+}
