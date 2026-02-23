@@ -96,8 +96,6 @@ export const IMPORTER_CONFIGS: ImporterConfig[] = [
       { header: "Categoria Código", key: "categoria_codigo", example: "CAT01" },
       { header: "Tipo Pessoa Código", key: "tipo_pessoa_codigo", example: "PJ" },
       { header: "PDV Ativo", key: "pdv_ativo", example: "S" },
-      { header: "Telefone", key: "telefone", example: "11999999999" },
-      { header: "Telefone Principal", key: "telefone_principal", example: "S" },
     ],
   },
   {
@@ -106,9 +104,8 @@ export const IMPORTER_CONFIGS: ImporterConfig[] = [
     tableName: "produtos",
     columns: [
       { header: "Código", key: "codigo", example: "PRD001" },
-      { header: "Nome", key: "nome", example: "Cerveja Pilsen 350ml" },
       { header: "Descrição", key: "descricao", example: "Cerveja tipo pilsen em lata" },
-      { header: "Quantidade", key: "quantidade", example: "12" },
+      { header: "Valor Unitário", key: "valor_unitario", example: "5.00" },
       { header: "Tipo Marca Código", key: "tipo_marca_codigo", example: "TM01" },
       { header: "Embalagem Código", key: "embalagem_codigo", example: "EMB01" },
       { header: "EAN", key: "ean", example: "7891234567890" },
@@ -127,7 +124,6 @@ export const IMPORTER_CONFIGS: ImporterConfig[] = [
       { header: "Data Admissão", key: "data_admissao", example: "2024-01-15" },
       { header: "Filial Código", key: "filial_codigo", example: "F001" },
       { header: "Cluster Código", key: "cluster_codigo", example: "C001" },
-      { header: "Senha", key: "senha", example: "" },
     ],
   },
   {
@@ -139,7 +135,7 @@ export const IMPORTER_CONFIGS: ImporterConfig[] = [
       { header: "Pedido", key: "pedido", example: "PED001" },
       { header: "Mapa", key: "mapa", example: "MAPA01" },
       { header: "Cliente Código", key: "cliente_codigo", example: "CLI001" },
-      { header: "Rota Nome", key: "rota_nome", example: "ROTA-01" },
+      { header: "Motorista Código", key: "motorista_codigo", example: "MOT001" },
       { header: "Data Operação", key: "data_operacao", example: "2024-01-15" },
       { header: "Data Emissão", key: "data_emissao", example: "2024-01-15" },
       { header: "Valor Bruto", key: "valor_bruto", example: "1500.00" },
