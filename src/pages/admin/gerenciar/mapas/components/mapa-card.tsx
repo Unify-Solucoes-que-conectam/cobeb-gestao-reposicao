@@ -22,11 +22,10 @@ interface MapaCardProps {
  */
 export default function MapaCard({ data }: MapaCardProps) {
   const {
-    clientes,
+    codigo,
     motorista,
-    mapa,
-    qntd_clientes,
-    qntd_notas
+    clientes,
+    notas_fiscais,
   } = data;
 
   // Limite de clientes a serem exibidos antes do "ver mais"
@@ -41,10 +40,10 @@ export default function MapaCard({ data }: MapaCardProps) {
         <CardTitle className='p-4 border-b border-neutral-100 dark:border-neutral-800'>
           <div className="flex items-center gap-2">
             <Badge className="text-[10px] font-bold p-1.5 rounded uppercase tracking-wider">
-              MAPA {mapa}
+              MAPA {codigo}
             </Badge>
             <h3 className="text-base font-bold dark:text-slate-400 truncate uppercase">
-              FILIAL {data.motorista.filial}
+              FILIAL {motorista.filial.descricao}
             </h3>
           </div>
         </CardTitle>
@@ -55,11 +54,11 @@ export default function MapaCard({ data }: MapaCardProps) {
           </span>
           <span className="flex items-center gap-1 text-slate-400">
             <UsersIcon size={14} className='text-slate-300'/>
-            <span className="font-semibold">{qntd_clientes}</span> Cliente(s)
+            <span className="font-semibold">{clientes.length}</span> Cliente(s)
           </span>
           <span className="flex items-center gap-1 text-slate-400">
             <FileTextIcon size={14} className='text-slate-300'/>
-            <span className="font-semibold">{qntd_notas}</span> {qntd_notas > 1 ? 'Notas Fiscais' : 'Nota Fiscal'}
+            <span className="font-semibold">{notas_fiscais.length}</span> {notas_fiscais.length > 1 ? 'Notas Fiscais' : 'Nota Fiscal'}
           </span>
         </CardDescription>
       </CardHeader>
@@ -72,15 +71,15 @@ export default function MapaCard({ data }: MapaCardProps) {
             <LayersIcon size={18} className="text-blue-600" />
           </div>
           <div className="min-w-0 w-full">
-            <p className="text-[10px] text-slate-400 uppercase font-bold tracking-tight">Clientes ({qntd_clientes})</p>
+            <p className="text-[10px] text-slate-400 uppercase font-bold tracking-tight">Clientes ({clientes.length})</p>
             <div className="space-y-1.5">
               {visibleClients.map((c, index) => (
                 <div key={index} className="flex justify-between items-center text-sm">
-                  <span className="text-slate-500 truncate font-medium" title={c.nome}>
-                    {c.nome}
+                  <span className="text-slate-500 truncate font-medium" title={c.nome_fantasia}>
+                    {c.nome_fantasia}
                   </span>
                   <Badge className="text-[10px] font-bold rounded">
-                    {c.notas_fiscais.length} NF{c.notas_fiscais.length > 1 ? 's' : ''}
+                    {notas_fiscais.length} NF{notas_fiscais.length > 1 ? 's' : ''}
                   </Badge>
                 </div>
               ))}
@@ -99,7 +98,7 @@ export default function MapaCard({ data }: MapaCardProps) {
             <TruckIcon size={18} className="text-blue-600" />
           </div>
           <div className="">
-            <p className="text-[10px] text-slate-400 uppercase font-bold tracking-tight">{motorista.cluster}</p>
+            <p className="text-[10px] text-slate-400 uppercase font-bold tracking-tight">{motorista.cluster.descricao}</p>
             <p className="text-sm font-medium text-slate-500 truncate">
               <span className="text-slate-400 font-normal mr-1">[{motorista.codigo}]</span>
               {motorista.nome}

@@ -115,7 +115,7 @@ export default function AdminUsuarios() {
           <div className="space-y-4">
             {
               maps.length > 0 ? (
-                maps.map((mapa) => <MapaCard key={mapa.mapa} data={mapa} />)
+                maps.map((mapa) => <MapaCard key={mapa.codigo} data={mapa} />)
               ) : (
                 <div className="text-center py-8 text-muted-foreground">Nenhum mapa encontrado</div>
               )

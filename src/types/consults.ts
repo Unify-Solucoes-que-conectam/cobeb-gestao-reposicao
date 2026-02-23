@@ -86,7 +86,7 @@ export type Cliente = Base & {
 }
 
 export type NotaFiscal = Base & {
-  codigo: string
+  numero: string
   pedido: string
   mapa: string
   cliente: Cliente
@@ -100,30 +100,10 @@ export type NotaFiscal = Base & {
 }
 
 export type Mapa = {
-  mapa: string
-  qntd_notas: number
-  qntd_clientes: number
-  motorista: {
-    id: string
-    codigo: string
-    nome: string
-    cluster: string
-    filial: string
-  }
-  clientes: {
-    id: string
-    nome: string
-    notas_fiscais: {
-      id: string
-      numero_nota: string
-      valor_total_nota: string
-      produtos: {
-        id: string
-        descricao: string
-        quantidade: number
-        valor_unitario: number
-        valor_total: number
-      }[]
-    }[]
-  }[]
+  codigo: string
+  status: "ativo" | "inativo"
+  motorista: Motorista
+  clientes: Cliente[]
+  notas_fiscais: Exclude<NotaFiscal, 'produtos' | 'cliente' | 'mapa'>[]
+  usuario_responsavel_id: string
 }
