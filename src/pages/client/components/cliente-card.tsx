@@ -56,7 +56,7 @@ export default function ClienteCard({
   }
 
   return (
-    <Card className="flex justify-between items-center" onClick={onClick}>
+    <Card className="flex justify-between items-center border-2 hover:border-primary cursor-pointer" onClick={onClick}>
       <CardHeader className="p-4">
         <CardTitle className="text-md">{cliente.nome_fantasia}</CardTitle>
         <CardDescription>Cód. {cliente.codigo}</CardDescription>
