@@ -132,7 +132,7 @@ export default function DetectClientCard({ clientes, detectedClient }: DetectCli
   const getLocationDescription = () => {
     if (spinners.localizacao) return "Por favor, aguarde enquanto detectamos sua localização.";
     if (!currentPosition) return "Ative a localização para encontrar clientes próximos.";
-    if (clientesProximos.length === 1) return 'Cliente detectado automaticamente';
+    if (clientesProximos.length === 1) return 'Cliente mais próximo de você.';
     if (clientesProximos.length > 0) return `Encontramos ${clientesProximos.length} cliente(s) próximo(s) de você.`;
     return "Nenhum cliente encontrado perto de você.";
   }
