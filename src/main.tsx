@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { RouterProvider } from 'react-router-dom'
 
 import { Toaster } from './components/ui/sonner'
+import { LogProvider } from './hooks/mobile/useLogger'
 import './index.css'
 import { AuthProvider } from './providers/AuthProvider'
 import ThemeProvider from './providers/ThemeProvider'
@@ -11,7 +12,9 @@ import router from './routes'
 createRoot(document.getElementById('root')!).render(
   <AuthProvider>
     <ThemeProvider defaultTheme='light' storageKey='theme'>
-      <RouterProvider router={router} />
+      <LogProvider>
+        <RouterProvider router={router} />
+      </LogProvider>
 
       <Toaster
         className='pointer-events-auto'

@@ -25,6 +25,7 @@ import { defaultValues, schema, type Schema } from './schemas'
 
 export default function AuthPage() {
 
+  // =========== EFFECTS ===========
   const params = new URLSearchParams(window.location.search)
 
   const form = useForm<Schema>({
@@ -44,6 +45,7 @@ export default function AuthPage() {
     return null
   }
 
+  // =========== HANDLERS ===========
   const handleSubmit = async (data: Schema) => {
     setSpinner(true)
     if (params.get('register') === 'true') {

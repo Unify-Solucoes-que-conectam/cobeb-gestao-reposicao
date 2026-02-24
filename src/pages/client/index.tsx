@@ -1,14 +1,14 @@
-import { useHeader } from "@/hooks/mobile/use-header"
-import { useAuth } from "@/hooks/use-auth";
-import { useEffect, useState } from "react"
-import DetectClientCard from "./components/detect-client-card";
-import { Cliente } from "@/types/consults";
-import { ApiResponse } from "@/types/api-response";
-import axios from "@/lib/axios";
-import { toast } from "sonner";
-import SearchPanel from "@/components/custom/search-panel";
-import ClienteCard from "./components/cliente-card";
 import Loader from "@/components/custom/loader";
+import SearchPanel from "@/components/custom/search-panel";
+import { useHeader } from "@/hooks/mobile/use-header";
+import { useAuth } from "@/hooks/use-auth";
+import axios from "@/lib/axios";
+import { ApiResponse } from "@/types/api-response";
+import { Cliente } from "@/types/consults";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import ClienteCard from "./components/cliente-card";
+import DetectClientCard from "./components/detect-client-card";
 
 export default function ClientHome() {
 
@@ -50,7 +50,6 @@ export default function ClientHome() {
         }
       });
       const { data } = response;
-
       if (data.success) {
         setClients(data.data);
       } else {
@@ -66,7 +65,7 @@ export default function ClientHome() {
 
   return (
     <div className="space-y-6">
-      <DetectClientCard clientes={clientes} detectedClient={(cliente) => setClienteSelecionado(cliente)}/>
+      <DetectClientCard clientes={clientes} detectedClient={(cliente) => setClienteSelecionado(cliente)} />
       <SearchPanel
         total={clientes.length}
         placeholder="Pesquise clientes pelo nome ou código"
@@ -81,7 +80,7 @@ export default function ClientHome() {
             <Loader />
           ) : (
             clienteSelecionado ? (
-              <ClienteCard key={clienteSelecionado.id} cliente={clienteSelecionado} selecionado={true} onClick={() => setClienteSelecionado(null)}/>
+              <ClienteCard key={clienteSelecionado.id} cliente={clienteSelecionado} selecionado={true} onClick={() => setClienteSelecionado(null)} />
             ) : (
               clientes.map((cliente) => <ClienteCard key={cliente.id} cliente={cliente} onClick={() => setClienteSelecionado(cliente)} />)
             )
