@@ -9,9 +9,12 @@ import { toast } from "sonner";
 
 interface DetectClientCardProps {
   clientes: Cliente[]
+  currentDetected?: Cliente | null
+  selected?: Cliente | null
+  onSelect?: (cliente: Cliente) => void
   detectedClient?: (cliente: Cliente) => void
 }
-export default function DetectClientCard({ clientes, detectedClient }: DetectClientCardProps) {
+export default function DetectClientCard({ clientes, currentDetected, selected, onSelect, detectedClient }: DetectClientCardProps) {
 
   // ============ APP MODE ===========
   // Para desenvolvimento, forçamos o modo web para testar a localização simulada do navegador.
@@ -26,6 +29,7 @@ export default function DetectClientCard({ clientes, detectedClient }: DetectCli
   // ========== HANDLERS
   const clientesProximos = useMemo(() => {
     if (!currentPosition) return [];
+    if (currentDetected) return [currentDetected]; // Se já detectou um cliente, não precisa calcular os próximos, só retorna ele mesmo
 
     return clientes.filter(cliente => {
       const distancia = calculateDistance(currentPosition.latitude, currentPosition.longitude, cliente.latitude, cliente.longitude);
@@ -100,10 +104,10 @@ export default function DetectClientCard({ clientes, detectedClient }: DetectCli
   }, [])
 
   useEffect(() => {
-    if (clientesProximos.length === 1 && detectedClient) {
+    if (clientesProximos.length === 1 && detectedClient && !currentDetected) {
       detectedClient(clientesProximos[0]);
     }
-  }, [clientesProximos, detectedClient])
+  }, [clientesProximos, detectedClient, currentDetected])
 
   useEffect(() => {
     if (navigator.permissions) {
@@ -124,21 +128,27 @@ export default function DetectClientCard({ clientes, detectedClient }: DetectCli
   const getLocationTitle = () => {
     if (spinners.localizacao) return "Detectando localização...";
     if (!currentPosition) return "Localização não detectada";
-    if (clientesProximos.length === 1) return clientesProximos[0].nome_fantasia;
+    if (clientesProximos.length === 1) return `[${clientesProximos[0].codigo}] ${clientesProximos[0].nome_fantasia}`;
     if (clientesProximos.length > 0) return "Clientes próximos encontrados!";
     return "Nenhum cliente próximo encontrado";
   }
 
   const getLocationDescription = () => {
-    if (spinners.localizacao) return "Por favor, aguarde enquanto detectamos sua localização.";
+    if (spinners.localizacao) return "Detecção de localização em andamento...";
     if (!currentPosition) return "Ative a localização para encontrar clientes próximos.";
-    if (clientesProximos.length === 1) return 'Cliente mais próximo de você.';
+    if (clientesProximos.length === 1) {
+      if (selected && selected.id === clientesProximos[0].id) {
+        return "Cliente mais próximo selecionado automaticamente.";
+      } else {
+        return "Cliente mais próximo, toque para selecionar.";
+      }
+    };
     if (clientesProximos.length > 0) return `Encontramos ${clientesProximos.length} cliente(s) próximo(s) de você.`;
     return "Nenhum cliente encontrado perto de você.";
   }
 
   return (
-    <Card className="flex items-center">
+    <Card className="flex items-center" onClick={() => onSelect && onSelect(clientesProximos[0])}>
       <CardHeader className="p-4">
         <div className={cn(
           "size-12 flex items-center justify-center rounded-full p-2",

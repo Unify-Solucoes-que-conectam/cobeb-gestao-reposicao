@@ -17,6 +17,7 @@ export default function ClientHome() {
   const { user } = useAuth();
 
   // ============ STATES ===========
+  const [switched, setSwitched] = useState(false);
   const [spinners, setSpinners] = useState({
     geral: false,
   });
@@ -29,6 +30,7 @@ export default function ClientHome() {
   // ============ DATA ===========
   const [clientes, setClients] = useState<Cliente[]>([]);
   const [clienteSelecionado, setClienteSelecionado] = useState<Cliente | null>(null);
+  const [clienteDetectado, setClienteDetectado] = useState<Cliente | null>(null);
 
   // ============ EFFECTS ===========
   useEffect(() => {
@@ -65,7 +67,12 @@ export default function ClientHome() {
 
   return (
     <div className="space-y-6">
-      <DetectClientCard clientes={clientes} detectedClient={(cliente) => setClienteSelecionado(cliente)} />
+      <DetectClientCard clientes={clientes} selected={clienteSelecionado} onSelect={(cliente) => !clienteSelecionado && setClienteSelecionado(cliente)} currentDetected={clienteDetectado} detectedClient={(cliente) => {
+        if (!switched) {
+          setClienteSelecionado(cliente)
+          setClienteDetectado(cliente);
+        }
+      }} />
       <SearchPanel
         total={clientes.length}
         placeholder="Pesquise clientes pelo nome ou código"
@@ -80,7 +87,10 @@ export default function ClientHome() {
             <Loader />
           ) : (
             clienteSelecionado ? (
-              <ClienteCard key={clienteSelecionado.id} cliente={clienteSelecionado} selecionado={true} onClick={() => setClienteSelecionado(null)} />
+              <ClienteCard key={clienteSelecionado.id} cliente={clienteSelecionado} selecionado={true} onClick={() => {
+                setClienteSelecionado(null)
+                setSwitched(true);
+              }} />
             ) : (
               clientes.map((cliente) => <ClienteCard key={cliente.id} cliente={cliente} onClick={() => setClienteSelecionado(cliente)} />)
             )
