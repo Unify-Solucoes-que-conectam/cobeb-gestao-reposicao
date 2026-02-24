@@ -1,19 +1,16 @@
 import { Base } from "./app"
 
 export type TiposAvaria = 'avariado' | 'faltante' | 'inversao'
-export type StatusAvaria = 'aguardando_analise' | 'em_analise' | 'concluido'
+export type StatusAvaria = 'pendente' | 'em_analise' | 'concluido'
 
-export type Avaria = {
-  mapa: string
-  motorista: Motorista
-  produto: Produto[]
-  cliente: Cliente
-  tipo: TiposAvaria
-  quantidade: number
-  data: string
-  nf: string
+export type Avaria = Base & {
   status: StatusAvaria
-  imagens: string[]
+  mapa: Mapa
+  cliente: Cliente
+  notas_fiscais: NotaFiscal[]
+  produtos: Produto[]
+  anexos: Anexo[]
+  usuario_responsavel_id: string
 }
 
 export type Produto = Base & {
@@ -53,6 +50,10 @@ export type Categoria = Base & {
 export type Contato = Base & {
   tipo: string
   valor: string
+}
+
+export type Anexo = Base & {
+  path: string
 }
 
 export type Motorista = Base & {

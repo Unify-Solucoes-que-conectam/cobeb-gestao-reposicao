@@ -2,6 +2,7 @@ import { useHeader } from "@/hooks/use-header";
 import React, { useEffect, useState } from "react";
 
 import { DatePicker } from "@/components/custom/date-picker";
+import Loader from "@/components/custom/loader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
@@ -13,11 +14,14 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
+import axios from "@/lib/axios";
+import dayjs from "@/lib/dayjs";
 import { cn } from "@/lib/utils";
+import { ApiResponse } from "@/types/api-response";
 import { Avaria } from "@/types/consults";
 import { ArrowDownUpIcon, ArrowRightLeftIcon, Building2Icon, SearchIcon, SquaresSubtractIcon, Trash2Icon } from "lucide-react";
+import { toast } from "sonner";
 import AvariaCard from "./components/avaria-card";
-import { avarias_demo } from "./avarias-demo";
 
 interface Dashboard {
   total: number
@@ -26,21 +30,35 @@ interface Dashboard {
   className?: string
 }
 
+interface Filters {
+  busca: string
+  status: string
+  filial: string
+  dataInicial?: Date
+  dataFinal?: Date
+}
+
 export default function AdminAvarias() {
 
   // =============== HOOKS   ===============
   const { setPageBreadcrumbs } = useHeader();
 
   // ============== FILTERS ===============
-  const [fromDate, setFromDate] = useState<Date>();
-  const [toDate, setToDate] = useState<Date>();
+  const [filters, setFilters] = useState<Filters>({
+    busca: '',
+    status: 'todas',
+    filial: 'todas',
+    dataInicial: undefined,
+    dataFinal: undefined,
+  });
 
   // ============= STATES ===============
+  const [spinners, setSpinners] = useState({ geral: true });
   const [currentOrdenation, setCurrentOrdenation] = useState<"asc" | "desc">("asc");
 
   // =============== DADOS ===============
-  const [_avarias, _setAvarias] = useState<Avaria[]>(avarias_demo);
-  const [orderedAvarias, setOrderedAvarias] = useState<Avaria[]>(_avarias);
+  const [avarias, setAvarias] = useState<Avaria[]>([]);
+  const [orderedAvarias, setOrderedAvarias] = useState<Avaria[]>(avarias);
 
   useEffect(() => {
 
@@ -48,6 +66,8 @@ export default function AdminAvarias() {
     setPageBreadcrumbs([
       { title: "Avarias", href: "/admin/avarias" }
     ]);
+
+    fetchAvarias();
   }, [])
 
   const dashboards: Dashboard[] = [
@@ -71,10 +91,40 @@ export default function AdminAvarias() {
     },
   ]
 
+  // ============== HANDLERS ===============
+  const fetchAvarias = async () => {
+    try {
+      setSpinners((prev) => ({ ...prev, geral: true }));
+
+      const response = await axios.get<ApiResponse<Avaria[]>>('/avarias', {
+        params: {
+          search: filters.busca,
+          status: filters.status !== 'todas' ? filters.status : undefined,
+          filial: filters.filial !== 'todas' ? filters.filial : undefined,
+          dataInicial: filters.dataInicial ? dayjs(filters.dataInicial).toISOString() : undefined,
+          dataFinal: filters.dataFinal ? dayjs(filters.dataFinal).toISOString() : undefined,
+        }
+      });
+      const { data } = response;
+
+      if (data.success) {
+        setAvarias(data.data);
+        setOrderedAvarias(data.data);
+      } else {
+        toast.error(data.message || "Erro ao carregar avarias");
+      }
+    } catch (error) {
+      toast.error("Erro ao carregar avarias");
+      console.error("Error loading avarias:", error);
+    } finally {
+      setSpinners((prev) => ({ ...prev, geral: false }));
+    }
+  };
+
   // ============== FUNCTIONS ===============
 
   const order = (sortOrder: "asc" | "desc") => {
-    setOrderedAvarias(prev => [...prev].sort((a, b) => sortOrder === "asc" ? a.data.localeCompare(b.data) : b.data.localeCompare(a.data)))
+    setOrderedAvarias(prev => [...prev].sort((a, b) => sortOrder === "asc" ? a.created_at.localeCompare(b.created_at) : b.created_at.localeCompare(a.created_at)))
   }
 
   return (
@@ -124,21 +174,20 @@ export default function AdminAvarias() {
 
         <DatePicker
           placeholder="De"
-          date={fromDate}
-          onSelect={(date) => setFromDate(date)}
-          maxDate={toDate}
+          date={filters.dataInicial}
+          onSelect={(date) => setFilters((prev) => ({ ...prev, dataInicial: date }))}
+          maxDate={filters.dataFinal}
         />
         <DatePicker
           placeholder="Até"
-          date={toDate}
-          onSelect={(date) => setToDate(date)}
-          minDate={fromDate}
+          date={filters.dataFinal}
+          onSelect={(date) => setFilters((prev) => ({ ...prev, dataFinal: date }))}
+          minDate={filters.dataInicial}
         />
 
         <Button
           onClick={() => {
-            setFromDate(undefined)
-            setToDate(undefined)
+            setFilters((prev) => ({ ...prev, dataInicial: undefined, dataFinal: undefined }));
           }}
         >Limpar</Button>
 
@@ -154,31 +203,39 @@ export default function AdminAvarias() {
         </Button>
       </div>
 
-      <div className="flex gap-3">
-        {
-          dashboards.map((dash, index) => (
-            <Card key={index} className="flex items-center w-full">
-              <CardHeader className="p-4 pr-0">
-                <div className={cn("p-2 rounded-md flex", dash.className)}>
-                  {dash.icon}
-                </div>
-              </CardHeader>
-              <CardContent className="flex flex-col justify-center h-full p-4">
-                <p className="text-xl font-bold">{dash.total}</p>
-                <p className="text-sm text-muted-foreground">{dash.title}</p>
-              </CardContent>
-            </Card>
-          ))
-        }
-      </div>
+      {
+        spinners.geral ? (
+          <Loader />
+        ) : (
+          <>
+            <div className="flex gap-3">
+              {
+                dashboards.map((dash, index) => (
+                  <Card key={index} className="flex items-center w-full">
+                    <CardHeader className="p-4 pr-0">
+                      <div className={cn("p-2 rounded-md flex", dash.className)}>
+                        {dash.icon}
+                      </div>
+                    </CardHeader>
+                    <CardContent className="flex flex-col justify-center h-full p-4">
+                      <p className="text-xl font-bold">{dash.total}</p>
+                      <p className="text-sm text-muted-foreground">{dash.title}</p>
+                    </CardContent>
+                  </Card>
+                ))
+              }
+            </div>
 
-      <div className="flex flex-col gap-3">
-        {
-          orderedAvarias.map((av, index) => (
-            <AvariaCard key={index} data={av} />
-          ))
-        }
-      </div>
+            <div className="flex flex-col gap-3">
+              {
+                orderedAvarias.map((av, index) => (
+                  <AvariaCard key={index} data={av} />
+                ))
+              }
+            </div>
+          </>
+        )
+      }
     </div >
   )
 }
