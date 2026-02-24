@@ -20,8 +20,8 @@ import { Logo } from '@/components/custom/logo'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { formatCPF } from '@/utils/formatters'
-import { defaultValues, schema, type Schema } from './schemas'
 import { useState } from 'react'
+import { defaultValues, schema, type Schema } from './schemas'
 
 export default function AuthPage() {
 
@@ -40,7 +40,7 @@ export default function AuthPage() {
 
   // Redirect if already authenticated
   if (isAuthenticated) {
-    navigate('/admin/dashboard')
+    navigate('/admin/avarias')
     return null
   }
 
@@ -55,7 +55,7 @@ export default function AuthPage() {
           return
         }
 
-        navigate('/admin/dashboard')
+        navigate('/admin/avarias')
       } catch (error) {
         console.error('Register error:', error)
         toast.error('Não foi possível fazer registro. Tente novamente.')
@@ -64,14 +64,13 @@ export default function AuthPage() {
       }
     } else {
       try {
-        const { success, message } = await signIn(data.cpf, data.senha)
+        const { success } = await signIn(data.cpf, data.senha)
 
         if (!success) {
-          toast.error(message)
           return
         }
 
-        navigate('/admin/dashboard')
+        navigate('/admin/avarias')
       } catch (error) {
         console.error('Login error:', error)
         toast.error('Não foi possível fazer login. Tente novamente.')

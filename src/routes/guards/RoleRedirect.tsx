@@ -16,7 +16,11 @@ export function RoleRedirect() {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/auth/login" replace />
+
+    if (window.location.pathname !== '/auth/login') {
+      // Redireciona para login e mantém a rota original no estado para redirecionamento pós-login
+      return <Navigate to="/auth/login" state={{ from: window.location }} replace />
+    }
   }
 
   return <Navigate to={getHomeByRole(user?.role)} replace />

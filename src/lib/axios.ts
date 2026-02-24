@@ -52,14 +52,16 @@ function showToastOnce(key: string, message: string, type: 'error' | 'warning' =
 axios.interceptors.response.use((response) => {
   if (response.status === 401) {
     // armazenar papel atual do usuário antes de limpar o localStorage
-    const shouldRedirect = showToastOnce('401-error', 'Sessão expirada. Faça login novamente.')
+    const shouldRedirect = showToastOnce('401-error', response.data?.message)
 
     if (shouldRedirect) {
       setTimeout(() => {
         sessionStorage.clear()
         localStorage.clear()
 
-        window.location.href = '/auth/login'
+        if (window.location.pathname !== '/auth/login') {
+          window.location.href = '/auth/login'
+        }
       }, 1500)
     }
   }

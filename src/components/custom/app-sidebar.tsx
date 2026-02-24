@@ -20,10 +20,9 @@ import { SidebarUser } from './sidebar-user'
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
-  const { loading, menus } = useAuth()
+  const { loading } = useAuth()
 
   const data = {
-    sidebarPrimary: menus,
     sidebarSecondary: [],
   }
 
@@ -32,7 +31,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <Link to='/admin/dashboard' className='flex flex-col gap-3'>
+            <Link to='/admin/avarias' className='flex flex-col gap-3'>
               <Logo className='w-40' variant='light' />
               {loading ? (
                 <Skeleton className='w-full p-2' />
@@ -44,7 +43,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <SidebarMain items={data.sidebarPrimary} />
+        <SidebarMain />
         <SidebarSecondary items={data.sidebarSecondary} className='mt-auto' />
       </SidebarContent>
       <SidebarFooter>

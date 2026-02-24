@@ -1,6 +1,6 @@
-import type { User } from '@/types/app'
+import type { Usuario } from '@/types/app'
 
-type UserRole = User['role']
+type UserRole = Usuario['role']
 
 /**
  * Retorna o caminho da home baseado no role do usuário.

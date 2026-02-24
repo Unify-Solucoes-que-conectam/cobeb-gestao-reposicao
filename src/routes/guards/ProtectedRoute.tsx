@@ -1,6 +1,6 @@
-import { Navigate, Outlet, useLocation } from 'react-router-dom'
-import { useAuth } from '@/hooks/use-auth'
 import Loader from '@/components/custom/loader'
+import { useAuth } from '@/hooks/use-auth'
+import { Navigate, Outlet, useLocation } from 'react-router-dom'
 
 interface ProtectedRouteProps {
   allowedRoles?: Array<'monitoramento' | 'motorista'>
@@ -25,14 +25,18 @@ export function ProtectedRoute({ allowedRoles }: ProtectedRouteProps) {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/auth/login" state={{ from: location }} replace />
+
+    if (location.pathname !== '/auth/login') {
+      // Redireciona para login e mantém a rota original no estado para redirecionamento pós-login
+      return <Navigate to="/auth/login" state={{ from: location }} replace />
+    }
   }
 
   // Se roles específicos são requeridos, verifica se o usuário tem permissão
   if (allowedRoles && user && !allowedRoles.includes(user.role)) {
     // Redireciona para a home do role do usuário
     const redirectPath = user.role === 'monitoramento'
-      ? '/admin/dashboard'
+      ? '/admin/avarias'
       : '/cliente/home'
     return <Navigate to={redirectPath} replace />
   }
