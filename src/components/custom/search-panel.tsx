@@ -21,9 +21,9 @@ interface SearchPanelProps {
   fetchData: () => void;
   search?: string;
   onSearchChange: (search: string) => void;
-  defaultFilter: string;
-  filters: Filter[];
-  onFilterChange: (filters: Filter[]) => void;
+  defaultFilter?: string;
+  filters?: Filter[];
+  onFilterChange?: (filters: Filter[]) => void;
   addons?: React.ReactElement;
 }
 export default function SearchPanel({ total, placeholder, fetchData, search, onSearchChange, defaultFilter, filters, onFilterChange, addons }: SearchPanelProps) {
@@ -42,22 +42,26 @@ export default function SearchPanel({ total, placeholder, fetchData, search, onS
         Buscar
       </Button>
 
-      <Select defaultValue={defaultFilter} onValueChange={(value) => onFilterChange([{ ...filters.find(f => f.value === value)!, value }])}>
-        <SelectTrigger className="w-45">
-          <SelectValue placeholder="Status" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectGroup>
-            {
-              filters.map((filter, index) => (
-                <SelectItem key={index} value={filter.value}>{filter.label}</SelectItem>
-              ))
-            }
-          </SelectGroup>
-        </SelectContent>
-      </Select>
+      {filters && onFilterChange && (
+        <>
+          <Select defaultValue={defaultFilter} onValueChange={(value) => onFilterChange([{ ...filters.find(f => f.value === value)!, value }])}>
+            <SelectTrigger className="w-45">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                {
+                  filters.map((filter, index) => (
+                    <SelectItem key={index} value={filter.value}>{filter.label}</SelectItem>
+                  ))
+                }
+              </SelectGroup>
+            </SelectContent>
+          </Select>
 
-      {addons}
+          {addons}
+        </>
+      )}
     </div>
   )
 }

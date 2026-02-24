@@ -84,6 +84,8 @@ export type Cliente = Base & {
   tipo_pessoa: string
   pdv_ativo: boolean
   contatos: Contato[]
+  qntd_notas_fiscais?: number // quantidade de notas fiscais associadas ao cliente, se solicitadas via parâmetro na consulta
+  qntd_produtos?: number // quantidade de produtos associados às notas fiscais do cliente, se solicitadas via parâmetro na consulta
 }
 
 export type NotaFiscal = Base & {

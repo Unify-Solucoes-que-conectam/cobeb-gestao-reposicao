@@ -6,6 +6,7 @@ import { adminRoutes } from './admin'
 import { authRoutes } from './auth'
 import { clientRoutes } from './client'
 import { GuestRoute, ProtectedRoute, RoleRedirect } from './guards'
+import MobileLayout from '@/pages/mobile-layout'
 
 const router = createBrowserRouter([
   // Rota raiz - redireciona baseado no role
@@ -38,7 +39,7 @@ const router = createBrowserRouter([
     element: <ProtectedRoute allowedRoles={['motorista']} />,
     children: [
       {
-        element: <AppLayout />,
+        element: <MobileLayout />,
         children: clientRoutes,
       },
     ],
