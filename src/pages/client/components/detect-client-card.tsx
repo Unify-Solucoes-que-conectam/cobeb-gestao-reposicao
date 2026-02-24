@@ -1,9 +1,11 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { Cliente } from "@/types/consults";
-import { calcularDistanciaMetros, Coordenadas } from "@/utils/calc";
+import { calculateDistance, Coordenadas } from "@/utils/calc";
+import { Geolocation } from '@capacitor/geolocation';
 import { NavigationIcon } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 
 interface DetectClientCardProps {
   clientes: Cliente[]
@@ -11,24 +13,68 @@ interface DetectClientCardProps {
 }
 export default function DetectClientCard({ clientes, detectedClient }: DetectClientCardProps) {
 
+  // ============ APP MODE ===========
+  // Para desenvolvimento, forçamos o modo web para testar a localização simulada do navegador.
+  const developmentMode = process.env.VITE_APP_MODE === 'development';
+
   // ============ STATES ===========
   const [spinners, setSpinners] = useState({
     localizacao: false,
   });
   const [currentPosition, setCurrentPosition] = useState<Coordenadas | null>(null);
 
+  // ========== HANDLERS
   const clientesProximos = useMemo(() => {
     if (!currentPosition) return [];
 
     return clientes.filter(cliente => {
-      const distancia = calcularDistanciaMetros(currentPosition, cliente);
+      const distancia = calculateDistance(currentPosition.latitude, currentPosition.longitude, cliente.latitude, cliente.longitude);
       return distancia <= 100; // Raio de 100 metros
     });
   }, [currentPosition, clientes]);
 
   // Função para disparar a captura
-  const ativarLocalizacao = () => {
+  const getNativeLocation = async () => {
     setSpinners(prev => ({ ...prev, localizacao: true }));
+
+    try {
+      // 1. Verificar/Solicitar Permissão
+      const permission = await Geolocation.checkPermissions();
+
+      if (permission.location !== 'granted') {
+        const request = await Geolocation.requestPermissions();
+        if (request.location !== 'granted') {
+          return;
+        }
+      }
+
+      // 2. Obter posição com GPS de hardware (High Accuracy)
+      const coordinates = await Geolocation.getCurrentPosition({
+        enableHighAccuracy: true, // Crucial para o raio de 100m
+        timeout: 10000
+      });
+
+      setCurrentPosition({
+        latitude: coordinates.coords.latitude,
+        longitude: coordinates.coords.longitude
+      });
+
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setSpinners(prev => ({ ...prev, localizacao: false }));
+    }
+  };
+
+  const requestLocation = () => {
+    setSpinners(prev => ({ ...prev, localizacao: true }));
+
+    const options: PositionOptions = {
+      enableHighAccuracy: true, // FORÇA o uso do GPS de hardware (essencial para os 100m)
+      timeout: 15000,          // Tempo máximo de espera (15 segundos)
+      maximumAge: 0            // Não aceita localização em cache (queremos a posição exata de agora)
+    };
+
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setCurrentPosition({
@@ -37,12 +83,20 @@ export default function DetectClientCard({ clientes, detectedClient }: DetectCli
         });
         setSpinners(prev => ({ ...prev, localizacao: false }));
       },
-      () => setSpinners(prev => ({ ...prev, localizacao: false }))
+      () => {
+        setSpinners(prev => ({ ...prev, localizacao: false }));
+      },
+      options
     );
   };
 
+  // =========== EFFECTS ===========
   useEffect(() => {
-    ativarLocalizacao();
+    if (developmentMode) {
+      requestLocation();
+    } else {
+      getNativeLocation();
+    }
   }, [])
 
   useEffect(() => {
@@ -50,6 +104,21 @@ export default function DetectClientCard({ clientes, detectedClient }: DetectCli
       detectedClient(clientesProximos[0]);
     }
   }, [clientesProximos, detectedClient])
+
+  useEffect(() => {
+    if (navigator.permissions) {
+      navigator.permissions.query({ name: 'geolocation' as PermissionName }).then((result) => {
+        if (result.state === 'denied') {
+          alert("Atenção: O acesso à localização está bloqueado. O aplicativo não funcionará corretamente.");
+        }
+
+        // Opcional: Monitorar se ele mudar a permissão nas configs enquanto o app tá aberto
+        result.onchange = () => {
+          toast.info(`Status da permissão de GPS alterado para: ${result.state}`);
+        };
+      });
+    }
+  }, []);
 
   // =========== HELPERS ===========
   const getLocationTitle = () => {
