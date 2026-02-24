@@ -3,9 +3,11 @@ import { useHeader } from '@/hooks/mobile/use-header'
 import { Logo } from '../logo'
 import { Button } from '@/components/ui/button'
 import { HistoryIcon, LogOutIcon } from 'lucide-react'
+import { useAuth } from '@/hooks/use-auth'
 
 export function AppHeader() {
   const { pageDescription } = useHeader()
+  const { signOut } = useAuth();
 
   return (
     <header className='flex justify-between items-center h-(--header-height) shrink-0 gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height) bg-primary px-4 py-2'>
@@ -18,7 +20,7 @@ export function AppHeader() {
         <Button className='size-10 hover:bg-yellow-500'>
           <HistoryIcon className='size-6'/>
         </Button>
-        <Button className='size-10 hover:bg-yellow-500'>
+        <Button className='size-10 hover:bg-yellow-500' onClick={signOut}>
           <LogOutIcon className='size-6'/>
         </Button>
       </div>
