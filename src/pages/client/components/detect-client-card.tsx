@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { Cliente } from "@/types/consults";
 import { calculateDistance, Coordenadas } from "@/utils/calc";
@@ -17,8 +18,8 @@ interface DetectClientCardProps {
 export default function DetectClientCard({ clientes, currentDetected, selected, onSelect, detectedClient }: DetectClientCardProps) {
 
   // ============ APP MODE ===========
-  // Para desenvolvimento, forçamos o modo web para testar a localização simulada do navegador.
-  const developmentMode = process.env.VITE_APP_MODE === 'development';
+  // Para mobile, usamos Capacitor Geolocation.
+  const isMobile = useIsMobile();
 
   // ============ STATES ===========
   const [spinners, setSpinners] = useState({
@@ -96,7 +97,7 @@ export default function DetectClientCard({ clientes, currentDetected, selected, 
 
   // =========== EFFECTS ===========
   useEffect(() => {
-    if (developmentMode) {
+    if (isMobile) {
       getNativeLocation();
     } else {
       requestLocation();
