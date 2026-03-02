@@ -6,16 +6,16 @@ import { FileTextIcon, MapPinIcon, PackageIcon, UserIcon } from "lucide-react";
 
 interface ClienteCardProps {
   cliente: Cliente
+  type?: 'selected' | 'list'
   onClick?: () => void;
-  selecionado?: boolean;
 }
 export default function ClienteCard({
   cliente,
+  type = 'list',
   onClick,
-  selecionado
 }: ClienteCardProps) {
 
-  if (selecionado) {
+  if (type === 'selected') {
     return (
       <Card className="border-2 border-blue-500 bg-blue-50">
         <CardHeader className="p-4 flex-row justify-between items-center">
