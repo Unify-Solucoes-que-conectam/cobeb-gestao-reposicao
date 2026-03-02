@@ -5,7 +5,7 @@ import { calculateDistance, Coordenadas } from "@/utils/calc";
 import { Geolocation } from '@capacitor/geolocation';
 import { NavigationIcon } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { toast } from "sonner";
+// import { toast } from "sonner";
 
 interface DetectClientCardProps {
   clientes: Cliente[]
@@ -97,9 +97,9 @@ export default function DetectClientCard({ clientes, currentDetected, selected, 
   // =========== EFFECTS ===========
   useEffect(() => {
     if (developmentMode) {
-      requestLocation();
-    } else {
       getNativeLocation();
+    } else {
+      requestLocation();
     }
   }, [])
 
@@ -117,9 +117,9 @@ export default function DetectClientCard({ clientes, currentDetected, selected, 
         }
 
         // Opcional: Monitorar se ele mudar a permissão nas configs enquanto o app tá aberto
-        result.onchange = () => {
-          toast.info(`Status da permissão de GPS alterado para: ${result.state}`);
-        };
+        // result.onchange = () => {
+        //   toast.info(`Status da permissão de GPS alterado para: ${result.state}`);
+        // };
       });
     }
   }, []);
