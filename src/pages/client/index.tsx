@@ -87,7 +87,7 @@ export default function ClientHome() {
             <Loader />
           ) : (
             clienteSelecionado ? (
-              <ClienteCard key={clienteSelecionado.id} cliente={clienteSelecionado} selecionado={true} onClick={() => {
+              <ClienteCard key={clienteSelecionado.id} cliente={clienteSelecionado} type="selected" onClick={() => {
                 setClienteSelecionado(null)
                 setSwitched(true);
               }} />
