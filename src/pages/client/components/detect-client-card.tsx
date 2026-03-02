@@ -139,7 +139,7 @@ export default function DetectClientCard({ clientes, currentDetected, selected, 
     if (!currentPosition) return "Ative a localização para encontrar clientes próximos.";
     if (clientesProximos.length === 1) {
       if (selected && selected.id === clientesProximos[0].id) {
-        return "Cliente mais próximo selecionado automaticamente.";
+        return "Cliente mais próximo selecionado.";
       } else {
         return "Cliente mais próximo, toque para selecionar.";
       }
