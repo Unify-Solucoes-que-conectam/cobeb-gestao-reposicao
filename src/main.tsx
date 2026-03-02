@@ -2,12 +2,19 @@ import { createRoot } from 'react-dom/client'
 
 import { RouterProvider } from 'react-router-dom'
 
+import { Capacitor } from '@capacitor/core'
+import { StatusBar, Style } from '@capacitor/status-bar'
 import { Toaster } from './components/ui/sonner'
 import { LogProvider } from './hooks/mobile/useLogger'
 import './index.css'
 import { AuthProvider } from './providers/AuthProvider'
 import ThemeProvider from './providers/ThemeProvider'
 import router from './routes'
+
+// Configura a StatusBar nativa no Capacitor
+if (Capacitor.isNativePlatform()) {
+  StatusBar.setStyle({ style: Style.Dark }); // ícones brancos na barra de status
+}
 
 createRoot(document.getElementById('root')!).render(
   <AuthProvider>

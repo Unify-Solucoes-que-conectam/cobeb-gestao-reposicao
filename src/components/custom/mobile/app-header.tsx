@@ -1,16 +1,19 @@
 
-import { useHeader } from '@/hooks/mobile/use-header'
-import { Logo } from '../logo'
 import { Button } from '@/components/ui/button'
-import { HistoryIcon, LogOutIcon } from 'lucide-react'
+import { useHeader } from '@/hooks/mobile/use-header'
 import { useAuth } from '@/hooks/use-auth'
+import { HistoryIcon, LogOutIcon } from 'lucide-react'
+import { Logo } from '../logo'
 
 export function AppHeader() {
   const { pageDescription } = useHeader()
   const { signOut } = useAuth();
 
   return (
-    <header className='flex justify-between items-center h-(--header-height) shrink-0 gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height) bg-primary px-4 py-2'>
+    <header
+      style={{ paddingTop: 'env(safe-area-inset-top)' }}
+      className='flex justify-between items-center shrink-0 gap-2 border-b bg-primary px-4 pb-2'
+    >
       <div className='flex flex-col'>
         <Logo variant='light' className='w-40' />
         <span className='text-lg text-white uppercase'>{pageDescription}</span>
@@ -18,10 +21,10 @@ export function AppHeader() {
 
       <div className='flex gap-2'>
         <Button className='size-10 hover:bg-yellow-500'>
-          <HistoryIcon className='size-6'/>
+          <HistoryIcon className='size-6' />
         </Button>
         <Button className='size-10 hover:bg-yellow-500' onClick={signOut}>
-          <LogOutIcon className='size-6'/>
+          <LogOutIcon className='size-6' />
         </Button>
       </div>
     </header>
