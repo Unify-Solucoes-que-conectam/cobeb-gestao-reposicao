@@ -6,7 +6,7 @@ import { HistoryIcon, LogOutIcon } from 'lucide-react'
 import { Logo } from '../logo'
 
 export function AppHeader() {
-  const { pageDescription } = useHeader()
+  const { pageTitle, pageDescription } = useHeader()
   const { signOut } = useAuth();
 
   return (
@@ -15,8 +15,13 @@ export function AppHeader() {
       className='flex justify-between items-center shrink-0 gap-2 border-b bg-primary px-4 pb-2'
     >
       <div className='flex flex-col'>
-        <Logo variant='light' className='w-40' />
-        <span className='text-lg text-white uppercase'>{pageDescription}</span>
+        {
+          !pageTitle && (
+            <Logo variant='light' className='w-40' />
+          )
+        }
+        <span className='text-lg text-white uppercase'>{pageTitle}</span>
+        <span className='text-sm text-white'>{pageDescription}</span>
       </div>
 
       <div className='flex gap-2'>
