@@ -11,7 +11,7 @@ export function AppHeader() {
 
   return (
     <header
-      style={{ paddingTop: 'env(safe-area-inset-top)' }}
+      style={{ paddingTop: 'calc(env(safe-area-inset-top) + 10px)' }}
       className='flex justify-between items-center shrink-0 gap-2 border-b bg-primary px-4 pb-2'
     >
       <div className='flex flex-col'>
