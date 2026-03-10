@@ -37,7 +37,7 @@ export function ProtectedRoute({ allowedRoles }: ProtectedRouteProps) {
     // Redireciona para a home do role do usuário
     const redirectPath = user.role === 'monitoramento'
       ? '/admin/avarias'
-      : '/cliente/home'
+      : '/client/home'
     return <Navigate to={redirectPath} replace />
   }
 

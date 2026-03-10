@@ -35,7 +35,7 @@ const router = createBrowserRouter([
 
   // Rotas de Cliente (motorista)
   {
-    path: '/cliente',
+    path: '/client',
     element: <ProtectedRoute allowedRoles={['motorista']} />,
     children: [
       {

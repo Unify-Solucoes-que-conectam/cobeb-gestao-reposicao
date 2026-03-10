@@ -10,7 +10,7 @@ export function getHomeByRole(role?: UserRole): string {
     case 'monitoramento':
       return '/admin/avarias'
     case 'motorista':
-      return '/cliente/home'
+      return '/client/home'
     default:
       return '/auth/login'
   }

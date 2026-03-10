@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Cliente } from "@/types/consults";
 import { FileTextIcon, MapPinIcon, PackageIcon, UserIcon } from "lucide-react";
+import { useNavigate } from "react-router";
 
 interface ClienteCardProps {
   cliente: Cliente
@@ -14,6 +15,8 @@ export default function ClienteCard({
   type = 'list',
   onClick,
 }: ClienteCardProps) {
+
+  const navigate = useNavigate();
 
   if (type === 'selected') {
     return (
@@ -47,7 +50,7 @@ export default function ClienteCard({
           </div>
         </CardContent>
         <CardFooter className="px-4">
-          <Button className="w-full h-12">
+          <Button className="w-full h-12" onClick={() => navigate('/client/registrar-avarias')}>
             Registar Avarias
           </Button>
         </CardFooter>
