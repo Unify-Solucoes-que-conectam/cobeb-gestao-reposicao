@@ -13,7 +13,7 @@ import DetectClientCard from "./components/detect-client-card";
 export default function ClientHome() {
 
   // ============ HOOKS ===========
-  const { setPageDescription } = useHeader();
+  const { setShowBackButton, setPageDescription } = useHeader();
   const { user } = useAuth();
 
   // ============ STATES ===========
@@ -34,6 +34,7 @@ export default function ClientHome() {
 
   // ============ EFFECTS ===========
   useEffect(() => {
+    setShowBackButton(false);
     setPageDescription(user?.nome ? user.nome : 'Bem-vindo à área de cliente!');
     fetchClients();
   }, [])

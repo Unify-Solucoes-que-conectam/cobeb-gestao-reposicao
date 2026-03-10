@@ -9,7 +9,7 @@ import { toast } from "sonner";
 export default function ClientRegistrarAvarias() {
 
     // ============= HOOKS =============
-    const { setPageTitle, setPageDescription } = useHeader();
+    const { setPageTitle, setPageDescription, setShowBackButton } = useHeader();
     const [searchParams] = useSearchParams();
     const clienteId = searchParams.get('clienteId');
 
@@ -20,10 +20,11 @@ export default function ClientRegistrarAvarias() {
     useEffect(() => {
         setPageTitle(cliente?.nome_fantasia || 'Registrar Avarias');
         setPageDescription('Cód: ' + cliente?.codigo + ' • ' + cliente?.endereco);
+        setShowBackButton(true);
 
         // consultar dados do cliente para mostrar na tela
         getClientDetails();
-    }, [setPageTitle, setPageDescription, cliente]);
+    }, [setPageTitle, setPageDescription, setShowBackButton, cliente]);
 
     // ============= HANDLERS =============
     const getClientDetails = async () => {
