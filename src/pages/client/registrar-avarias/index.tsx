@@ -10,12 +10,13 @@ import { ApiResponse } from "@/types/api-response";
 import { Cliente } from "@/types/consults";
 import { FunnelIcon, PackageIcon, PlusIcon } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import { toast } from "sonner";
 
 export default function ClientRegistrarAvarias() {
 
     // ============= HOOKS =============
+    const navigate = useNavigate()
     const { setPageTitle, setPageDescription, setShowBackButton } = useHeader();
     const [searchParams] = useSearchParams();
     const clienteId = searchParams.get('clienteId');
@@ -84,7 +85,7 @@ export default function ClientRegistrarAvarias() {
                     </div>
                 </div>
 
-                <Button className="w-full">
+                <Button className="w-full" onClick={() => navigate(`/client/registrar-avarias/etapa-001?codigo=${cliente?.codigo}&nome_fantasia=${cliente?.nome_fantasia}&endereco=${cliente?.endereco}`)}>
                     <PlusIcon />
                     <span>Adicionar Avaria</span>
                 </Button>
