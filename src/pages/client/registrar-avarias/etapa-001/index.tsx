@@ -45,7 +45,7 @@ export default function ClientRegistrarAvariasEtapa001() {
       nome_fantasia: clienteNomeFantasia || undefined,
       endereco: clienteEndereco || undefined,
     } as Cliente)
-  }, [setPageTitle, setPageDescription, setShowBackButton, cliente]);
+  }, []);
 
   // ============ FETCHERS ===========
   const fetchNotasFiscais = async () => {

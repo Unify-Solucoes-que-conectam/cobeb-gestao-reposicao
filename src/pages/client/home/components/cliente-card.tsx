@@ -50,7 +50,7 @@ export default function ClienteCard({
           </div>
         </CardContent>
         <CardFooter className="px-4">
-          <Button className="w-full h-12" onClick={() => navigate(`/client/registrar-avarias?clienteId=${cliente.id}`)}>
+          <Button className="w-full h-12" onClick={() => navigate(`/client/registrar-avarias?clienteId=${cliente.id}`, { state: { clienteInfo: cliente } })}>
             Registar Avarias
           </Button>
         </CardFooter>

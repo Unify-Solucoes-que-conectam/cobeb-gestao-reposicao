@@ -10,7 +10,7 @@ import { ApiResponse } from "@/types/api-response";
 import { Cliente } from "@/types/consults";
 import { FunnelIcon, PackageIcon, PlusIcon } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router";
+import { useNavigate, useSearchParams, useLocation } from "react-router";
 import { toast } from "sonner";
 
 export default function ClientRegistrarAvarias() {
@@ -20,19 +20,26 @@ export default function ClientRegistrarAvarias() {
     const { setPageTitle, setPageDescription, setShowBackButton } = useHeader();
     const [searchParams] = useSearchParams();
     const clienteId = searchParams.get('clienteId');
+    const location = useLocation();
 
     // ============= STATES =============
-    const [cliente, setCliente] = useState<Cliente>();
+    const [cliente, setCliente] = useState<Cliente | undefined>(location.state?.clienteInfo);
 
     // ============= EFFECTS =============
     useEffect(() => {
-        setPageTitle(cliente?.nome_fantasia || 'Registrar Avarias');
-        setPageDescription('Cód: ' + cliente?.codigo + ' • ' + cliente?.endereco);
         setShowBackButton(true);
 
-        // consultar dados do cliente para mostrar na tela
-        if (!cliente) getClientDetails();
-    }, [setPageTitle, setPageDescription, setShowBackButton, cliente]);
+        if (cliente) {
+            setPageTitle(cliente.nome_fantasia || 'Registrar Avarias');
+            setPageDescription(`Cód: ${cliente.codigo} • ${cliente.endereco}`);
+        } else {
+            // Fallback de segurança: se o usuário recarregar a página (F5), ou acessar a URL direto
+            setPageTitle('Registrar Avarias');
+            setPageDescription('Carregando informações...');
+            
+            if (clienteId) getClientDetails();
+        }
+    }, [setPageTitle, setPageDescription, cliente]);
 
     // ============= HANDLERS =============
     const getClientDetails = async () => {
