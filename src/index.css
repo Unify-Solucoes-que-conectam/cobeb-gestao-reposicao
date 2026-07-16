@@ -11,7 +11,6 @@ body,
 }
 
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
@@ -30,7 +29,7 @@ body,
   --card-foreground: oklch(0.15 0.02 262.881);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.15 0.02 262.881);
-  --primary: oklch(54.6% 0.245 262.881);
+  --primary: #00529f;
   --primary-foreground: oklch(0.99 0 0);
   --secondary: oklch(0.96 0.015 262.881);
   --secondary-foreground: oklch(0.2 0.02 262.881);
@@ -42,8 +41,8 @@ body,
   --destructive-foreground: oklch(0.99 0 0);
   --border: oklch(0.9 0.01 262.881);
   --input: oklch(0.9 0.01 262.881);
-  --ring: oklch(54.6% 0.245 262.881);
-  --chart-1: oklch(54.6% 0.245 262.881);
+  --ring: #00529f;
+  --chart-1: #00529f;
   --chart-2: oklch(0.65 0.22 220);
   --chart-3: oklch(0.7 0.19 160);
   --chart-4: oklch(0.6 0.25 300);
@@ -52,13 +51,14 @@ body,
   --sidebar-foreground: oklch(0.98 0.005 262.881);
   --sidebar-primary: oklch(0.98 0.005 262.881);
   --sidebar-primary-foreground: oklch(54.6% 0.245 262.881);
-  --sidebar-accent: oklch(64.6% 0.23 262.881);
+  --sidebar-accent: #00529f;
   --sidebar-accent-foreground: oklch(0.98 0 0);
   --sidebar-border: oklch(0.35 0.05 262.881);
-  --sidebar-ring: oklch(64.6% 0.23 262.881);
+  --sidebar-ring: #00529f;
 }
 
 @theme inline {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -183,4 +183,24 @@ body,
 .recharts-wrapper,
 .recharts-surface {
   outline: none !important;
+}
+
+/* Aplica a trava de aplicativo APENAS em celulares (telas menores que 768px) */
+@media (max-width: 767px) {
+  html,
+  body,
+  #root {
+    height: 100dvh;
+    overflow: hidden;
+  }
+}
+
+/* Garante que o Desktop (768px ou mais) mantenha o scroll natural do navegador */
+@media (min-width: 768px) {
+  html,
+  body,
+  #root {
+    min-height: 100vh;
+    overflow: auto;
+  }
 }

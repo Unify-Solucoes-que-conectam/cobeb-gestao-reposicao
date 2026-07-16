@@ -92,11 +92,10 @@ export default function AuthPage() {
 
   return (
     <div className='flex flex-col h-screen'>
-      <div className='h-full flex flex-col items-center justify-center py-10 px-10 gap-3'>
-        <Card className='w-md'>
-          <CardHeader className='items-center gap-2'>
+      <div className='flex-1 flex flex-col items-center justify-center px-10 border-slate-200'>
+        <Card className='w-full max-w-lg'>
+          <CardHeader className='items-center gap-4'>
             <Logo className='w-50 h-full' />
-            <h2>Gestão de Reposição</h2>
           </CardHeader>
           <CardContent>
             <div className='h-full'>
@@ -164,7 +163,7 @@ export default function AuthPage() {
                     )}
                   />
 
-                  <Field>
+                  <Field className='flex justify-center bg-primary rounded-2xl'>
                     <Button type='submit' className='cursor-pointer' onClick={form.handleSubmit(handleSubmit)} loading={spinner} disabled={spinner}>
                       Entrar
                     </Button>
@@ -176,8 +175,8 @@ export default function AuthPage() {
         </Card>
       </div>
 
-      <footer className='p-8 text-center text-xs text-muted-foreground'>
-        Powered by IsmaelSantiago
+      <footer className='p-4 text-center text-xs text-muted-foreground'>
+        Powered by Unify Soluções
       </footer>
     </div>
   )

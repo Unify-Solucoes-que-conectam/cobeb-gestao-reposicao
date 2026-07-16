@@ -20,7 +20,7 @@ export default function AppLayout() {
         <AppSidebar variant='inset' />
         <SidebarInset>
           <AppHeader />
-          <div className='flex flex-1 flex-col'>
+          <div className='flex flex-1 flex-col p-4'>
             <div className='@container/main flex flex-1 flex-col gap-2 p-6'>
               <Outlet />
             </div>
