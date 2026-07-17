@@ -90,7 +90,7 @@ export default function ClienteCard({ cliente, type = 'list', onClick }: Cliente
           <Button
             className='w-full bg-primary text-white h-10 rounded-xl text-sm font-semibold shadow-sm'
             onClick={() =>
-              navigate(`/client/registrar-avarias?clienteId=${cliente.id}`, {
+              navigate(`/client/avarias-registradas?clienteId=${cliente.id}`, {
                 state: { clienteInfo: cliente },
               })
             }
