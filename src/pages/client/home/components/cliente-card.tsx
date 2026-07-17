@@ -1,18 +1,13 @@
 import {
-  FileTextIcon,
   MapIcon,
-  MapPinIcon,
-  PackageIcon,
   PlusIcon,
-  TagIcon,
-  TriangleAlertIcon,
-  UserIcon,
+  TagIcon
 } from 'lucide-react'
 import { useNavigate } from 'react-router'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader } from '@/components/ui/card'
+import { Card } from '@/components/ui/card'
 import { Cliente } from '@/types/consults'
 
 interface ClienteCardProps {
@@ -58,11 +53,10 @@ export default function ClienteCard({ cliente, type = 'list', onClick }: Cliente
             </Badge>
 
             <Badge
-              className={`text-xs font-bold border-none rounded-full px-2.5 py-0.5 tracking-wide shadow-none uppercase ${
-                !cliente.pdv_ativo
+              className={`text-xs font-bold border-none rounded-full px-2.5 py-0.5 tracking-wide shadow-none uppercase ${!cliente.pdv_ativo
                   ? 'bg-red-100 text-red-700 hover:bg-red-200'
                   : 'bg-green-100 text-green-700 hover:bg-green-200'
-              }`}
+                }`}
             >
               {cliente.pdv_ativo ? 'ATIVO' : 'INATIVO'}
             </Badge>
@@ -144,11 +138,10 @@ export default function ClienteCard({ cliente, type = 'list', onClick }: Cliente
           </Badge>
 
           <Badge
-            className={`text-xs font-bold border-none rounded-full px-2.5 py-0.5 tracking-wide shadow-none uppercase ${
-              !cliente.pdv_ativo
+            className={`text-xs font-bold border-none rounded-full px-2.5 py-0.5 tracking-wide shadow-none uppercase ${!cliente.pdv_ativo
                 ? 'bg-red-100 text-red-700 hover:bg-red-200'
                 : 'bg-green-100 text-green-700 hover:bg-green-200'
-            }`}
+              }`}
           >
             {cliente.pdv_ativo ? 'ATIVO' : 'INATIVO'}
           </Badge>
