@@ -5,7 +5,7 @@ import dayjs from '@/lib/dayjs';
 import { Avaria } from '@/types/consults';
 import {
   CalendarIcon,
-  EyeIcon,
+  // EyeIcon,
   FileTextIcon,
   LayersIcon,
   MessageCircleIcon,
@@ -144,14 +144,14 @@ export default function AvariaCard({ data }: AvariaCardProps) {
           color='success'
         >
           <MessageCircleIcon size={16} />
-          Notificar Cliente
+          Aprovar e Notificar Cliente
         </Button>
-        <Button
+        {/* <Button
           color="warning"
         >
           <EyeIcon size={20} />
           Visualizar Detalhes
-        </Button>
+        </Button> */}
       </CardFooter>
     </Card>
   );
