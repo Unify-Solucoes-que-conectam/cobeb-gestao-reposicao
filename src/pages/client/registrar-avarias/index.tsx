@@ -1,3 +1,4 @@
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -5,18 +6,17 @@ import { Input } from "@/components/ui/input";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { NotaFiscal, Produto, TiposAvaria } from "@/types/consults";
+import { useDebounce } from "@/hooks/use-debounce";
+import { notaFiscalService, tiposAvariaService } from "@/services/api.service";
+import { NotaFiscal, TiposAvaria } from "@/types/consults";
 import { convertFileToBase64 } from "@/utils/conversors";
+import { formatCurrency } from "@/utils/formatters";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CameraIcon, CheckIcon, FileTextIcon, ImageIcon, MinusIcon, PlusIcon, SendIcon, TriangleAlertIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { CadastrarAvariaSchema, initValues, schema } from "./schemas/avaria";
-import { useDebounce } from "@/hooks/use-debounce";
-import { notaFiscalService, tiposAvariaService } from "@/services/api.service";
-import { Badge } from "@/components/ui/badge";
-import { formatCurrency } from "@/utils/formatters";
 
 export default function ClientRegistrarAvarias() {
 
@@ -65,13 +65,15 @@ export default function ClientRegistrarAvarias() {
 
   // =================================== Watchers ==================================
   const notaFiscalWatcher = form.watch('nota_fiscal');
+  const produtoWatcher = form.watch('produto');
 
   /**
-   * useDebounce para consultar nota fiscal e código do produto
+   * useDebounce para consultar nota fiscal
    */
   const notaFiscalDebounced = useDebounce(async (numeroNota: string) => {
 
     if (!numeroNota) {
+      setNotaFiscalData(null);
       return;
     }
 
@@ -99,11 +101,35 @@ export default function ClientRegistrarAvarias() {
   }, 800);
 
   /**
+   * Verifica se o produto informado está presente na nota fiscal
+   */
+  const produtoEncontrado = notaFiscalData?.produtos.find(produto => produto.codigo === form.getValues('produto'));
+
+  /**
+   * useDebounce para controlar campo produto
+   */
+  const produtoDebounced = useDebounce(async () => {
+
+    if (produtoEncontrado) {
+      form.clearErrors('produto');
+    } else {
+      form.setError('produto', {
+        type: 'manual',
+        message: 'Produto não encontrado na Nota Fiscal.'
+      });
+    }
+  }, 800);
+
+  /**
    * useEffect para disparar a consulta da nota fiscal quando o campo for alterado
    */
   useEffect(() => {
     notaFiscalDebounced(notaFiscalWatcher);
-  }, [notaFiscalWatcher])
+    
+    if (notaFiscalData) {
+      produtoDebounced();
+    }
+  }, [notaFiscalWatcher, produtoWatcher])
 
   return (
     <div className="flex flex-col w-full h-full bg-slate-50 overflow-y-auto no-scrollbar">
@@ -125,7 +151,7 @@ export default function ClientRegistrarAvarias() {
                         notaFiscalData !== null && (
                           <Badge className="text-emerald-700 bg-emerald-100 hover:bg-emerald-100 text-sm gap-2">
                             Carregada
-                            <CheckIcon size={20}/>
+                            <CheckIcon size={20} />
                           </Badge>
                         )
                       }
@@ -176,11 +202,19 @@ export default function ClientRegistrarAvarias() {
             control={form.control}
             name='produto'
             render={({ field }) => (
-              <FormItem className="w-full">
+              <FormItem>
                 <Card>
                   <CardHeader className="p-2">
-                    <CardTitle>
-                      <FormLabel className="text-blue-700 font-bold text-lg" required>CÓDIGO DO PRODUTO</FormLabel>
+                    <CardTitle className="flex justify-between items-center">
+                      <FormLabel className="text-blue-700 font-bold text-lg " required>CÓDIGO DO PRODUTO</FormLabel>
+                      {
+                        produtoEncontrado && (
+                          <Badge className="text-emerald-700 bg-emerald-100 hover:bg-emerald-100 text-sm gap-2">
+                            Carregado
+                            <CheckIcon size={20} />
+                          </Badge>
+                        )
+                      }
                     </CardTitle>
                     <CardDescription>
                       Digite o código do produto na nota
@@ -202,6 +236,29 @@ export default function ClientRegistrarAvarias() {
 
                     <FormMessage />
                   </CardContent>
+
+                  {
+                    produtoEncontrado && (
+                      <CardFooter className="p-2">
+                        <Card className="p-3 w-full">
+                          <CardHeader className="p-0 w-full">
+                            <div className="w-full">
+                              <CardTitle
+                                title={produtoEncontrado.descricao}
+                                className="w-full"
+                              >
+                                {produtoEncontrado.descricao}
+                              </CardTitle>
+                            </div>
+                            <CardDescription className="font-thin flex justify-between">
+                              <span>Código: {produtoEncontrado.codigo}</span>
+                              <span>Disponível: {produtoEncontrado.quantidade}</span>
+                            </CardDescription>
+                          </CardHeader>
+                        </Card>
+                      </CardFooter>
+                    )
+                  }
                 </Card>
               </FormItem>
             )}
@@ -276,7 +333,7 @@ export default function ClientRegistrarAvarias() {
                     <FormControl>
                       <div className="flex flex-col gap-2">
                         <div className="flex items-center gap-2">
-                          <Button variant="outline" type="button" className="flex-1 text-blue-700 bg-blue-500/20" onClick={() => field.onChange((field.value || 0) - 1)}>
+                          <Button variant="outline" type="button" className="flex-1 text-blue-700 bg-blue-500/20" disabled={(field.value || 0) <= 0} onClick={() => field.onChange(Math.max((field.value || 0) - 1, 0))}>
                             <MinusIcon />
                           </Button>
                           <Input
@@ -284,13 +341,14 @@ export default function ClientRegistrarAvarias() {
                             value={field.value ?? 0}
                             onChange={(e) => field.onChange(Number(e.target.value))}
                             min={0}
+                            max={produtoEncontrado?.quantidade ?? 999}
                             className="text-center flex-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                           />
-                          <Button variant="outline" type="button" className="flex-1 text-blue-700 bg-blue-500/20" onClick={() => field.onChange(field.value + 1)}>
+                          <Button variant="outline" type="button" className="flex-1 text-blue-700 bg-blue-500/20" disabled={(field.value || 0) >= (produtoEncontrado?.quantidade ?? 999)} onClick={() => field.onChange(Math.min((field.value || 0) + 1, produtoEncontrado?.quantidade ?? 999))}>
                             <PlusIcon />
                           </Button>
                         </div>
-                        <Button type="button" className="flex-1" onClick={() => field.onChange(999)}>
+                        <Button type="button" className="flex-1" onClick={() => field.onChange(produtoEncontrado?.quantidade ?? 999)}>
                           SELECIONAR TUDO
                         </Button>
                       </div>
