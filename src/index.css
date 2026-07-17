@@ -144,6 +144,22 @@ body,
   }
 }
 
+@layer utilities {
+
+  /* Remove a barra de rolagem no Chrome, Safari e Opera */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  /* Remove a barra de rolagem no IE, Edge e Firefox */
+  .no-scrollbar {
+    -ms-overflow-style: none !important;
+    /* IE e Edge */
+    scrollbar-width: none !important;
+    /* Firefox */
+  }
+}
+
 /* Scrollbar global para todos os elementos */
 * {
   scrollbar-width: thin;
