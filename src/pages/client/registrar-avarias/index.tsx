@@ -66,6 +66,8 @@ export default function ClientRegistrarAvarias() {
   // =================================== Watchers ==================================
   const notaFiscalWatcher = form.watch('nota_fiscal');
   const produtoWatcher = form.watch('produto');
+  const tipoAvariaWatcher = form.watch('tipo_avaria');
+  const quantidadeAvariadaWatcher = form.watch('quantidade_avariada');
 
   /**
    * useDebounce para consultar nota fiscal
@@ -74,6 +76,7 @@ export default function ClientRegistrarAvarias() {
 
     if (!numeroNota) {
       setNotaFiscalData(null);
+      form.reset()
       return;
     }
 
@@ -133,6 +136,14 @@ export default function ClientRegistrarAvarias() {
 
   return (
     <div className="flex flex-col w-full h-full bg-slate-50 overflow-y-auto no-scrollbar">
+
+      <StepPanel steps={[
+        { step: 1, active: notaFiscalData !== null },
+        { step: 2, active: !!produtoEncontrado },
+        { step: 3, active: tipoAvariaWatcher !== '' },
+        { step: 4, active: quantidadeAvariadaWatcher > 0 },
+        { step: 5, active: form.formState.isValid }
+      ]} />
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col gap-4 pb-20">
@@ -203,7 +214,7 @@ export default function ClientRegistrarAvarias() {
             name='produto'
             render={({ field }) => (
               <FormItem>
-                <Card>
+                <Card className="relative">
                   <CardHeader className="p-2">
                     <CardTitle className="flex justify-between items-center">
                       <FormLabel className="text-blue-700 font-bold text-lg " required>CÓDIGO DO PRODUTO</FormLabel>
@@ -259,6 +270,8 @@ export default function ClientRegistrarAvarias() {
                       </CardFooter>
                     )
                   }
+
+                  <StepOverlay disabled={notaFiscalData === null} />
                 </Card>
               </FormItem>
             )}
@@ -270,7 +283,7 @@ export default function ClientRegistrarAvarias() {
             name='tipo_avaria'
             render={({ field }) => (
               <FormItem className="w-full">
-                <Card>
+                <Card className="relative">
                   <CardHeader className="p-2">
                     <CardTitle>
                       <FormLabel className="text-blue-700 font-bold text-lg" required>TIPO DE AVARIA</FormLabel>
@@ -308,6 +321,8 @@ export default function ClientRegistrarAvarias() {
 
                     <FormMessage />
                   </CardContent>
+
+                  <StepOverlay disabled={!produtoEncontrado} />
                 </Card>
               </FormItem>
             )}
@@ -319,7 +334,7 @@ export default function ClientRegistrarAvarias() {
             name='quantidade_avariada'
             render={({ field }) => (
               <FormItem className="w-full">
-                <Card>
+                <Card className="relative">
                   <CardHeader className="p-2">
                     <CardTitle>
                       <FormLabel className="text-blue-700 font-bold text-lg" required>QUANTIDADE AVARIADA</FormLabel>
@@ -356,13 +371,15 @@ export default function ClientRegistrarAvarias() {
 
                     <FormMessage />
                   </CardContent>
+
+                  <StepOverlay disabled={tipoAvariaWatcher === ''} />
                 </Card>
               </FormItem>
             )}
           />
 
           {/* ALERTA_IMAGEM */}
-          <Card className="flex items-center px-1 py-2 border-dotted border-2 border-amber-700 bg-amber-100">
+          <Card className="relative flex items-center px-1 py-2 border-dotted border-2 border-amber-700 bg-amber-100">
             <div className="p-3">
               <TriangleAlertIcon className="text-amber-700 size-7" />
             </div>
@@ -374,6 +391,8 @@ export default function ClientRegistrarAvarias() {
                 A imagem deve conter o lote do produto
               </CardDescription>
             </CardHeader>
+
+            <StepOverlay disabled={quantidadeAvariadaWatcher === 0} />
           </Card>
 
           {/* IMAGEM_FIELD */}
@@ -382,7 +401,7 @@ export default function ClientRegistrarAvarias() {
             name='imagem'
             render={({ field }) => (
               <FormItem className="w-full">
-                <Card>
+                <Card className="relative">
                   <CardHeader className="p-2">
                     <CardTitle>
                       <FormLabel className="text-blue-700 font-bold text-lg" required>FOTOGRAFAR AVARIA</FormLabel>
@@ -435,6 +454,8 @@ export default function ClientRegistrarAvarias() {
 
                     <FormMessage />
                   </CardContent>
+
+                  <StepOverlay disabled={quantidadeAvariadaWatcher === 0} />
                 </Card>
               </FormItem>
             )}
@@ -442,13 +463,36 @@ export default function ClientRegistrarAvarias() {
 
         </form>
 
-        <div className="absolute bottom-0 left-0 w-full p-3 bg-background">
-          <Button className="h-14 w-full" onClick={form.handleSubmit(handleSubmit)}>
+        <div className="absolute bottom-0 left-0 w-full p-3 bg-background z-50">
+          <Button className="h-14 w-full" disabled={!form.formState.isValid} onClick={form.handleSubmit(handleSubmit)}>
             <SendIcon />
             ENVIAR AVARIA
           </Button>
         </div>
       </Form>
+    </div>
+  )
+}
+
+const StepOverlay = ({ disabled }: { disabled: boolean }) => {
+
+  if (!disabled) {
+    return null
+  }
+
+  return (
+    <div className="absolute top-0 left-0 w-full h-full bg-gray-100/70 z-10 flex items-center justify-center rounded-md"></div>
+  )
+}
+
+const StepPanel = ({ steps }: { steps: Array<{ step: number, active: boolean }> }) => {
+  return (
+    <div className="px-3 pb-3 bg-background sticky w-full top-0 left-0 flex gap-2 z-50">
+      {
+        steps.map((step, index) => (
+          <div key={index} className={`h-3 rounded-full w-full ${step.active ? 'bg-blue-500' : 'bg-gray-300'}`}></div>
+        ))
+      }
     </div>
   )
 }
