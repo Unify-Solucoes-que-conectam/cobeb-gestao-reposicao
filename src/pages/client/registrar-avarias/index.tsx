@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 
-import { FolderOpenIcon, FunnelIcon, PackageIcon, PlusIcon } from 'lucide-react'
-import { useNavigate, useSearchParams, useLocation } from 'react-router'
+import { FolderOpenIcon, PlusIcon } from 'lucide-react'
+import { useLocation, useNavigate, useSearchParams } from 'react-router'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
@@ -18,11 +18,9 @@ import { Separator } from '@/components/ui/separator'
 import { useHeader } from '@/hooks/mobile/use-header'
 import axios from '@/lib/axios'
 import { ApiResponse } from '@/types/api-response'
-import { Cliente } from '@/types/consults'
+import { Avaria, Cliente } from '@/types/consults'
 
-const tags = Array.from({ length: 50 }).map((_, i, a) => `v1.2.0-beta.${a.length - i}`)
-// SIMULAÇÂO
-const avarias = []
+const avarias: Avaria[] = []
 
 export default function ClientRegistrarAvarias() {
   // ============= HOOKS =============
@@ -102,7 +100,7 @@ export default function ClientRegistrarAvarias() {
               <div className='text-center space-y-2'>
                 <p className='font-medium text-sm text-slate-900'>Nenhum registro encontrado</p>
                 <p className='text-xs text-slate-500'>
-                  Clique em "Adicionar Avaria" para cadastrar
+                  Clique em &quot;Adicionar Avaria&quot; para cadastrar
                 </p>
               </div>
             </div>
@@ -114,7 +112,7 @@ export default function ClientRegistrarAvarias() {
                   key={avaria.id}
                   className='bg-white p-4 rounded-lg shadow-sm border border-gray-200'
                 >
-                  <p className='font-medium text-sm text-slate-900'>{avaria.nome}</p>
+                  <p className='font-medium text-sm text-slate-900'>{avaria.id}</p>
                 </div>
               ))}
             </div>
