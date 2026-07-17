@@ -22,7 +22,7 @@ import { Avaria, Cliente } from '@/types/consults'
 
 const avarias: Avaria[] = []
 
-export default function ClientRegistrarAvarias() {
+export default function ClientAvariasRegistradas() {
   // ============= HOOKS =============
   const navigate = useNavigate()
   const { setPageTitle, setPageDescription, setShowBackButton } = useHeader()
@@ -128,7 +128,7 @@ export default function ClientRegistrarAvarias() {
           className='w-full h-12 shadow-sm border-slate-200 hover:bg-slate-50'
           onClick={() =>
             navigate(
-              `/client/registrar-avarias/etapa-001?codigo=${cliente?.codigo}&nome_fantasia=${cliente?.nome_fantasia}&endereco=${cliente?.endereco}`
+              `/client/registrar-avarias?codigo=${cliente?.codigo}&nome_fantasia=${cliente?.nome_fantasia}&endereco=${cliente?.endereco}`
             )
           }
         >
