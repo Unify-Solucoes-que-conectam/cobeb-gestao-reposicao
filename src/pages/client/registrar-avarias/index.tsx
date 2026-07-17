@@ -81,10 +81,16 @@ export default function ClientRegistrarAvarias() {
    * useDebounce para consultar nota fiscal
    */
   const notaFiscalDebounced = useDebounce(async (numeroNota: string) => {
-
-    if (!numeroNota) {
+    // Se o campo estiver vazio, apenas limpa os estados e o próprio campo sem disparar resets em loop
+    if (!numeroNota || numeroNota.trim() === "") {
       setNotaFiscalData(null);
-      form.reset()
+      form.reset({
+        nota_fiscal: "",
+        produto: "",
+        tipo_avaria: "",
+        quantidade_avariada: 0,
+        imagem: ""
+      });
       return;
     }
 
@@ -104,6 +110,7 @@ export default function ClientRegistrarAvarias() {
       }
     } catch (error) {
       console.error('Erro ao buscar Nota Fiscal:', error);
+      setNotaFiscalData(null);
       form.setError('nota_fiscal', {
         type: 'manual',
         message: 'Nota Fiscal não encontrada.'
@@ -136,11 +143,16 @@ export default function ClientRegistrarAvarias() {
    */
   useEffect(() => {
     notaFiscalDebounced(notaFiscalWatcher);
-    
+  }, [notaFiscalWatcher]);
+
+  /**
+   * useEffect para disparar a consulta do produto quando o campo for alterado e a nota fiscal estiver carregada
+   */
+  useEffect(() => {
     if (notaFiscalData) {
       produtoDebounced();
     }
-  }, [notaFiscalWatcher, produtoWatcher])
+  }, [produtoWatcher, notaFiscalData]);
 
   return (
     <div className="flex flex-col w-full h-full bg-slate-50 overflow-y-auto no-scrollbar">
@@ -245,6 +257,7 @@ export default function ClientRegistrarAvarias() {
                       <InputGroup className="h-10">
                         <InputGroupInput
                           {...field}
+                          disabled={notaFiscalData === null}
                           placeholder="Ex: 7001"
                         />
                         <InputGroupAddon>
@@ -309,7 +322,7 @@ export default function ClientRegistrarAvarias() {
                               <Card className="flex items-center p-3 gap-3">
 
                                 <div className="flex items-center justify-center">
-                                  <RadioGroupItem value={tipo.id} id={tipo.id} />
+                                  <RadioGroupItem disabled={!produtoEncontrado} value={tipo.id} id={tipo.id} />
                                 </div>
 
                                 <CardHeader className="p-0">
@@ -366,12 +379,13 @@ export default function ClientRegistrarAvarias() {
                             min={0}
                             max={produtoEncontrado?.quantidade ?? 999}
                             className="text-center flex-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            disabled={!tipoAvariaWatcher}
                           />
-                          <Button variant="outline" type="button" className="flex-1 text-blue-700 bg-blue-500/20" disabled={(field.value || 0) >= (produtoEncontrado?.quantidade ?? 999)} onClick={() => field.onChange(Math.min((field.value || 0) + 1, produtoEncontrado?.quantidade ?? 999))}>
+                          <Button variant="outline" type="button" className="flex-1 text-blue-700 bg-blue-500/20" disabled={(field.value || 0) >= (produtoEncontrado?.quantidade ?? 999) || !tipoAvariaWatcher} onClick={() => field.onChange(Math.min((field.value || 0) + 1, produtoEncontrado?.quantidade ?? 999))}>
                             <PlusIcon />
                           </Button>
                         </div>
-                        <Button type="button" className="flex-1" onClick={() => field.onChange(produtoEncontrado?.quantidade ?? 999)}>
+                        <Button type="button" className="flex-1" disabled={!tipoAvariaWatcher} onClick={() => field.onChange(produtoEncontrado?.quantidade ?? 999)}>
                           SELECIONAR TUDO
                         </Button>
                       </div>
