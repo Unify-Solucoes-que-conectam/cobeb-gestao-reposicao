@@ -1,74 +1,192 @@
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Cliente } from "@/types/consults";
-import { FileTextIcon, MapPinIcon, PackageIcon, UserIcon } from "lucide-react";
-import { useNavigate } from "react-router";
+import {
+  FileTextIcon,
+  MapIcon,
+  MapPinIcon,
+  PackageIcon,
+  PlusIcon,
+  TagIcon,
+  TriangleAlertIcon,
+  UserIcon,
+} from 'lucide-react'
+import { useNavigate } from 'react-router'
+
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardFooter, CardHeader } from '@/components/ui/card'
+import { Cliente } from '@/types/consults'
 
 interface ClienteCardProps {
-  cliente: Cliente
+  cliente: Cliente & {
+    razao_social?: string
+    status?: string
+    categoria?: {
+      id?: number
+      descricao?: string
+    }
+    cidade?: string
+    uf?: string
+  }
   type?: 'selected' | 'list'
-  onClick?: () => void;
+  onClick?: () => void
 }
-export default function ClienteCard({
-  cliente,
-  type = 'list',
-  onClick,
-}: ClienteCardProps) {
 
-  const navigate = useNavigate();
+export default function ClienteCard({ cliente, type = 'list', onClick }: ClienteCardProps) {
+  const navigate = useNavigate()
 
   if (type === 'selected') {
     return (
-      <Card className="border-2 border-blue-500 bg-blue-50">
-        <CardHeader className="p-4 flex-row justify-between items-center">
-          <CardTitle className="text-md">Cliente Selecionado</CardTitle>
-          <CardDescription>
-            <Button variant='ghost' onClick={onClick}>
-              Trocar
-            </Button>
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center space-x-2">
-            <UserIcon className="text-muted-foreground size-4" />
-            <span className="uppercase">
-              [{cliente.codigo}] {cliente.nome_fantasia}
+      <Card className='flex flex-col bg-blue-50 border border-blue-600 rounded-2xl shadow-sm transition-all'>
+        <div className='flex justify-between items-start p-4 gap-4'>
+          <div className='flex flex-col gap-0.5 flex-1 min-w-0'>
+            <span className='text-xs font-semibold text-slate-500 uppercase truncate'>
+              Cód {cliente.codigo}
+            </span>
+            <span className='text-base font-extrabold text-foreground uppercase leading-tight tracking-tight truncate'>
+              {cliente.nome_fantasia}
+            </span>
+            <span className='text-xs font-medium text-slate-500 uppercase truncate'>
+              {cliente.razao_social || 'RAZÃO SOCIAL NÃO INFORMADA'}
             </span>
           </div>
-          <div className="flex items-center space-x-2">
-            <MapPinIcon className="text-muted-foreground size-4" />
-            <span className="uppercase">{cliente.endereco}</span>
+
+          <div className='flex flex-col items-end gap-2 shrink-0'>
+            <Badge
+              variant='outline'
+              className='text-xs font-bold text-foreground bg-white border-slate-200 rounded-full px-3 py-0.5 whitespace-nowrap'
+            >
+              {cliente.qntd_notas_fiscais || 0} NFs
+            </Badge>
+
+            <Badge
+              className={`text-xs font-bold border-none rounded-full px-2.5 py-0.5 tracking-wide shadow-none uppercase ${
+                !cliente.pdv_ativo
+                  ? 'bg-red-100 text-red-700 hover:bg-red-200'
+                  : 'bg-green-100 text-green-700 hover:bg-green-200'
+              }`}
+            >
+              {cliente.pdv_ativo ? 'ATIVO' : 'INATIVO'}
+            </Badge>
           </div>
-          <div className="flex items-center space-x-2">
-            <FileTextIcon className="text-muted-foreground size-4" />
-            <span>{cliente.qntd_notas_fiscais} NF(s)</span>
+        </div>
+
+        <div className='h-px bg-slate-200 mx-4' />
+
+        <div className='flex justify-between items-end p-4 gap-4'>
+          <div className='flex flex-col gap-1 flex-1 min-w-0'>
+            <div className='flex items-center text-slate-500 text-xs gap-2'>
+              <MapIcon className='size-4 shrink-0' strokeWidth={2} />
+              <span className='uppercase font-medium truncate'>{cliente.endereco}</span>
+            </div>
+            <div className='flex items-center text-slate-500 text-xs gap-2'>
+              <TagIcon className='size-4 shrink-0' strokeWidth={2} />
+              <span className='uppercase font-medium truncate'>
+                {cliente.categoria?.descricao || 'SEGMENTO'}
+              </span>
+            </div>
           </div>
-          <div className="flex items-center space-x-2">
-            <PackageIcon className="text-muted-foreground size-4" />
-            <span>{cliente.qntd_produtos} Produto(s)</span>
+
+          <div className='flex items-center justify-end shrink-0'>
+            <span className='text-xs font-bold text-foreground uppercase'>
+              {cliente.cidade && cliente.uf ? `${cliente.cidade}/${cliente.uf}` : 'CIDADE/UF'}
+            </span>
           </div>
-        </CardContent>
-        <CardFooter className="px-4">
-          <Button className="w-full h-12" onClick={() => navigate(`/client/registrar-avarias?clienteId=${cliente.id}`)}>
-            Registar Avarias
+        </div>
+
+        <div className='flex flex-col gap-3 px-4 pb-4 pt-2'>
+          <Button
+            className='w-full bg-primary text-white h-10 rounded-xl text-sm font-semibold shadow-sm'
+            onClick={() =>
+              navigate(`/client/registrar-avarias?clienteId=${cliente.id}`, {
+                state: { clienteInfo: cliente },
+              })
+            }
+          >
+            <PlusIcon className='size-5 mr-1' strokeWidth={2.5} />
+            Registrar Avarias
           </Button>
-        </CardFooter>
+
+          <Button
+            className='w-full bg-white border border-slate-200 text-slate-800 hover:bg-slate-50 h-10 rounded-xl text-sm font-semibold shadow-sm'
+            variant='ghost'
+            onClick={onClick}
+          >
+            Escolher outro
+          </Button>
+        </div>
       </Card>
     )
   }
 
   return (
-    <Card className="flex justify-between items-center border-2 hover:border-primary cursor-pointer" onClick={onClick}>
-      <CardHeader className="p-4">
-        <CardTitle className="text-md">{cliente.nome_fantasia}</CardTitle>
-        <CardDescription>Cód. {cliente.codigo}</CardDescription>
-      </CardHeader>
-      <CardContent className="p-0 py-4 pr-4">
-        <Badge className="text-[10px] font-bold bg-slate-200 hover:bg-slate-300 text-foreground px-1.5 py-0.5 rounded uppercase tracking-wider">
-          {cliente.qntd_notas_fiscais && cliente.qntd_notas_fiscais > 0 ? `${cliente.qntd_notas_fiscais} NF(s)` : 'NF'}
-        </Badge>
-      </CardContent>
+    <Card
+      className='flex flex-col bg-white border border-slate-200 rounded-2xl shadow-sm transition-all cursor-pointer'
+      onClick={onClick}
+    >
+      <div className='flex justify-between items-start p-4 gap-4'>
+        <div className='flex flex-col gap-0.5 flex-1 min-w-0'>
+          <span className='text-xs font-semibold text-slate-500 uppercase truncate'>
+            Cód {cliente.codigo}
+          </span>
+          <span className='text-base font-extrabold text-foreground uppercase leading-tight tracking-tight truncate'>
+            {cliente.nome_fantasia}
+          </span>
+          <span className='text-xs font-medium text-slate-500 uppercase truncate'>
+            {cliente.razao_social || 'RAZÃO SOCIAL NÃO INFORMADA'}
+          </span>
+        </div>
+
+        <div className='flex flex-col items-end gap-2 shrink-0'>
+          <Badge
+            variant='outline'
+            className='text-xs font-bold text-foreground bg-white border-slate-200 rounded-full px-3 py-0.5 whitespace-nowrap'
+          >
+            {cliente.qntd_notas_fiscais || 0} NFs
+          </Badge>
+
+          <Badge
+            className={`text-xs font-bold border-none rounded-full px-2.5 py-0.5 tracking-wide shadow-none uppercase ${
+              !cliente.pdv_ativo
+                ? 'bg-red-100 text-red-700 hover:bg-red-200'
+                : 'bg-green-100 text-green-700 hover:bg-green-200'
+            }`}
+          >
+            {cliente.pdv_ativo ? 'ATIVO' : 'INATIVO'}
+          </Badge>
+        </div>
+      </div>
+
+      <div className='h-px bg-slate-200 mx-4' />
+
+      <div className='flex justify-between items-end p-4 gap-4'>
+        <div className='flex flex-col gap-1 flex-1 min-w-0'>
+          <div className='flex items-center text-slate-500 text-xs gap-2'>
+            <MapIcon className='size-4 shrink-0' strokeWidth={2} />
+            <span className='uppercase font-medium truncate'>{cliente.endereco}</span>
+          </div>
+          <div className='flex items-center text-slate-500 text-xs gap-2'>
+            <TagIcon className='size-4 shrink-0' strokeWidth={2} />
+            <span className='uppercase font-medium truncate'>
+              {cliente.categoria?.descricao || 'SEGMENTO'}
+            </span>
+          </div>
+        </div>
+
+        <div className='flex items-center justify-end shrink-0'>
+          <span className='text-xs font-bold text-foreground uppercase'>
+            {cliente.cidade && cliente.uf ? `${cliente.cidade}/${cliente.uf}` : 'CIDADE/UF'}
+          </span>
+        </div>
+      </div>
+
+      {/* ALERT DE SINCRONIZAÇÃO DE AVARIAS
+      <div className='px-4 pb-4 pt-0'>
+        <div className='flex items-center gap-2.5 bg-amber-100/60 border border-amber-600 rounded-lg px-3 py-2.5 shadow-sm'>
+          <TriangleAlertIcon className='size-7 text-amber-700 shrink-0' strokeWidth={2} />
+          <span className='text-xs font-bold text-amber-700 leading-tight'>
+            ? avarias registradas aguardando sincronização
+          </span>
+        </div>
+      </div> */}
     </Card>
   )
 }
