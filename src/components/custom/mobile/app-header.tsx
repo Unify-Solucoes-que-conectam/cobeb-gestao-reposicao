@@ -45,7 +45,6 @@ export function AppHeader() {
       <div className='flex gap-2'>
   <AlertDialog>
     
-    {/* GATILHO: O botão original fica aqui dentro com o asChild */}
     <AlertDialogTrigger asChild>
       <Button className='size-10 rounded-lg shadow-accent-foreground hover:bg-red-500'>
         <LogOutIcon className='size-6' />
@@ -54,7 +53,6 @@ export function AppHeader() {
     
     <AlertDialogContent className="w-[90%] max-w-[380px] rounded-3xl p-6 bg-white gap-6">
       
-      {/* TEXTOS CENTRALIZADOS */}
       <AlertDialogHeader className="flex flex-col items-center text-center space-y-2">
         <AlertDialogTitle className="text-lg leading-snug font-semibold text-slate-900">
           Você tem certeza que deseja sair?
@@ -64,14 +62,12 @@ export function AppHeader() {
         </AlertDialogDescription>
       </AlertDialogHeader>
 
-      {/* RODAPÉ E BOTÕES: Flex-col para empilhar, Cancelar primeiro */}
       <AlertDialogFooter className="flex flex-col gap-3 sm:flex-col sm:space-x-0">
         
         <AlertDialogCancel className="w-full h-11 mt-0 rounded-xl border border-slate-200 font-semibold text-slate-800 bg-white hover:bg-slate-50 shadow-sm">
           Cancelar
         </AlertDialogCancel>
         
-        {/* A Ação real de signOut fica aqui */}
         <AlertDialogAction 
           onClick={signOut} 
           className="w-full h-11 rounded-xl bg-red-500 hover:bg-red-700 text-white font-semibold shadow-sm"
