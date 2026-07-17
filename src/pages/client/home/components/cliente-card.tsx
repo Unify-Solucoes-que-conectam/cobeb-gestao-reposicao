@@ -170,16 +170,6 @@ export default function ClienteCard({ cliente, type = 'list', onClick }: Cliente
           </span>
         </div>
       </div>
-
-      {/* ALERT DE SINCRONIZAÇÃO DE AVARIAS
-      <div className='px-4 pb-4 pt-0'>
-        <div className='flex items-center gap-2.5 bg-amber-100/60 border border-amber-600 rounded-lg px-3 py-2.5 shadow-sm'>
-          <TriangleAlertIcon className='size-7 text-amber-700 shrink-0' strokeWidth={2} />
-          <span className='text-xs font-bold text-amber-700 leading-tight'>
-            ? avarias registradas aguardando sincronização
-          </span>
-        </div>
-      </div> */}
     </Card>
   )
 }
