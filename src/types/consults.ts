@@ -1,6 +1,5 @@
 import { Base } from "./app"
 
-export type TiposAvaria = 'avariado' | 'faltante' | 'inversao'
 export type StatusAvaria = 'pendente' | 'em_analise' | 'concluido'
 
 export type Avaria = Base & {
@@ -109,4 +108,9 @@ export type Mapa = {
   clientes: Cliente[]
   notas_fiscais: Exclude<NotaFiscal, 'produtos' | 'cliente' | 'mapa'>[]
   usuario_responsavel_id: string
+}
+
+export type TiposAvaria = Base & {
+  nome: string
+  descricao: string
 }
