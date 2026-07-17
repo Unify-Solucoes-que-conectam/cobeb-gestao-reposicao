@@ -1,34 +1,40 @@
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { fetch } from "@/services/fetch";
-import { TiposAvaria } from "@/types/consults";
+import { NotaFiscal, Produto, TiposAvaria } from "@/types/consults";
 import { convertFileToBase64 } from "@/utils/conversors";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CameraIcon, FileTextIcon, ImageIcon, MinusIcon, PlusIcon, SendIcon, TriangleAlertIcon } from "lucide-react";
+import { CameraIcon, CheckIcon, FileTextIcon, ImageIcon, MinusIcon, PlusIcon, SendIcon, TriangleAlertIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { CadastrarAvariaSchema, initValues, schema } from "./schemas/avaria";
+import { useDebounce } from "@/hooks/use-debounce";
+import { notaFiscalService, tiposAvariaService } from "@/services/api.service";
+import { Badge } from "@/components/ui/badge";
+import { formatCurrency } from "@/utils/formatters";
 
 export default function ClientRegistrarAvarias() {
 
-  // ===================== Formulário de cadastro de avarias =====================
+  // ===================== Formulário de cadastro de avarias =======================
   const form = useForm<CadastrarAvariaSchema>({
     resolver: zodResolver(schema),
     defaultValues: initValues,
     mode: "onSubmit"
   })
 
-  // =============================== States de dados =============================
+  // =============================== States de dados ===============================
   const [tiposAvaria, setTiposAvaria] = useState<TiposAvaria[]>([]);
   const [imageName, setImageName] = useState<{
     name: string;
   } | null>(null);
+
+  // =============================== States de passos ===============================
+  const [notaFiscalData, setNotaFiscalData] = useState<NotaFiscal | null>(null);
 
   /**
    * função para registrar avarias
@@ -41,7 +47,7 @@ export default function ClientRegistrarAvarias() {
    * função para consultar tipos de avaria
    */
   const fetchTiposAvaria = async () => {
-    const response = await fetch.tiposAvaria();
+    const response = await tiposAvariaService.read();
 
     if (response.success) {
       setTiposAvaria(response.data);
@@ -57,6 +63,48 @@ export default function ClientRegistrarAvarias() {
     fetchTiposAvaria();
   }, []);
 
+  // =================================== Watchers ==================================
+  const notaFiscalWatcher = form.watch('nota_fiscal');
+
+  /**
+   * useDebounce para consultar nota fiscal e código do produto
+   */
+  const notaFiscalDebounced = useDebounce(async (numeroNota: string) => {
+
+    if (!numeroNota) {
+      return;
+    }
+
+    try {
+      const response = await notaFiscalService.read(numeroNota, true);
+      const notaFiscal = response.data[0];
+
+      if (notaFiscal) {
+        setNotaFiscalData(notaFiscal);
+        form.clearErrors('nota_fiscal');
+      } else {
+        setNotaFiscalData(null);
+        form.setError('nota_fiscal', {
+          type: 'manual',
+          message: 'Nota Fiscal não encontrada.'
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao buscar Nota Fiscal:', error);
+      form.setError('nota_fiscal', {
+        type: 'manual',
+        message: 'Nota Fiscal não encontrada.'
+      });
+    }
+  }, 800);
+
+  /**
+   * useEffect para disparar a consulta da nota fiscal quando o campo for alterado
+   */
+  useEffect(() => {
+    notaFiscalDebounced(notaFiscalWatcher);
+  }, [notaFiscalWatcher])
+
   return (
     <div className="flex flex-col w-full h-full bg-slate-50 overflow-y-auto no-scrollbar">
 
@@ -71,8 +119,16 @@ export default function ClientRegistrarAvarias() {
               <FormItem className="w-full">
                 <Card>
                   <CardHeader className="p-2">
-                    <CardTitle>
+                    <CardTitle className="flex justify-between items-center">
                       <FormLabel className="text-blue-700 font-bold text-lg" required>NOTA FISCAL</FormLabel>
+                      {
+                        notaFiscalData !== null && (
+                          <Badge className="text-emerald-700 bg-emerald-100 hover:bg-emerald-100 text-sm gap-2">
+                            Carregada
+                            <CheckIcon size={20}/>
+                          </Badge>
+                        )
+                      }
                     </CardTitle>
                     <CardDescription>
                       Digite o número da Nota Fiscal
@@ -94,6 +150,22 @@ export default function ClientRegistrarAvarias() {
 
                     <FormMessage />
                   </CardContent>
+
+                  {
+                    notaFiscalData !== null && (
+                      <CardFooter className="p-2">
+                        <Card className="flex items-center p-3 w-full justify-between">
+                          <CardHeader className="p-0">
+                            <CardTitle>NF {notaFiscalData.numero}</CardTitle>
+                            <CardDescription className="font-thin">Cliente: {notaFiscalData.cliente.razao_social}</CardDescription>
+                          </CardHeader>
+                          <CardContent className="text-blue-700 font-bold text-xl p-0">
+                            {formatCurrency(notaFiscalData.valor_total)}
+                          </CardContent>
+                        </Card>
+                      </CardFooter>
+                    )
+                  }
                 </Card>
               </FormItem>
             )}
