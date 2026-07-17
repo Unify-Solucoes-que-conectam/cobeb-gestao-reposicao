@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useDebounce } from "@/hooks/use-debounce";
 import { notaFiscalService, tiposAvariaService } from "@/services/api.service";
-import { NotaFiscal, TiposAvaria } from "@/types/consults";
+import { Cliente, NotaFiscal, TiposAvaria } from "@/types/consults";
 import { convertFileToBase64 } from "@/utils/conversors";
 import { formatCurrency } from "@/utils/formatters";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -17,8 +17,18 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { CadastrarAvariaSchema, initValues, schema } from "./schemas/avaria";
+import { useLocation, useSearchParams } from "react-router";
+import axios from "@/lib/axios";
+import { ApiResponse } from "@/types/api-response";
+import { useHeader } from "@/hooks/mobile/use-header";
 
 export default function ClientRegistrarAvarias() {
+
+  // ===================================== Hooks ====================================
+  const { setPageTitle, setPageDescription, setShowBackButton } = useHeader()
+  const [searchParams] = useSearchParams()
+  const clienteId = searchParams.get('clienteId')
+  const location = useLocation()
 
   // ===================== Formulário de cadastro de avarias =======================
   const form = useForm<CadastrarAvariaSchema>({
@@ -32,9 +42,35 @@ export default function ClientRegistrarAvarias() {
   const [imageName, setImageName] = useState<{
     name: string;
   } | null>(null);
+  const [cliente, setCliente] = useState<Cliente | undefined>(location.state?.clienteInfo)
 
   // =============================== States de passos ===============================
   const [notaFiscalData, setNotaFiscalData] = useState<NotaFiscal | null>(null);
+
+  /**
+   * Função para buscar detalhes do cliente caso o usuário recarregue a página (F5) ou acesse a URL direto
+   */
+  const getClientDetails = async () => {
+    try {
+      const res = await axios.get<ApiResponse<Cliente>>(`/clientes/${clienteId}`, {
+        params: {
+          detalhar: true,
+        },
+      })
+
+      const { data } = res.data
+      console.log('Detalhes do cliente carregados:', data)
+
+      if (res.data.success) {
+        setCliente(data)
+      }
+    } catch (err) {
+      toast.error(
+        'Erro ao buscar detalhes do cliente. Contate o administrador do sistema caso o erro persista!'
+      )
+      console.error('Erro ao buscar detalhes do cliente', err)
+    }
+  }
 
   /**
    * função para registrar avarias
@@ -69,7 +105,19 @@ export default function ClientRegistrarAvarias() {
    */
   useEffect(() => {
     fetchTiposAvaria();
-  }, []);
+    setShowBackButton(true)
+
+    if (cliente) {
+      setPageTitle(cliente.nome_fantasia || 'Registrar Avarias')
+      setPageDescription(`Cód: ${cliente.codigo} • ${cliente.endereco}`)
+    } else {
+      // Fallback de segurança: se o usuário recarregar a página (F5), ou acessar a URL direto
+      setPageTitle('Registrar Avarias')
+      setPageDescription('Carregando informações...')
+
+      if (clienteId) getClientDetails()
+    }
+  }, [setPageTitle, setPageDescription, cliente]);
 
   // =================================== Watchers ==================================
   const notaFiscalWatcher = form.watch('nota_fiscal');

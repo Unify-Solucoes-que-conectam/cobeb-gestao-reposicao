@@ -128,7 +128,7 @@ export default function ClientAvariasRegistradas() {
           className='w-full h-12 shadow-sm border-slate-200 hover:bg-slate-50'
           onClick={() =>
             navigate(
-              `/client/registrar-avarias?codigo=${cliente?.codigo}&nome_fantasia=${cliente?.nome_fantasia}&endereco=${cliente?.endereco}`
+              `/client/registrar-avarias?clienteId=${cliente?.id}&codigo=${cliente?.codigo}&nome_fantasia=${cliente?.nome_fantasia}&endereco=${cliente?.endereco}`
             )
           }
         >
