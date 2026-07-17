@@ -42,6 +42,13 @@ export default function ClientRegistrarAvarias() {
   const handleSubmit = async (data: CadastrarAvariaSchema) => {
     console.log('Formulário submetido:', data);
     toast.success('Avaria registrada com sucesso!');
+    form.reset({
+      nota_fiscal: notaFiscalData?.numero,
+      produto: '',
+      tipo_avaria: '',
+      quantidade_avariada: 0,
+      imagem: ''
+    })
   }
 
   /**
