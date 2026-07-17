@@ -6,8 +6,11 @@ import { Input } from "@/components/ui/input";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { useHeader } from "@/hooks/mobile/use-header";
 import { useDebounce } from "@/hooks/use-debounce";
-import { notaFiscalService, tiposAvariaService } from "@/services/api.service";
+import axios from "@/lib/axios";
+import { avariaService, notaFiscalService, tiposAvariaService } from "@/services/api.service";
+import { ApiResponse } from "@/types/api-response";
 import { Cliente, NotaFiscal, TiposAvaria } from "@/types/consults";
 import { convertFileToBase64 } from "@/utils/conversors";
 import { formatCurrency } from "@/utils/formatters";
@@ -15,12 +18,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { CameraIcon, CheckIcon, FileTextIcon, ImageIcon, MinusIcon, PlusIcon, SendIcon, TriangleAlertIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import { useLocation, useSearchParams } from "react-router";
 import { toast } from "sonner";
 import { CadastrarAvariaSchema, initValues, schema } from "./schemas/avaria";
-import { useLocation, useSearchParams } from "react-router";
-import axios from "@/lib/axios";
-import { ApiResponse } from "@/types/api-response";
-import { useHeader } from "@/hooks/mobile/use-header";
 
 export default function ClientRegistrarAvarias() {
 
@@ -28,6 +28,7 @@ export default function ClientRegistrarAvarias() {
   const { setPageTitle, setPageDescription, setShowBackButton } = useHeader()
   const [searchParams] = useSearchParams()
   const clienteId = searchParams.get('clienteId')
+  const mapaId = searchParams.get('mapaId')
   const location = useLocation()
 
   // ===================== Formulário de cadastro de avarias =======================
@@ -59,7 +60,6 @@ export default function ClientRegistrarAvarias() {
       })
 
       const { data } = res.data
-      console.log('Detalhes do cliente carregados:', data)
 
       if (res.data.success) {
         setCliente(data)
@@ -76,15 +76,31 @@ export default function ClientRegistrarAvarias() {
    * função para registrar avarias
    */
   const handleSubmit = async (data: CadastrarAvariaSchema) => {
-    console.log('Formulário submetido:', data);
-    toast.success('Avaria registrada com sucesso!');
-    form.reset({
-      nota_fiscal: notaFiscalData?.numero,
-      produto: '',
-      tipo_avaria: '',
-      quantidade_avariada: 0,
-      imagem: ''
+
+    const response = await avariaService.create({
+      cliente_id: cliente?.id || '',
+      mapa_id: mapaId || '',
+      notas_fiscais: [notaFiscalData?.numero || ''],
+      produtos: notaFiscalData?.produtos.filter(produto => produto.codigo === data.produto).map(produto => ({
+        produto_id: produto.id,
+        tipo_avaria_id: data.tipo_avaria,
+        quantidade: data.quantidade_avariada,
+      })).filter(Boolean) || [],
+      anexos: []
     })
+
+    if (response.success) {
+      toast.success('Avaria registrada com sucesso!');
+      form.reset({
+        nota_fiscal: notaFiscalData?.numero,
+        produto: '',
+        tipo_avaria: '',
+        quantidade_avariada: 0,
+        imagem: ''
+      })
+    } else {
+      toast.error(response.message || 'Erro ao registrar avaria');
+    }
   }
 
   /**

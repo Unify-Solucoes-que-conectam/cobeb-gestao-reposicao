@@ -1,4 +1,4 @@
-import axios from "@/lib/axios"
+import axios from "@/lib/axios";
 import { ApiResponse } from "@/types/api-response";
 import { NotaFiscal, Produto, TiposAvaria } from "@/types/consults";
 
@@ -48,6 +48,34 @@ export const produtoService = {
           ...(!individual ? { search } : {}),
           detalhar: true
         }
+      });
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
+}
+
+/**
+ * Avaria service
+ */
+export const avariaService = {
+
+  create: async (data: {
+    cliente_id: string
+    mapa_id: string | null
+    notas_fiscais: string[]
+    produtos: Array<{
+      produto_id: string
+      tipo_avaria_id: string
+      quantidade: number
+    }>
+    anexos: string[]
+  }) => {
+    try {
+      const response = await axios.post<ApiResponse>(`/avarias`, {
+        ...data,
       });
       return response.data;
     } catch (error) {

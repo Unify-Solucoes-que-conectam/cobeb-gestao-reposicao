@@ -28,6 +28,7 @@ export default function ClientAvariasRegistradas() {
   const { setPageTitle, setPageDescription, setShowBackButton } = useHeader()
   const [searchParams] = useSearchParams()
   const clienteId = searchParams.get('clienteId')
+  const mapaId = searchParams.get('mapaId')
   const location = useLocation()
 
   // ============= STATES =============
@@ -128,7 +129,7 @@ export default function ClientAvariasRegistradas() {
           className='w-full h-12 shadow-sm border-slate-200 hover:bg-slate-50'
           onClick={() =>
             navigate(
-              `/client/registrar-avarias?clienteId=${cliente?.id}&codigo=${cliente?.codigo}&nome_fantasia=${cliente?.nome_fantasia}&endereco=${cliente?.endereco}`
+              `/client/registrar-avarias?clienteId=${cliente?.id}&mapaId=${mapaId}&codigo=${cliente?.codigo}&nome_fantasia=${cliente?.nome_fantasia}&endereco=${cliente?.endereco}`
             )
           }
         >
