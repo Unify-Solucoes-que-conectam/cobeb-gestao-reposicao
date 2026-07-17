@@ -16,6 +16,9 @@ if (Capacitor.isNativePlatform()) {
   StatusBar.setStyle({ style: Style.Dark }); // ícones brancos na barra de status
 }
 
+// valida se está usando mobile ou web
+const isMobile = Capacitor.isNativePlatform() || window.innerWidth <= 768;
+
 createRoot(document.getElementById('root')!).render(
   <AuthProvider>
     <ThemeProvider defaultTheme='light' storageKey='theme'>
@@ -25,14 +28,14 @@ createRoot(document.getElementById('root')!).render(
 
       <Toaster
         className='pointer-events-auto'
-        position='bottom-right'
+        position={isMobile ? 'top-center' : 'bottom-right'}
         visibleToasts={3}
         expand={false}
         richColors
         toastOptions={{
           classNames: {
             toast:
-              '!bg-neutral-100 border !border-neutral-200 dark:!bg-neutral-800 dark:!border-neutral-700',
+              `${isMobile ? '!bg-primary' : '!bg-neutral-100'} border ${isMobile ? '!border-primary' : '!border-neutral-200'} dark:!bg-neutral-800 dark:!border-neutral-700 mt-14`,
           },
         }}
       />

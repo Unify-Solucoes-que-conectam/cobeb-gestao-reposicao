@@ -41,6 +41,7 @@ export default function ClientRegistrarAvarias() {
    */
   const handleSubmit = async (data: CadastrarAvariaSchema) => {
     console.log('Formulário submetido:', data);
+    toast.success('Avaria registrada com sucesso!');
   }
 
   /**
