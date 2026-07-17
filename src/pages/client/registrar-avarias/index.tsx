@@ -80,7 +80,7 @@ export default function ClientRegistrarAvarias() {
     const response = await avariaService.create({
       cliente_id: cliente?.id || '',
       mapa_id: mapaId || '',
-      notas_fiscais: [notaFiscalData?.numero || ''],
+      notas_fiscais: [notaFiscalData?.id || ''],
       produtos: notaFiscalData?.produtos.filter(produto => produto.codigo === data.produto).map(produto => ({
         produto_id: produto.id,
         tipo_avaria_id: data.tipo_avaria,
