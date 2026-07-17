@@ -141,6 +141,13 @@ export default function AvariaCard({ data }: AvariaCardProps) {
       <CardFooter className="px-4 py-3 flex items-center justify-end gap-2 border-t">
         <Button
           onClick={handleSendMessage}
+          color='destructive'
+        >
+          <MessageCircleIcon size={16} />
+          Reprovar
+        </Button>
+        <Button
+          onClick={handleSendMessage}
           color='success'
         >
           <MessageCircleIcon size={16} />
