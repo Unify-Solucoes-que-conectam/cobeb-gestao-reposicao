@@ -82,5 +82,29 @@ export const avariaService = {
       console.error(error);
       throw error;
     }
+  },
+
+  aprovar: async (id: string) => {
+    try {
+      const response = await axios.put<ApiResponse>(`/avarias/${id}/status`, {
+        status: 'aprovado'
+      });
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  },
+
+  reprovar: async (id: string) => {
+    try {
+      const response = await axios.put<ApiResponse>(`/avarias/${id}/status`, {
+        status: 'reprovado'
+      });
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
   }
 }

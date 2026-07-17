@@ -2,6 +2,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import dayjs from '@/lib/dayjs';
+import { avariaService } from '@/services/api.service';
 import { Avaria } from '@/types/consults';
 import {
   CalendarIcon,
@@ -11,16 +12,18 @@ import {
   MessageCircleIcon,
   TruckIcon
 } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface AvariaCardProps {
   data: Avaria
+  reloadData: () => void;
 }
 
 /**
  * Componente AvariaCard
  * Exibe informações de ocorrências com suporte a múltiplos produtos.
  */
-export default function AvariaCard({ data }: AvariaCardProps) {
+export default function AvariaCard({ data, reloadData }: AvariaCardProps) {
   const {
     cliente,
     mapa,
@@ -42,21 +45,38 @@ export default function AvariaCard({ data }: AvariaCardProps) {
     concluido: 'Concluído'
   };
 
-  const handleSendMessage = () => {
-    const contato = cliente.contatos?.find(c =>
-      c.tipo.toLowerCase().includes('celular') ||
-      c.tipo.toLowerCase().includes('whatsapp')
-    );
-    if (contato) {
-      const phone = contato.valor.replace(/\D/g, '');
-      window.open(`https://wa.me/55${phone}`, '_blank');
-    }
-  };
-
   // Limite de produtos a serem exibidos antes do "ver mais"
   const MAX_VISIBLE_PRODUCTS = 3;
   const visibleProducts = produtos.slice(0, MAX_VISIBLE_PRODUCTS);
   const remainingCount = produtos.length - MAX_VISIBLE_PRODUCTS;
+
+  /**
+   * função para aprovar a avaria
+   */
+  const handleAprovar = async () => {
+    const response = await avariaService.aprovar(data.id);
+    if (response.success) {
+      // Atualizar o status localmente ou refetch os dados
+      toast.success('Avaria aprovada com sucesso!');
+      reloadData();
+    } else {
+      toast.error(response.message || 'Erro ao aprovar avaria');
+    }
+  }
+
+  /**
+   * função para reprovar a avaria
+   */
+  const handleReprovar = async () => {
+    const response = await avariaService.reprovar(data.id);
+    if (response.success) {
+      // Atualizar o status localmente ou refetch os dados
+      toast.success('Avaria reprovada com sucesso!');
+      reloadData();
+    } else {
+      toast.error(response.message || 'Erro ao reprovar avaria');
+    }
+  }
 
   return (
     <Card className="overflow-hidden">
@@ -140,14 +160,14 @@ export default function AvariaCard({ data }: AvariaCardProps) {
       {/* Footer / Ações */}
       <CardFooter className="px-4 py-3 flex items-center justify-end gap-2 border-t">
         <Button
-          onClick={handleSendMessage}
+          onClick={handleReprovar}
           color='destructive'
         >
           <MessageCircleIcon size={16} />
           Reprovar
         </Button>
         <Button
-          onClick={handleSendMessage}
+          onClick={handleAprovar}
           color='success'
         >
           <MessageCircleIcon size={16} />
