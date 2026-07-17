@@ -34,3 +34,22 @@ export function formatPhoneDisplay(phone: string): string {
 export function unformatPhone(phone: string): string {
   return phone.replace(/\D/g, '')
 }
+
+/**
+ * Formata um número ou string numérica para o padrão de moeda brasileiro (R$ 0,00).
+ * @param {number|string} value - O valor a ser formatado.
+ * @returns {string} O valor formatado como moeda.
+ */
+export function formatCurrency(value: string | number): string {
+  // Converte para número e valida se é um valor utilizável
+  const numberValue = typeof value === 'string' ? parseFloat(value) : value;
+
+  if (isNaN(numberValue) || numberValue === null || numberValue === undefined) {
+    return 'R$\u00A00,00'; // Retorna zero formatado caso receba um valor inválido
+  }
+
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  }).format(numberValue);
+}
