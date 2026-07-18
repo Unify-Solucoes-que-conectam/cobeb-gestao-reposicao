@@ -2,7 +2,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import { CloudDownloadIcon, ShieldCheckIcon, SmartphoneIcon } from 'lucide-react';
+import { CheckIcon, CloudDownloadIcon, ShieldCheckIcon, SmartphoneIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 
@@ -58,37 +58,6 @@ export default function PWAInstall() {
     navigate('/auth/login'); // Redireciona para a tela de login se o app já estiver instalado
   }
 
-  // return (
-  //   <div style={{ padding: '20px', textAlign: 'center' }}>
-  //     <h1>Instale nosso Aplicativo</h1>
-  //     <p>Tenha acesso rápido direto da sua tela inicial, carregamento mais rápido e suporte offline.</p>
-
-  //     {/* Botão customizado que chama a ação de instalação */}
-  //     <button
-  //       onClick={handleInstallClick}
-  //       disabled={!deferredPrompt}
-  //       style={{
-  //         padding: '12px 24px',
-  //         fontSize: '16px',
-  //         backgroundColor: deferredPrompt ? '#0070f3' : '#ccc',
-  //         color: '#fff',
-  //         border: 'none',
-  //         borderRadius: '8px',
-  //         cursor: deferredPrompt ? 'pointer' : 'not-allowed'
-  //       }}
-  //     >
-  //       {deferredPrompt ? 'Instalar no meu Celular' : 'Preparando instalação...'}
-  //     </button>
-
-  //     {/* Dica para usuários de iOS (Safari), que não suportam o beforeinstallprompt nativo */}
-  //     {!deferredPrompt && (
-  //       <div style={{ marginTop: '20px', fontSize: '14px', color: '#666' }}>
-  //         <p>Se estiver no iPhone/iPad (Safari):</p>
-  //         <p>Clique no botão de <strong>Compartilhar</strong> (ícone de seta) e escolha <strong>&quot;Adicionar à Tela de Início&quot;</strong>.</p>
-  //       </div>
-  //     )}
-  //   </div>
-  // );
   return (
     <div className='flex flex-col h-full items-center justify-center'>
       <Card className='w-100 flex flex-col gap-6'>
@@ -115,10 +84,17 @@ export default function PWAInstall() {
             disabled={!deferredPrompt}
             className={cn('cursor-pointer w-full h-12', {
               'cursor-not-allowed': !deferredPrompt,
+              'bg-emerald-500': isAppInstalled,
             })}
           >
-            <CloudDownloadIcon />
-            {deferredPrompt ? 'Instalar agora' : 'Preparando instalação...'}
+            {
+              isAppInstalled ? (
+                <CheckIcon />
+              ) : (
+                <CloudDownloadIcon />
+              )
+            }
+            {deferredPrompt ? 'Instalar agora' : isAppInstalled ? 'App já instalado' : 'Preparando instalação...'}
           </Button>
 
           <Button
