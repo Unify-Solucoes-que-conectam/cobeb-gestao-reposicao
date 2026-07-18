@@ -35,14 +35,14 @@ export default function AvariaCard({ data, reloadData }: AvariaCardProps) {
 
   const statusColors = {
     pendente: 'bg-yellow-100 text-yellow-500 border-yellow-200 hover:bg-yellow-200 hover:text-yellow-500',
-    em_analise: 'bg-blue-100 text-blue-500 border-blue-200 hover:bg-blue-200 hover:text-blue-500',
-    concluido: 'bg-green-100 text-green-500 border-green-200 hover:bg-green-200 hover:text-green-500'
+    aprovado: 'bg-green-100 text-green-500 border-green-200 hover:bg-green-200 hover:text-green-500',
+    reprovado: 'bg-red-100 text-red-500 border-red-200 hover:bg-red-200 hover:text-red-500'
   };
 
   const statusLabels = {
     pendente: 'Aguardando Análise',
-    em_analise: 'Em Análise',
-    concluido: 'Concluído'
+    aprovado: 'Aprovado',
+    reprovado: 'Reprovado'
   };
 
   // Limite de produtos a serem exibidos antes do "ver mais"
@@ -162,6 +162,7 @@ export default function AvariaCard({ data, reloadData }: AvariaCardProps) {
         <Button
           onClick={handleReprovar}
           color='destructive'
+          disabled={status !== 'pendente'}
         >
           <MessageCircleIcon size={16} />
           Reprovar
@@ -169,6 +170,7 @@ export default function AvariaCard({ data, reloadData }: AvariaCardProps) {
         <Button
           onClick={handleAprovar}
           color='success'
+          disabled={status !== 'pendente'}
         >
           <MessageCircleIcon size={16} />
           Aprovar e Notificar Cliente

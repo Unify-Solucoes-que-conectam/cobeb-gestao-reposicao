@@ -70,7 +70,7 @@ const HeaderNotifications = () => {
   const { messages, clearMessages } = useEcho({
     channelName: user ? `notifications.${user.id}` : '',
     mode: 'event',
-    eventName: 'appointment.created',
+    eventName: 'notification.created',
   })
 
   const [open, setOpen] = useState(false)
