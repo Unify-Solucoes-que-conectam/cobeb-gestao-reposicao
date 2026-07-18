@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 
-import { FolderOpenIcon, PlusIcon } from 'lucide-react'
+import { FolderOpenIcon, LoaderCircleIcon, PlusIcon } from 'lucide-react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router'
 import { toast } from 'sonner'
 
@@ -19,8 +19,7 @@ import { useHeader } from '@/hooks/mobile/use-header'
 import axios from '@/lib/axios'
 import { ApiResponse } from '@/types/api-response'
 import { Avaria, Cliente } from '@/types/consults'
-
-const avarias: Avaria[] = []
+import AvariaCard from '@/pages/admin/avarias/components/avaria-card'
 
 export default function ClientAvariasRegistradas() {
   // ============= HOOKS =============
@@ -33,6 +32,38 @@ export default function ClientAvariasRegistradas() {
 
   // ============= STATES =============
   const [cliente, setCliente] = useState<Cliente | undefined>(location.state?.clienteInfo)
+  const [avarias, setAvarias] = useState<Avaria[]>([])
+  const [selectedStatus, setSelectedStatus] = useState<string | undefined>(undefined)
+  const [spinners, setSpinners] = useState({ geral: false })
+
+  const fetchAvarias = async () => {
+    try {
+      setSpinners((prev) => ({ ...prev, geral: true }));
+
+      const response = await axios.get<ApiResponse<Avaria[]>>('/avarias', {
+        params: {
+          search: '',
+          status: selectedStatus,
+          filial: undefined,
+          clienteId,
+          dataInicial: undefined,
+          dataFinal: undefined,
+        }
+      });
+      const { data } = response;
+
+      if (data.success) {
+        setAvarias(data.data);
+      } else {
+        toast.error(data.message || "Erro ao carregar avarias");
+      }
+    } catch (error) {
+      toast.error("Erro ao carregar avarias");
+      console.error("Error loading avarias:", error);
+    } finally {
+      setSpinners((prev) => ({ ...prev, geral: false }));
+    }
+  };
 
   // ============= EFFECTS =============
   useEffect(() => {
@@ -49,6 +80,10 @@ export default function ClientAvariasRegistradas() {
       if (clienteId) getClientDetails()
     }
   }, [setPageTitle, setPageDescription, cliente])
+
+  useEffect(() => {
+    fetchAvarias();
+  }, [])
 
   // ============= HANDLERS =============
   const getClientDetails = async () => {
@@ -76,7 +111,7 @@ export default function ClientAvariasRegistradas() {
     <div className='flex flex-1 flex-col min-h-0 w-full bg-slate-50'>
       <div className='flex justify-between items-center shrink-0 z-10'>
         <h1 className='text-sm font-semibold'>Avarias Registradas (0)</h1>
-        <Select defaultValue='000'>
+        <Select defaultValue='000' onValueChange={(value) => setSelectedStatus(value)}>
           <SelectTrigger className='w-32 h-9 text-sm bg-white'>
             <SelectValue placeholder='Tipos de Avaria' />
           </SelectTrigger>
@@ -105,16 +140,14 @@ export default function ClientAvariasRegistradas() {
                 </p>
               </div>
             </div>
+          ) : spinners.geral ? (
+            <div className='flex flex-col items-center justify-center h-full gap-2 p-4'>
+              <LoaderCircleIcon className='animate-spin' size={32} strokeWidth={2} />
+            </div>
           ) : (
-            /* SIMULAÇÂO */
-            <div className='flex flex-col gap-4 p-4'>
+            <div className='flex flex-col gap-4 mt-3'>
               {avarias.map((avaria) => (
-                <div
-                  key={avaria.id}
-                  className='bg-white p-4 rounded-lg shadow-sm border border-gray-200'
-                >
-                  <p className='font-medium text-sm text-slate-900'>{avaria.id}</p>
-                </div>
+                <AvariaCard key={avaria.id} data={avaria} />
               ))}
             </div>
           )}

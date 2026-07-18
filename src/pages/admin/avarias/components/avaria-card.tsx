@@ -1,22 +1,27 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { useAuth } from '@/hooks/use-auth';
 import dayjs from '@/lib/dayjs';
+import { cn } from '@/lib/utils';
 import { avariaService } from '@/services/api.service';
 import { Avaria } from '@/types/consults';
 import {
   CalendarIcon,
+  CheckIcon,
+  ClockIcon,
   // EyeIcon,
   FileTextIcon,
   LayersIcon,
   MessageCircleIcon,
-  TruckIcon
+  TruckIcon,
+  XIcon
 } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface AvariaCardProps {
   data: Avaria
-  reloadData: () => void;
+  reloadData?: () => void;
 }
 
 /**
@@ -32,6 +37,8 @@ export default function AvariaCard({ data, reloadData }: AvariaCardProps) {
     notas_fiscais,
     created_at: dataOcorrencia,
   } = data;
+
+  const { user } = useAuth();
 
   const statusColors = {
     pendente: 'bg-yellow-100 text-yellow-500 border-yellow-200 hover:bg-yellow-200 hover:text-yellow-500',
@@ -58,7 +65,7 @@ export default function AvariaCard({ data, reloadData }: AvariaCardProps) {
     if (response.success) {
       // Atualizar o status localmente ou refetch os dados
       toast.success('Avaria aprovada com sucesso!');
-      reloadData();
+      reloadData?.();
     } else {
       toast.error(response.message || 'Erro ao aprovar avaria');
     }
@@ -72,7 +79,7 @@ export default function AvariaCard({ data, reloadData }: AvariaCardProps) {
     if (response.success) {
       // Atualizar o status localmente ou refetch os dados
       toast.success('Avaria reprovada com sucesso!');
-      reloadData();
+      reloadData?.();
     } else {
       toast.error(response.message || 'Erro ao reprovar avaria');
     }
@@ -159,29 +166,50 @@ export default function AvariaCard({ data, reloadData }: AvariaCardProps) {
 
       {/* Footer / Ações */}
       <CardFooter className="px-4 py-3 flex items-center justify-end gap-2 border-t">
-        <Button
-          onClick={handleReprovar}
-          color='destructive'
-          disabled={status !== 'pendente'}
-        >
-          <MessageCircleIcon size={16} />
-          Reprovar
-        </Button>
-        <Button
-          onClick={handleAprovar}
-          color='success'
-          disabled={status !== 'pendente'}
-        >
-          <MessageCircleIcon size={16} />
-          Aprovar e Notificar Cliente
-        </Button>
+        {
+          status !== 'pendente' ? (
+            <div className={
+              cn(
+                'text-sm font-medium flex items-center gap-2',
+                status === 'aprovado' ? 'text-green-600' : 'text-red-600'
+              )}>
+                {
+                  status === 'aprovado' ? <CheckIcon size={16} className='mr-1' /> : <XIcon size={16} className='mr-1' />
+                }
+                Troca {status === 'aprovado' ? 'aprovada' : 'reprovada'} para envio ao cliente em {dayjs(data.updated_at).format('DD/MM/YYYY HH:mm')}
+            </div>
+          ) : status === 'pendente' && user?.role === 'motorista' ? (
+            <div>
+              <div className='text-sm font-medium text-slate-500 flex items-center gap-2'><ClockIcon /> Aguardando análise do administrador</div>
+            </div>
+          ) : (
+            <>
+              <Button
+                onClick={handleReprovar}
+                color='destructive'
+                disabled={status !== 'pendente'}
+              >
+                <MessageCircleIcon size={16} />
+                Reprovar
+              </Button>
+              <Button
+                onClick={handleAprovar}
+                color='success'
+                disabled={status !== 'pendente'}
+              >
+                <MessageCircleIcon size={16} />
+                Aprovar e Notificar Cliente
+              </Button>
+            </>
+          )
+        }
         {/* <Button
           color="warning"
         >
           <EyeIcon size={20} />
           Visualizar Detalhes
         </Button> */}
-      </CardFooter>
-    </Card>
+      </CardFooter >
+    </Card >
   );
 };
