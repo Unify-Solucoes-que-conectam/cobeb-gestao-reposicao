@@ -1,4 +1,4 @@
-import axios from "@/lib/axios";
+import axios from "@/lib/axios"
 import { ApiResponse } from "@/types/api-response";
 import { NotaFiscal, Produto, TiposAvaria } from "@/types/consults";
 
