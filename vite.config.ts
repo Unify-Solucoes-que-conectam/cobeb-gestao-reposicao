@@ -56,13 +56,55 @@ export default defineConfig({
         // Configuração de Background Sync para APIs
         runtimeCaching: [
           {
+            // 1. Estratégia para buscar dados (GET)
             urlPattern: /\/api\/.*$/,
-            handler: 'NetworkOnly', // Tenta sempre a rede primeiro
+            method: 'GET',
+            handler: 'NetworkFirst', // Tenta a rede, se falhar ou demorar, busca no cache (útil para offline)
+            options: {
+              cacheName: 'api-get-cache',
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 24 * 60 * 60 // Cache válido por 24h
+              },
+              // Opcional: define um tempo máximo de espera antes de recorrer ao cache
+              networkTimeoutSeconds: 5,
+            }
+          },
+          {
+            urlPattern: /\/api\/.*$/,
+            method: 'POST',
+            handler: 'NetworkOnly',
             options: {
               backgroundSync: {
                 name: 'sync-queue-data',
                 options: {
-                  maxRetentionTime: 24 * 60 // Tenta reinstanciar por até 24 horas
+                  maxRetentionTime: 24 * 60 // Tenta reenviar por até 24 horas
+                }
+              }
+            }
+          },
+          {
+            urlPattern: /\/api\/.*$/,
+            method: 'PUT',
+            handler: 'NetworkOnly',
+            options: {
+              backgroundSync: {
+                name: 'sync-queue-data',
+                options: {
+                  maxRetentionTime: 24 * 60 // Tenta reenviar por até 24 horas
+                }
+              }
+            }
+          },
+          {
+            urlPattern: /\/api\/.*$/,
+            method: 'DELETE',
+            handler: 'NetworkOnly',
+            options: {
+              backgroundSync: {
+                name: 'sync-queue-data',
+                options: {
+                  maxRetentionTime: 24 * 60 // Tenta reenviar por até 24 horas
                 }
               }
             }
