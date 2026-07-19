@@ -3,13 +3,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/hooks/use-auth';
 import dayjs from '@/lib/dayjs';
+import VisualizarAvaria from '@/pages/admin/avarias/visualizar-avaria';
 import { avariaService } from '@/services/api.service';
 import { Avaria } from '@/types/consults';
 import {
   CalendarIcon,
   CheckIcon,
   ClockIcon,
-  EyeIcon,
   FileTextIcon,
   LayersIcon,
   MessageCircleIcon,
@@ -24,7 +24,7 @@ interface AvariaCardProps {
   reloadData?: () => void;
 }
 
-type Spinners = {
+export type Spinners = {
   aprovando: boolean;
   reprovando: boolean;
 }
@@ -54,14 +54,14 @@ export default function AvariaCard({ data, reloadData }: AvariaCardProps) {
 
   const statusColors = {
     pendente: 'bg-yellow-100 text-yellow-500 border-yellow-200 hover:bg-yellow-200 hover:text-yellow-500',
-    aprovado: 'bg-green-100 text-green-500 border-green-200 hover:bg-green-200 hover:text-green-500',
-    reprovado: 'bg-red-100 text-red-500 border-red-200 hover:bg-red-200 hover:text-red-500'
+    aprovada: 'bg-green-100 text-green-500 border-green-200 hover:bg-green-200 hover:text-green-500',
+    reprovada: 'bg-red-100 text-red-500 border-red-200 hover:bg-red-200 hover:text-red-500'
   };
 
   const statusLabels = {
     pendente: 'Aguardando Análise',
-    aprovado: 'Aprovado',
-    reprovado: 'Reprovado'
+    aprovada: 'Aprovada',
+    reprovada: 'Reprovada'
   };
 
   // Limite de produtos a serem exibidos antes do "ver mais"
@@ -194,14 +194,14 @@ export default function AvariaCard({ data, reloadData }: AvariaCardProps) {
               </div>
             )}
 
-            {status === 'aprovado' && (
+            {status === 'aprovada' && (
               <div className="text-sm font-medium text-green-600 flex items-center">
                 <CheckIcon size={16} className="mr-1" />
                 Troca aprovada, o envio será realizado na próxima entrega!
               </div>
             )}
 
-            {status === 'reprovado' && (
+            {status === 'reprovada' && (
               <div className="text-sm font-medium text-red-600 flex items-center">
                 <XIcon size={16} className="mr-1" />
                 Troca reprovada
@@ -237,13 +237,7 @@ export default function AvariaCard({ data, reloadData }: AvariaCardProps) {
 
         {/* Botão de Monitoramento (Exclusivo para Monitoramento) */}
         {user?.role === 'monitoramento' && (
-          <Button
-            color="warning"
-            disabled={spinners.reprovando || spinners.aprovando}
-          >
-            <EyeIcon size={20} className="mr-2" />
-            Visualizar Detalhes
-          </Button>
+          <VisualizarAvaria spinners={spinners} avaria={data} />
         )}
 
       </CardFooter>
