@@ -56,3 +56,55 @@ export const produtoService = {
     }
   }
 }
+
+/**
+ * Avaria service
+ */
+export const avariaService = {
+
+  create: async (data: {
+    cliente_id: string
+    mapa_id: string | null
+    notas_fiscais: string[]
+    produtos: Array<{
+      produto_id: string
+      tipo_avaria_id: string
+      quantidade: number
+    }>
+    anexos: string[]
+  }) => {
+    try {
+      const response = await axios.post<ApiResponse>(`/avarias`, {
+        ...data,
+      });
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  },
+
+  aprovar: async (id: string) => {
+    try {
+      const response = await axios.put<ApiResponse>(`/avarias/${id}/status`, {
+        status: 'aprovado'
+      });
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  },
+
+  reprovar: async (id: string) => {
+    try {
+      const response = await axios.put<ApiResponse>(`/avarias/${id}/status`, {
+        status: 'reprovado'
+      });
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
+}
