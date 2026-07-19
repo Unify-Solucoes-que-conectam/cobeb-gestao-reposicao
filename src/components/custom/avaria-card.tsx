@@ -3,25 +3,30 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/hooks/use-auth';
 import dayjs from '@/lib/dayjs';
-import { cn } from '@/lib/utils';
 import { avariaService } from '@/services/api.service';
 import { Avaria } from '@/types/consults';
 import {
   CalendarIcon,
   CheckIcon,
   ClockIcon,
-  // EyeIcon,
+  EyeIcon,
   FileTextIcon,
   LayersIcon,
   MessageCircleIcon,
   TruckIcon,
   XIcon
 } from 'lucide-react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 
 interface AvariaCardProps {
   data: Avaria
   reloadData?: () => void;
+}
+
+type Spinners = {
+  aprovando: boolean;
+  reprovando: boolean;
 }
 
 /**
@@ -38,7 +43,14 @@ export default function AvariaCard({ data, reloadData }: AvariaCardProps) {
     created_at: dataOcorrencia,
   } = data;
 
+  // ======================= Hooks ====================
   const { user } = useAuth();
+
+  // ======================= States ===================
+  const [spinners, setSpinners] = useState<Spinners>({
+    aprovando: false,
+    reprovando: false
+  })
 
   const statusColors = {
     pendente: 'bg-yellow-100 text-yellow-500 border-yellow-200 hover:bg-yellow-200 hover:text-yellow-500',
@@ -61,6 +73,7 @@ export default function AvariaCard({ data, reloadData }: AvariaCardProps) {
    * função para aprovar a avaria
    */
   const handleAprovar = async () => {
+    setSpinners(prev => ({ ...prev, aprovando: true }));
     const response = await avariaService.aprovar(data.id);
     if (response.success) {
       // Atualizar o status localmente ou refetch os dados
@@ -68,6 +81,7 @@ export default function AvariaCard({ data, reloadData }: AvariaCardProps) {
       reloadData?.();
     } else {
       toast.error(response.message || 'Erro ao aprovar avaria');
+      setSpinners(prev => ({ ...prev, aprovando: false }));
     }
   }
 
@@ -75,6 +89,7 @@ export default function AvariaCard({ data, reloadData }: AvariaCardProps) {
    * função para reprovar a avaria
    */
   const handleReprovar = async () => {
+    setSpinners(prev => ({ ...prev, reprovando: true }));
     const response = await avariaService.reprovar(data.id);
     if (response.success) {
       // Atualizar o status localmente ou refetch os dados
@@ -83,6 +98,8 @@ export default function AvariaCard({ data, reloadData }: AvariaCardProps) {
     } else {
       toast.error(response.message || 'Erro ao reprovar avaria');
     }
+
+    setSpinners(prev => ({ ...prev, reprovando: false }));
   }
 
   return (
@@ -166,59 +183,70 @@ export default function AvariaCard({ data, reloadData }: AvariaCardProps) {
 
       {/* Footer / Ações */}
       <CardFooter className="px-4 py-3 flex items-center justify-end gap-2 border-t">
-        {
-          status !== 'pendente' ? (
-            <div className={
-              cn(
-                'text-sm font-medium flex items-center',
-                status === 'aprovado' ? 'text-green-600' : 'text-red-600'
-              )}>
-              {
-                status === 'aprovado' ? (
-                  <>
-                    <CheckIcon size={16} className='mr-1' />
-                    Troca aprovada, o envio será realizado na próxima entrega!
-                  </>
-                ) : (
-                  <>
-                    <XIcon size={16} className='mr-1' />
-                    Troca reprovada
-                  </>
-                )
-              }
-            </div>
-          ) : status === 'pendente' && user?.role === 'motorista' ? (
-            <div>
-              <div className='text-sm font-medium text-slate-500 flex items-center gap-2'><ClockIcon /> Aguardando análise do administrador</div>
-            </div>
-          ) : (
-            <>
-              <Button
-                onClick={handleReprovar}
-                color='destructive'
-                disabled={status !== 'pendente'}
-              >
-                <MessageCircleIcon size={16} />
-                Reprovar
-              </Button>
-              <Button
-                onClick={handleAprovar}
-                color='success'
-                disabled={status !== 'pendente'}
-              >
-                <MessageCircleIcon size={16} />
-                Aprovar e Notificar Cliente
-              </Button>
-            </>
-          )
-        }
-        {/* <Button
-          color="warning"
-        >
-          <EyeIcon size={20} />
-          Visualizar Detalhes
-        </Button> */}
-      </CardFooter >
+
+        {/* Mensagens de status (Exclusivas para Motorista) */}
+        {user?.role === 'motorista' && (
+          <>
+            {status === 'pendente' && (
+              <div className="text-sm font-medium text-slate-500 flex items-center gap-2">
+                <ClockIcon size={16} />
+                Aguardando análise do administrador
+              </div>
+            )}
+
+            {status === 'aprovado' && (
+              <div className="text-sm font-medium text-green-600 flex items-center">
+                <CheckIcon size={16} className="mr-1" />
+                Troca aprovada, o envio será realizado na próxima entrega!
+              </div>
+            )}
+
+            {status === 'reprovado' && (
+              <div className="text-sm font-medium text-red-600 flex items-center">
+                <XIcon size={16} className="mr-1" />
+                Troca reprovada
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Botões de Ação (Aparecem apenas quando pendente e para perfis com permissão) */}
+        {status === 'pendente' && user?.role !== 'motorista' && (
+          <>
+            <Button
+              onClick={handleReprovar}
+              color="destructive"
+              disabled={spinners.reprovando || spinners.aprovando}
+              loading={spinners.reprovando}
+            >
+              {!spinners.reprovando && <MessageCircleIcon size={16} />}
+              {spinners.reprovando ? 'Processando...' : 'Reprovar'}
+            </Button>
+
+            <Button
+              onClick={handleAprovar}
+              color="success"
+              disabled={spinners.aprovando || spinners.reprovando}
+              loading={spinners.aprovando}
+            >
+              {!spinners.aprovando && <MessageCircleIcon size={16} />}
+              {spinners.aprovando ? 'Processando...' : 'Aprovar e Notificar Cliente'}
+            </Button>
+          </>
+        )}
+
+        {/* Botão de Monitoramento (Exclusivo para Monitoramento) */}
+        {user?.role === 'monitoramento' && (
+          <Button
+            color="warning"
+            disabled={spinners.reprovando || spinners.aprovando}
+          >
+            <EyeIcon size={20} className="mr-2" />
+            Visualizar Detalhes
+          </Button>
+        )}
+
+      </CardFooter>
     </Card >
   );
 };
