@@ -98,7 +98,14 @@ export default function ClientHome() {
         ) : clienteSelecionado ? (
           <ClienteCard
             key={clienteSelecionado.id}
-            cliente={clienteSelecionado}
+            cliente={
+              {
+                ...clienteSelecionado,
+                mapa: {
+                  id: user?.mapa.id || ''
+                }
+              }
+            }
             type='selected'
             onClick={() => {
               setClienteSelecionado(null)
@@ -121,7 +128,12 @@ export default function ClientHome() {
           clientes.map((cliente) => (
             <ClienteCard
               key={cliente.id}
-              cliente={cliente}
+              cliente={{
+                ...cliente,
+                mapa: {
+                  id: user?.mapa.id || ''
+                }
+              }}
               onClick={() => setClienteSelecionado(cliente)}
             />
           ))

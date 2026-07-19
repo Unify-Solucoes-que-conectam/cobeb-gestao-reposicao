@@ -1,6 +1,6 @@
 import { Base } from "./app"
 
-export type StatusAvaria = 'pendente' | 'em_analise' | 'concluido'
+export type StatusAvaria = 'pendente' | 'aprovado' | 'reprovado'
 
 export type Avaria = Base & {
   status: StatusAvaria
