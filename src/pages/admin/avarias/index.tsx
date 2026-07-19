@@ -21,7 +21,7 @@ import { ApiResponse } from "@/types/api-response";
 import { Avaria } from "@/types/consults";
 import { ArrowDownUpIcon, ArrowRightLeftIcon, Building2Icon, SearchIcon, SquaresSubtractIcon, Trash2Icon } from "lucide-react";
 import { toast } from "sonner";
-import AvariaCard from "./components/avaria-card";
+import AvariaCard from "../../../components/custom/avaria-card";
 
 interface Dashboard {
   total: number

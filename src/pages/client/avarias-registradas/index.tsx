@@ -4,6 +4,7 @@ import { FolderOpenIcon, LoaderCircleIcon, PlusIcon } from 'lucide-react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router'
 import { toast } from 'sonner'
 
+import AvariaCard from '@/components/custom/avaria-card'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import {
@@ -19,7 +20,6 @@ import { useHeader } from '@/hooks/mobile/use-header'
 import axios from '@/lib/axios'
 import { ApiResponse } from '@/types/api-response'
 import { Avaria, Cliente } from '@/types/consults'
-import AvariaCard from '@/pages/admin/avarias/components/avaria-card'
 
 export default function ClientAvariasRegistradas() {
   // ============= HOOKS =============
