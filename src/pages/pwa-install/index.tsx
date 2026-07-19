@@ -59,8 +59,8 @@ export default function PWAInstall() {
   }
 
   return (
-    <div className='flex flex-col h-full items-center justify-center'>
-      <Card className='w-100 flex flex-col gap-6'>
+    <div className='flex flex-col h-full items-center justify-center px-20'>
+      <Card className='flex flex-col gap-6'>
         <CardHeader className='items-center gap-3'>
 
           <div className='relative bg-primary border rounded-4xl w-32 h-32 flex items-center justify-center'>
