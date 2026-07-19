@@ -170,13 +170,22 @@ export default function AvariaCard({ data, reloadData }: AvariaCardProps) {
           status !== 'pendente' ? (
             <div className={
               cn(
-                'text-sm font-medium flex items-center gap-2',
+                'text-sm font-medium flex items-center',
                 status === 'aprovado' ? 'text-green-600' : 'text-red-600'
               )}>
-                {
-                  status === 'aprovado' ? <CheckIcon size={16} className='mr-1' /> : <XIcon size={16} className='mr-1' />
-                }
-                Troca {status === 'aprovado' ? 'aprovada' : 'reprovada'} para envio ao cliente em {dayjs(data.updated_at).format('DD/MM/YYYY HH:mm')}
+              {
+                status === 'aprovado' ? (
+                  <>
+                    <CheckIcon size={16} className='mr-1' />
+                    Troca aprovada, o envio será realizado na próxima entrega!
+                  </>
+                ) : (
+                  <>
+                    <XIcon size={16} className='mr-1' />
+                    Troca reprovada
+                  </>
+                )
+              }
             </div>
           ) : status === 'pendente' && user?.role === 'motorista' ? (
             <div>
