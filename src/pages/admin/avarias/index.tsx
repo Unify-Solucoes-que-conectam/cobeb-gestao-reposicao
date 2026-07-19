@@ -229,7 +229,7 @@ export default function AdminAvarias() {
             <div className="flex flex-col gap-3">
               {
                 orderedAvarias.map((av, index) => (
-                  <AvariaCard key={index} data={av} />
+                  <AvariaCard key={index} data={av} reloadData={fetchAvarias} />
                 ))
               }
             </div>

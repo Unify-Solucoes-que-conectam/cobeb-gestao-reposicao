@@ -1,4 +1,5 @@
 import { NotificationType } from "@/hooks/use-echo";
+import { Motorista } from "./consults";
 
 export type Usuario = {
   id: string;
@@ -6,6 +7,16 @@ export type Usuario = {
   nome: string;
   role: 'monitoramento' | 'motorista';
   primeiro_acesso: boolean;
+  mapa: {
+    id: string
+    codigo: string
+    status: string
+    motorista_id: string
+    usuario_responsavel_id: string
+    created_at: string
+    updated_at: string
+    motorista: Motorista
+  }
 }
 
 export type Notificacao = {

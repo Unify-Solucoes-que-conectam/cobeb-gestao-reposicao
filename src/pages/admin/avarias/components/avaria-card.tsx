@@ -1,26 +1,34 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { useAuth } from '@/hooks/use-auth';
 import dayjs from '@/lib/dayjs';
+import { cn } from '@/lib/utils';
+import { avariaService } from '@/services/api.service';
 import { Avaria } from '@/types/consults';
 import {
   CalendarIcon,
-  EyeIcon,
+  CheckIcon,
+  ClockIcon,
+  // EyeIcon,
   FileTextIcon,
   LayersIcon,
   MessageCircleIcon,
-  TruckIcon
+  TruckIcon,
+  XIcon
 } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface AvariaCardProps {
   data: Avaria
+  reloadData?: () => void;
 }
 
 /**
  * Componente AvariaCard
  * Exibe informações de ocorrências com suporte a múltiplos produtos.
  */
-export default function AvariaCard({ data }: AvariaCardProps) {
+export default function AvariaCard({ data, reloadData }: AvariaCardProps) {
   const {
     cliente,
     mapa,
@@ -30,33 +38,52 @@ export default function AvariaCard({ data }: AvariaCardProps) {
     created_at: dataOcorrencia,
   } = data;
 
+  const { user } = useAuth();
+
   const statusColors = {
     pendente: 'bg-yellow-100 text-yellow-500 border-yellow-200 hover:bg-yellow-200 hover:text-yellow-500',
-    em_analise: 'bg-blue-100 text-blue-500 border-blue-200 hover:bg-blue-200 hover:text-blue-500',
-    concluido: 'bg-green-100 text-green-500 border-green-200 hover:bg-green-200 hover:text-green-500'
+    aprovado: 'bg-green-100 text-green-500 border-green-200 hover:bg-green-200 hover:text-green-500',
+    reprovado: 'bg-red-100 text-red-500 border-red-200 hover:bg-red-200 hover:text-red-500'
   };
 
   const statusLabels = {
     pendente: 'Aguardando Análise',
-    em_analise: 'Em Análise',
-    concluido: 'Concluído'
-  };
-
-  const handleSendMessage = () => {
-    const contato = cliente.contatos?.find(c =>
-      c.tipo.toLowerCase().includes('celular') ||
-      c.tipo.toLowerCase().includes('whatsapp')
-    );
-    if (contato) {
-      const phone = contato.valor.replace(/\D/g, '');
-      window.open(`https://wa.me/55${phone}`, '_blank');
-    }
+    aprovado: 'Aprovado',
+    reprovado: 'Reprovado'
   };
 
   // Limite de produtos a serem exibidos antes do "ver mais"
   const MAX_VISIBLE_PRODUCTS = 3;
   const visibleProducts = produtos.slice(0, MAX_VISIBLE_PRODUCTS);
   const remainingCount = produtos.length - MAX_VISIBLE_PRODUCTS;
+
+  /**
+   * função para aprovar a avaria
+   */
+  const handleAprovar = async () => {
+    const response = await avariaService.aprovar(data.id);
+    if (response.success) {
+      // Atualizar o status localmente ou refetch os dados
+      toast.success('Avaria aprovada com sucesso!');
+      reloadData?.();
+    } else {
+      toast.error(response.message || 'Erro ao aprovar avaria');
+    }
+  }
+
+  /**
+   * função para reprovar a avaria
+   */
+  const handleReprovar = async () => {
+    const response = await avariaService.reprovar(data.id);
+    if (response.success) {
+      // Atualizar o status localmente ou refetch os dados
+      toast.success('Avaria reprovada com sucesso!');
+      reloadData?.();
+    } else {
+      toast.error(response.message || 'Erro ao reprovar avaria');
+    }
+  }
 
   return (
     <Card className="overflow-hidden">
@@ -139,20 +166,50 @@ export default function AvariaCard({ data }: AvariaCardProps) {
 
       {/* Footer / Ações */}
       <CardFooter className="px-4 py-3 flex items-center justify-end gap-2 border-t">
-        <Button
-          onClick={handleSendMessage}
-          color='success'
-        >
-          <MessageCircleIcon size={16} />
-          Notificar Cliente
-        </Button>
-        <Button
+        {
+          status !== 'pendente' ? (
+            <div className={
+              cn(
+                'text-sm font-medium flex items-center gap-2',
+                status === 'aprovado' ? 'text-green-600' : 'text-red-600'
+              )}>
+                {
+                  status === 'aprovado' ? <CheckIcon size={16} className='mr-1' /> : <XIcon size={16} className='mr-1' />
+                }
+                Troca {status === 'aprovado' ? 'aprovada' : 'reprovada'} para envio ao cliente em {dayjs(data.updated_at).format('DD/MM/YYYY HH:mm')}
+            </div>
+          ) : status === 'pendente' && user?.role === 'motorista' ? (
+            <div>
+              <div className='text-sm font-medium text-slate-500 flex items-center gap-2'><ClockIcon /> Aguardando análise do administrador</div>
+            </div>
+          ) : (
+            <>
+              <Button
+                onClick={handleReprovar}
+                color='destructive'
+                disabled={status !== 'pendente'}
+              >
+                <MessageCircleIcon size={16} />
+                Reprovar
+              </Button>
+              <Button
+                onClick={handleAprovar}
+                color='success'
+                disabled={status !== 'pendente'}
+              >
+                <MessageCircleIcon size={16} />
+                Aprovar e Notificar Cliente
+              </Button>
+            </>
+          )
+        }
+        {/* <Button
           color="warning"
         >
           <EyeIcon size={20} />
           Visualizar Detalhes
-        </Button>
-      </CardFooter>
-    </Card>
+        </Button> */}
+      </CardFooter >
+    </Card >
   );
 };

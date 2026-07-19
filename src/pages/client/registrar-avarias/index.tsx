@@ -6,19 +6,30 @@ import { Input } from "@/components/ui/input";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { useHeader } from "@/hooks/mobile/use-header";
 import { useDebounce } from "@/hooks/use-debounce";
-import { notaFiscalService, tiposAvariaService } from "@/services/api.service";
-import { NotaFiscal, TiposAvaria } from "@/types/consults";
+import axios from "@/lib/axios";
+import { avariaService, notaFiscalService, tiposAvariaService } from "@/services/api.service";
+import { ApiResponse } from "@/types/api-response";
+import { Cliente, NotaFiscal, TiposAvaria } from "@/types/consults";
 import { convertFileToBase64 } from "@/utils/conversors";
 import { formatCurrency } from "@/utils/formatters";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CameraIcon, CheckIcon, FileTextIcon, ImageIcon, MinusIcon, PlusIcon, SendIcon, TriangleAlertIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import { useLocation, useSearchParams } from "react-router";
 import { toast } from "sonner";
 import { CadastrarAvariaSchema, initValues, schema } from "./schemas/avaria";
 
 export default function ClientRegistrarAvarias() {
+
+  // ===================================== Hooks ====================================
+  const { setPageTitle, setPageDescription, setShowBackButton } = useHeader()
+  const [searchParams] = useSearchParams()
+  const clienteId = searchParams.get('clienteId')
+  const mapaId = searchParams.get('mapaId')
+  const location = useLocation()
 
   // ===================== Formulário de cadastro de avarias =======================
   const form = useForm<CadastrarAvariaSchema>({
@@ -32,23 +43,64 @@ export default function ClientRegistrarAvarias() {
   const [imageName, setImageName] = useState<{
     name: string;
   } | null>(null);
+  const [cliente, setCliente] = useState<Cliente | undefined>(location.state?.clienteInfo)
 
   // =============================== States de passos ===============================
   const [notaFiscalData, setNotaFiscalData] = useState<NotaFiscal | null>(null);
 
   /**
+   * Função para buscar detalhes do cliente caso o usuário recarregue a página (F5) ou acesse a URL direto
+   */
+  const getClientDetails = async () => {
+    try {
+      const res = await axios.get<ApiResponse<Cliente>>(`/clientes/${clienteId}`, {
+        params: {
+          detalhar: true,
+        },
+      })
+
+      const { data } = res.data
+
+      if (res.data.success) {
+        setCliente(data)
+      }
+    } catch (err) {
+      toast.error(
+        'Erro ao buscar detalhes do cliente. Contate o administrador do sistema caso o erro persista!'
+      )
+      console.error('Erro ao buscar detalhes do cliente', err)
+    }
+  }
+
+  /**
    * função para registrar avarias
    */
   const handleSubmit = async (data: CadastrarAvariaSchema) => {
-    console.log('Formulário submetido:', data);
-    toast.success('Avaria registrada com sucesso!');
-    form.reset({
-      nota_fiscal: notaFiscalData?.numero,
-      produto: '',
-      tipo_avaria: '',
-      quantidade_avariada: 0,
-      imagem: ''
+
+    const response = await avariaService.create({
+      cliente_id: cliente?.id || '',
+      mapa_id: mapaId || '',
+      notas_fiscais: [notaFiscalData?.id || ''],
+      produtos: notaFiscalData?.produtos.filter(produto => produto.codigo === data.produto).map(produto => ({
+        produto_id: produto.id,
+        tipo_avaria_id: data.tipo_avaria,
+        quantidade: data.quantidade_avariada,
+      })).filter(Boolean) || [],
+      anexos: []
     })
+
+    if (response.success) {
+      toast.success('Avaria registrada com sucesso!');
+      form.reset({
+        nota_fiscal: notaFiscalData?.numero,
+        produto: '',
+        tipo_avaria: '',
+        quantidade_avariada: 0,
+        imagem: ''
+      })
+    } else {
+      toast.error(response.message || 'Erro ao registrar avaria');
+    }
   }
 
   /**
@@ -69,7 +121,19 @@ export default function ClientRegistrarAvarias() {
    */
   useEffect(() => {
     fetchTiposAvaria();
-  }, []);
+    setShowBackButton(true)
+
+    if (cliente) {
+      setPageTitle(cliente.nome_fantasia || 'Registrar Avarias')
+      setPageDescription(`Cód: ${cliente.codigo} • ${cliente.endereco}`)
+    } else {
+      // Fallback de segurança: se o usuário recarregar a página (F5), ou acessar a URL direto
+      setPageTitle('Registrar Avarias')
+      setPageDescription('Carregando informações...')
+
+      if (clienteId) getClientDetails()
+    }
+  }, [setPageTitle, setPageDescription, cliente]);
 
   // =================================== Watchers ==================================
   const notaFiscalWatcher = form.watch('nota_fiscal');

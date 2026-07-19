@@ -20,6 +20,9 @@ interface ClienteCardProps {
     }
     cidade?: string
     uf?: string
+    mapa: {
+      id: string
+    }
   }
   type?: 'selected' | 'list'
   onClick?: () => void
@@ -54,8 +57,8 @@ export default function ClienteCard({ cliente, type = 'list', onClick }: Cliente
 
             <Badge
               className={`text-xs font-bold border-none rounded-full px-2.5 py-0.5 tracking-wide shadow-none uppercase ${!cliente.pdv_ativo
-                  ? 'bg-red-100 text-red-700 hover:bg-red-200'
-                  : 'bg-green-100 text-green-700 hover:bg-green-200'
+                ? 'bg-red-100 text-red-700 hover:bg-red-200'
+                : 'bg-green-100 text-green-700 hover:bg-green-200'
                 }`}
             >
               {cliente.pdv_ativo ? 'ATIVO' : 'INATIVO'}
@@ -90,7 +93,7 @@ export default function ClienteCard({ cliente, type = 'list', onClick }: Cliente
           <Button
             className='w-full bg-primary text-white h-10 rounded-xl text-sm font-semibold shadow-sm'
             onClick={() =>
-              navigate(`/client/avarias-registradas?clienteId=${cliente.id}`, {
+              navigate(`/client/avarias-registradas?clienteId=${cliente.id}&mapaId=${cliente.mapa.id}`, {
                 state: { clienteInfo: cliente },
               })
             }
@@ -139,8 +142,8 @@ export default function ClienteCard({ cliente, type = 'list', onClick }: Cliente
 
           <Badge
             className={`text-xs font-bold border-none rounded-full px-2.5 py-0.5 tracking-wide shadow-none uppercase ${!cliente.pdv_ativo
-                ? 'bg-red-100 text-red-700 hover:bg-red-200'
-                : 'bg-green-100 text-green-700 hover:bg-green-200'
+              ? 'bg-red-100 text-red-700 hover:bg-red-200'
+              : 'bg-green-100 text-green-700 hover:bg-green-200'
               }`}
           >
             {cliente.pdv_ativo ? 'ATIVO' : 'INATIVO'}
