@@ -71,7 +71,10 @@ export const avariaService = {
       tipo_avaria_id: string
       quantidade: number
     }>
-    anexos: string[]
+    anexos: Array<{
+      nome: string
+      base64: string
+    }>
   }) => {
     try {
       const response = await axios.post<ApiResponse>(`/avarias`, {

@@ -67,7 +67,7 @@ export default function VisualizarAvaria(props: VisualizarAvariaProps) {
           <CardNotasFiscais notasFiscais={props.avaria.notas_fiscais} />
           <div className='w-full md:w-90 flex flex-col gap-4'>
             <CardContextoRota mapa={props.avaria.mapa} />
-            <CardEvidencias anexos={props.avaria.anexos} />
+            <CardEvidencias avaria={props.avaria} anexos={props.avaria.anexos} />
           </div>
         </div>
       </DialogContent>

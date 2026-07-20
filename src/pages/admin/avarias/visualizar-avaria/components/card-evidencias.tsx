@@ -1,9 +1,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Anexo } from "@/types/consults"
+import { Anexo, Avaria } from "@/types/consults"
 import { TruckIcon } from "lucide-react"
+import VisualizarEvidencias from "./visualizar-evidencias"
+import VisualizarDocumento from "@/components/custom/visualizar-documento"
 
 interface CardEvidenciasProps {
   anexos: Anexo[]
+  avaria: Avaria
 }
 
 export default function CardEvidencias(props: CardEvidenciasProps) {
@@ -17,11 +20,11 @@ export default function CardEvidencias(props: CardEvidenciasProps) {
         </CardTitle>
       </CardHeader>
 
-      <CardContent>
+      <CardContent className='grid grid-cols-2 gap-2'>
         {
           props.anexos.length > 0 ? (
-            props.anexos.map(anexo => (
-              <CardEvidencia key={anexo.id} anexo={anexo} />
+            props.anexos.slice(0, 4).map((anexo, index) => (
+              <CardEvidencia key={anexo.id}  anexo={anexo} anexos={props.anexos} avaria={props.avaria} amount={props.anexos.length} currentIndex={index}/>
             ))
           ) : (
             <p>Nenhuma evidência disponível.</p>
@@ -34,12 +37,26 @@ export default function CardEvidencias(props: CardEvidenciasProps) {
 
 interface CardEvidenciaProps {
   anexo: Anexo
+  anexos: Anexo[]
+  avaria: Avaria
+  amount: number
+  currentIndex: number
 }
 
 export function CardEvidencia(props: CardEvidenciaProps) {
   return (
-    <div className='w-full h-auto rounded-md overflow-hidden'>
-      <img src={props.anexo.path} alt={`evidência_${props.anexo.id}`} className='w-full h-auto rounded-md' />
+    <div className='relative w-full h-full rounded-md overflow-hidden border hover:bg-accent cursor-pointer'>
+      <VisualizarDocumento
+        key={props.anexo.id}
+        isImage={['.png', '.jpg', '.jpeg', '.gif'].some(ext => props.anexo.path.endsWith(ext))}
+        fileUrl={props.anexo.path}
+        fileId={props.anexo.id}
+      />
+      {
+        props.amount > 4 && props.currentIndex === 3 && (
+          <VisualizarEvidencias avaria={props.avaria} evidencias={props.anexos}/>
+        )
+      }
     </div>
   )
 }
