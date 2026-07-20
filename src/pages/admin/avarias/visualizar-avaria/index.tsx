@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Avaria } from "@/types/consults";
 import { EyeIcon } from "lucide-react";
 import CardNotasFiscais from "./components/card-notas-fiscais";
+import CardContextoRota from "./components/card-contexto-rota";
 
 interface VisualizarAvariaProps {
   spinners: Spinners
@@ -43,7 +44,7 @@ export default function VisualizarAvaria(props: VisualizarAvariaProps) {
         </Button>
       </DialogTrigger>
 
-      <DialogContent className='md:max-w-4xl'>
+      <DialogContent className='md:max-w-6xl'>
         <DialogHeader>
           <DialogTitle className='flex items-center gap-3'>
             Detalhes da Avaria #{props.avaria.id}
@@ -61,8 +62,9 @@ export default function VisualizarAvaria(props: VisualizarAvariaProps) {
           </DialogDescription>
         </DialogHeader>
 
-        <div>
+        <div className='flex flex-wrap gap-4'>
           <CardNotasFiscais notasFiscais={props.avaria.notas_fiscais} />
+          <CardContextoRota mapa={props.avaria.mapa} />
         </div>
       </DialogContent>
     </Dialog>

@@ -11,7 +11,7 @@ interface CardNotasFiscaisProps {
 export default function CardNotasFiscais(props: CardNotasFiscaisProps) {
 
   return (
-    <Card>
+    <Card className='flex-1'>
       <CardHeader>
         <CardTitle className='flex items-center text-md gap-2'>
           <FileTextIcon className='text-primary' />
