@@ -15,7 +15,7 @@ import { Cliente, NotaFiscal, TiposAvaria } from "@/types/consults";
 import { convertFileToBase64 } from "@/utils/conversors";
 import { formatCurrency } from "@/utils/formatters";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CameraIcon, CheckIcon, FileTextIcon, ImageIcon, MinusIcon, PlusIcon, SendIcon, TriangleAlertIcon } from "lucide-react";
+import { CameraIcon, CheckIcon, FileTextIcon, ImageIcon, MinusIcon, PlusIcon, SendIcon, TriangleAlertIcon, XIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useLocation, useSearchParams } from "react-router";
@@ -40,10 +40,8 @@ export default function ClientRegistrarAvarias() {
 
   // =============================== States de dados ===============================
   const [tiposAvaria, setTiposAvaria] = useState<TiposAvaria[]>([]);
-  const [imageName, setImageName] = useState<{
-    name: string;
-  } | null>(null);
   const [cliente, setCliente] = useState<Cliente | undefined>(location.state?.clienteInfo)
+  const [anexos, setAnexos] = useState<{ id: string; name: string; base64: string }[]>([]);
 
   // =============================== States de passos ===============================
   const [notaFiscalData, setNotaFiscalData] = useState<NotaFiscal | null>(null);
@@ -86,7 +84,7 @@ export default function ClientRegistrarAvarias() {
         tipo_avaria_id: data.tipo_avaria,
         quantidade: data.quantidade_avariada,
       })).filter(Boolean) || [],
-      anexos: []
+      anexos: data.anexos
     })
 
     if (response.success) {
@@ -96,8 +94,9 @@ export default function ClientRegistrarAvarias() {
         produto: '',
         tipo_avaria: '',
         quantidade_avariada: 0,
-        imagem: ''
+        anexos: []
       })
+      setAnexos([]);
     } else {
       toast.error(response.message || 'Erro ao registrar avaria');
     }
@@ -153,8 +152,9 @@ export default function ClientRegistrarAvarias() {
         produto: "",
         tipo_avaria: "",
         quantidade_avariada: 0,
-        imagem: ""
+        anexos: []
       });
+      setAnexos([]);
       return;
     }
 
@@ -484,67 +484,127 @@ export default function ClientRegistrarAvarias() {
           {/* IMAGEM_FIELD */}
           <FormField
             control={form.control}
-            name='imagem'
-            render={({ field }) => (
-              <FormItem className="w-full">
-                <Card className="relative">
-                  <CardHeader className="p-2">
-                    <CardTitle>
-                      <FormLabel className="text-blue-700 font-bold text-lg" required>FOTOGRAFAR AVARIA</FormLabel>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-2">
+            name='anexos'
+            render={({ field }) => {
 
-                    <FormControl>
-                      <Label htmlFor="imagem">
-                        {
-                          field.value ? (
-                            <Card className="flex items-center p-3 border-dotted border-2 cursor-pointer gap-3">
+              // Função para remover a imagem e sincronizar os estados
+              const handleRemoverAnexo = (idParaRemover: string) => {
+                // Filtra tirando o anexo que tem o id clicado
+                const anexosAtualizados = anexos.filter(anexo => anexo.id !== idParaRemover);
+
+                // Atualiza o estado visual
+                setAnexos(anexosAtualizados);
+
+                // Atualiza o envio do formulário apenas com os base64 que sobraram
+                field.onChange(anexosAtualizados.map(item => item.base64));
+              };
+
+              return (
+                <FormItem className="w-full">
+                  <Card className="relative">
+                    <CardHeader className="p-2">
+                      <CardTitle>
+                        <FormLabel className="text-blue-700 font-bold text-lg" required>
+                          FOTOGRAFAR AVARIA
+                        </FormLabel>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-2">
+                      <FormControl>
+                        {/* Substituímos o Label geral por uma div para não bugar o botão de apagar */}
+                        <div className='flex flex-col gap-3'>
+
+                          {/* 1. LISTA DE ANEXOS (Com botão de apagar) */}
+                          {anexos.map((anexo, index) => (
+                            <Card key={anexo.id} className="flex items-center p-3 gap-3 relative">
                               <div className="flex items-center justify-center p-3 border rounded-md">
                                 <ImageIcon className="text-emerald-700 size-7" />
                               </div>
-                              <CardHeader className="p-0">
+                              <CardHeader className="p-0 flex-1 overflow-hidden">
                                 <CardTitle className="font-bold text-xl m-0 text-emerald-700">
-                                  Foto da avaria capturada
+                                  {/* Como usamos o 'index' do map, a numeração se reordena sozinha! */}
+                                  Anexo {index + 1}
                                 </CardTitle>
-                                <CardDescription className="font-thin text-gray-400">
-                                  {imageName?.name}
+                                <CardDescription className="font-thin text-gray-400 truncate">
+                                  {anexo.name}
                                 </CardDescription>
                               </CardHeader>
+
+                              {/* Botão de Excluir */}
+                              <Button
+                                type="button"
+                                onClick={() => handleRemoverAnexo(anexo.id)}
+                                size='icon'
+                                className="text-red-500 bg-red-50 hover:bg-red-100 transition-colors shrink-0"
+                              >
+                                <XIcon className="size-5" /> {/* Se não tiver esse ícone, pode usar X ou Trash2 */}
+                              </Button>
                             </Card>
-                          ) : (
-                            <Card className="flex flex-col items-center p-3 border-dotted border-2 bg-gray-50 cursor-pointer">
+                          ))}
+
+                          {/* 2. BOTÃO DE ADICIONAR (Este sim fica dentro do Label para abrir a câmera) */}
+                          <Label htmlFor="anexos" className="flex flex-col w-full">
+                            <input
+                              id="anexos"
+                              type="file"
+                              accept="image/*"
+                              multiple
+                              className="hidden"
+                              onChange={async (e) => {
+                                const files = e.target.files;
+                                if (!files || files.length === 0) return;
+
+                                const fileArray = Array.from(files);
+
+                                const base64Results = await Promise.all(
+                                  fileArray.map(file => convertFileToBase64(file))
+                                );
+
+                                // Usar Date.now() previne que IDs se repitam ao apagar e adicionar fotos
+                                const timestamp = Date.now();
+                                const novosAnexos = base64Results.map(({ base64 }, index) => {
+                                  const arquivoOriginal = fileArray[index];
+                                  return {
+                                    id: `${timestamp}-${index}`,
+                                    name: arquivoOriginal.name || `Imagem_${index + 1}.jpg`,
+                                    base64: base64
+                                  };
+                                });
+
+                                const estadoAtualizado = [...anexos, ...novosAnexos];
+
+                                setAnexos(estadoAtualizado);
+                                field.onChange(estadoAtualizado.map(item => ({
+                                  nome: item.name,
+                                  base64: item.base64
+                                })));
+
+                                // Limpa o input para caso o usuário apague uma foto e tente enviar a exata mesma foto logo em seguida
+                                e.target.value = '';
+                              }}
+                            />
+                            <Card className="flex flex-col items-center p-3 border-dotted border-2 bg-gray-50 cursor-pointer hover:bg-gray-100 transition">
                               <CardHeader className="p-0 items-center">
-                                <CardTitle className="flex flex-col items-center font-bold text-xl m-0">
+                                <CardTitle className="flex flex-col items-center font-bold text-xl m-0 text-center gap-2">
                                   <CameraIcon className="text-gray-500 size-7" />
                                   Tire uma foto
                                 </CardTitle>
-                                <CardDescription className="font-thin text-gray-400">
+                                <CardDescription className="font-thin text-gray-400 text-center">
                                   Toque para tirar a foto do(s) produto(s) avariado(s)
                                 </CardDescription>
                               </CardHeader>
                             </Card>
-                          )
-                        }
-                        <input id="imagem" type="file" accept="image/*" className="hidden" onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            convertFileToBase64(file).then(({ base64 }) => {
-                              field.onChange(base64);
-                              setImageName({ name: file.name });
-                            });
-                          }
-                        }} />
-                      </Label>
-                    </FormControl>
+                          </Label>
 
-                    <FormMessage />
-                  </CardContent>
-
-                  <StepOverlay disabled={quantidadeAvariadaWatcher === 0} />
-                </Card>
-              </FormItem>
-            )}
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </CardContent>
+                    <StepOverlay disabled={quantidadeAvariadaWatcher === 0} />
+                  </Card>
+                </FormItem>
+              );
+            }}
           />
 
         </form>
