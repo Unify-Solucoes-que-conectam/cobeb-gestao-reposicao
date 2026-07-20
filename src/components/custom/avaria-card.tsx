@@ -37,7 +37,6 @@ export default function AvariaCard({ data, reloadData }: AvariaCardProps) {
   const {
     cliente,
     mapa,
-    produtos,
     status,
     notas_fiscais,
     created_at: dataOcorrencia,
@@ -51,6 +50,9 @@ export default function AvariaCard({ data, reloadData }: AvariaCardProps) {
     aprovando: false,
     reprovando: false
   })
+
+  // ======================= Variáveis =================
+  const produtos = notas_fiscais.flatMap(nf => nf.produtos);
 
   const statusColors = {
     pendente: 'bg-yellow-100 text-yellow-500 border-yellow-200 hover:bg-yellow-200 hover:text-yellow-500',
