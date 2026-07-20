@@ -7,13 +7,19 @@ import { EyeIcon } from "lucide-react";
 import CardNotasFiscais from "./components/card-notas-fiscais";
 import CardContextoRota from "./components/card-contexto-rota";
 import CardEvidencias from "./components/card-evidencias";
+import { useEffect, useState } from "react";
 
 interface VisualizarAvariaProps {
   spinners: Spinners
   avaria: Avaria
+  reload: () => void
 }
 
 export default function VisualizarAvaria(props: VisualizarAvariaProps) {
+
+  // ======================= States ====================
+  const [hasUpdates, setHasUpdates] = useState(false);
+  const [open, setOpen] = useState(false);
 
   // ======================= Variáveis ====================
   const statusLabels = {
@@ -33,8 +39,22 @@ export default function VisualizarAvaria(props: VisualizarAvariaProps) {
     return `${street}, ${neighborhood} - ${city}/${state}`;
   }
 
+  // ======================= Handlers ====================
+  const handleHasUpdates = (hasUpdates: boolean) => {
+    if (hasUpdates) {
+      setHasUpdates(true);
+    }
+  }
+
+  // ======================= Effects ====================
+  useEffect(() => {
+    if (hasUpdates) {
+      props.reload();
+    }
+  }, [open]);
+
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button
           color="warning"
@@ -64,7 +84,7 @@ export default function VisualizarAvaria(props: VisualizarAvariaProps) {
         </DialogHeader>
 
         <div className='flex flex-wrap gap-4'>
-          <CardNotasFiscais notasFiscais={props.avaria.notas_fiscais} />
+          <CardNotasFiscais avariaId={props.avaria.id} notasFiscais={props.avaria.notas_fiscais} hasUpdates={handleHasUpdates} />
           <div className='w-full md:w-90 flex flex-col gap-4'>
             <CardContextoRota mapa={props.avaria.mapa} />
             <CardEvidencias avaria={props.avaria} anexos={props.avaria.anexos} />

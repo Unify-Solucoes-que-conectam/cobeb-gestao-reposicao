@@ -239,7 +239,7 @@ export default function AvariaCard({ data, reloadData }: AvariaCardProps) {
 
         {/* Botão de Monitoramento (Exclusivo para Monitoramento) */}
         {user?.role === 'monitoramento' && (
-          <VisualizarAvaria spinners={spinners} avaria={data} />
+          <VisualizarAvaria spinners={spinners} avaria={data} reload={() => reloadData?.()} />
         )}
 
       </CardFooter>

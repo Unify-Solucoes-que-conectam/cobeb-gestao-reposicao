@@ -90,7 +90,7 @@ export const avariaService = {
   aprovar: async (id: string) => {
     try {
       const response = await axios.put<ApiResponse>(`/avarias/${id}/status`, {
-        status: 'aprovado'
+        status: 'aprovada'
       });
       return response.data;
     } catch (error) {
@@ -102,7 +102,19 @@ export const avariaService = {
   reprovar: async (id: string) => {
     try {
       const response = await axios.put<ApiResponse>(`/avarias/${id}/status`, {
-        status: 'reprovado'
+        status: 'reprovada'
+      });
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  },
+
+  atualizarQuantidadeAvariada: async (avariaId: string, produtoId: string, quantidade: number) => {
+    try {
+      const response = await axios.put<ApiResponse>(`/avarias/${avariaId}/produtos/${produtoId}`, {
+        quantidade
       });
       return response.data;
     } catch (error) {
