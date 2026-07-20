@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Avaria } from "@/types/consults";
 import { EyeIcon } from "lucide-react";
+import CardNotasFiscais from "./components/card-notas-fiscais";
 
 interface VisualizarAvariaProps {
   spinners: Spinners
@@ -59,6 +60,10 @@ export default function VisualizarAvaria(props: VisualizarAvariaProps) {
             )}
           </DialogDescription>
         </DialogHeader>
+
+        <div>
+          <CardNotasFiscais notasFiscais={props.avaria.notas_fiscais} />
+        </div>
       </DialogContent>
     </Dialog>
   )
