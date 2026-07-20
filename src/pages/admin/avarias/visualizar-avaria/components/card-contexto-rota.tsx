@@ -9,7 +9,7 @@ interface CardContextoRotaProps {
 export default function CardContextoRota(props: CardContextoRotaProps) {
 
   return (
-    <Card className='w-full md:w-90'>
+    <Card>
       <CardHeader>
         <CardTitle className='flex items-center text-md gap-2'>
           <TruckIcon className='text-primary' />

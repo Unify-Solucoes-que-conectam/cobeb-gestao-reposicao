@@ -6,6 +6,7 @@ import { Avaria } from "@/types/consults";
 import { EyeIcon } from "lucide-react";
 import CardNotasFiscais from "./components/card-notas-fiscais";
 import CardContextoRota from "./components/card-contexto-rota";
+import CardEvidencias from "./components/card-evidencias";
 
 interface VisualizarAvariaProps {
   spinners: Spinners
@@ -64,7 +65,10 @@ export default function VisualizarAvaria(props: VisualizarAvariaProps) {
 
         <div className='flex flex-wrap gap-4'>
           <CardNotasFiscais notasFiscais={props.avaria.notas_fiscais} />
-          <CardContextoRota mapa={props.avaria.mapa} />
+          <div className='w-full md:w-90 flex flex-col gap-4'>
+            <CardContextoRota mapa={props.avaria.mapa} />
+            <CardEvidencias anexos={props.avaria.anexos} />
+          </div>
         </div>
       </DialogContent>
     </Dialog>
