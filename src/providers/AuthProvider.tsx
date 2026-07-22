@@ -1,4 +1,4 @@
-import { createContext, useEffect, useState, type ReactNode } from 'react'
+import { createContext, useState, type ReactNode } from 'react'
 
 import { toast } from 'sonner'
 
@@ -17,7 +17,6 @@ interface AuthState {
 
 interface AuthContextType extends AuthState {
   setLoading: (loading: boolean) => void
-  refreshAuth: () => Promise<void>
   signIn: (cpf: string, senha: string) => Promise<{ success: boolean; message: string }>
   signUp: (signUpData: SignUpSchema) => Promise<{ success: boolean; message: string }>
   signOut: () => Promise<void>
@@ -32,63 +31,23 @@ interface AuthProviderProps {
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
+
   const [state, setState] = useState<AuthState>({
-    user: null,
+    user: JSON.parse(localStorage.getItem('user') || 'null'),
     token: localStorage.getItem('auth_token'),
-    loading: true,
-    menus: []
+    loading: false,
+    menus: JSON.parse(localStorage.getItem('menus') || '[]')
   })
 
   const setLoading = (loading: boolean) => {
     setState((prev) => ({ ...prev, loading }))
   }
 
-  const loadAuthData = async () => {
-    const token = localStorage.getItem('auth_token')
-
-    if (!token) {
-      setState((prev) => ({ ...prev, loading: false }))
-      return
-    }
-
-    try {
-      // Busca dados do usuário autenticado
-      const userResponse = await axios.get<ApiResponse<{ usuario: Usuario; menus: Menu[] }>>(
-        '/auth/me'
-      )
-
-      if (!userResponse.data.success) {
-        throw new Error('Erro ao carregar usuário')
-      }
-
-      setState({
-        user: userResponse.data.data.usuario,
-        token,
-        loading: false,
-        menus: userResponse.data.data.menus
-      })
-    } catch (error) {
-      console.error('Erro ao carregar dados de autenticação:', error)
-      // Limpa dados inválidos
-      localStorage.removeItem('auth_token')
-      localStorage.removeItem('user_role')
-      setState({
-        user: null,
-        token: null,
-        loading: false,
-        menus: []
-      })
-    }
-  }
-
-  // Carrega os dados do usuário e barbershop ao inicializar se tiver token
-  useEffect(() => {
-    loadAuthData()
-  }, [])
-
   const logoutCleanup = () => {
     localStorage.removeItem('auth_token')
-    localStorage.removeItem('user_role')
+    localStorage.removeItem('user')
+    localStorage.removeItem('menus')
+    
     setState({
       user: null,
       token: null,
@@ -115,6 +74,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       // Salvando no localStorage para persistência
       localStorage.setItem('auth_token', data.token)
+
+      // armazenando o usuário no localStorage para persistência
+      localStorage.setItem('user', JSON.stringify(data.usuario))
+      localStorage.setItem('menus', JSON.stringify(data.menus))
 
       setState({
         user: data.usuario,
@@ -185,7 +148,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const value: AuthContextType = {
     ...state,
-    refreshAuth: loadAuthData,
     setLoading,
     signIn,
     signUp,

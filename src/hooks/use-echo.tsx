@@ -8,12 +8,13 @@ type UseEchoOptions = {
   channelName: string
   mode: 'notification' | 'event'
   eventName?: string // obrigatório se mode === "event"
+  isPrivate?: boolean // se true, usa canal privado
 }
 
 export type NotificationType = 'info' | 'warning' | 'error' | 'success'
 type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'reconnecting' | 'failed'
 
-const useEcho = ({ channelName, mode, eventName }: UseEchoOptions) => {
+const useEcho = ({ channelName, mode, eventName, isPrivate }: UseEchoOptions) => {
   const echoRef = useRef<Echo<keyof Broadcaster> | null>(null)
   const reconnectAttemptsRef = useRef(0)
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null)
@@ -89,6 +90,15 @@ const useEcho = ({ channelName, mode, eventName }: UseEchoOptions) => {
           enabledTransports: ['ws', 'wss'],
           activityTimeout: 30000,
           pongTimeout: 15000,
+          auth: {
+            headers: {
+              get 'Authorization'() {
+                const token = localStorage.getItem('auth_token')
+                return token ? `Bearer ${token}` : ''
+              },
+              'Accept': 'application/json',
+            },
+          },
         }
 
         // só define portas se o env existiu e foi convertido para número válido
@@ -137,7 +147,8 @@ const useEcho = ({ channelName, mode, eventName }: UseEchoOptions) => {
           }
         })
 
-        const channel = echo.channel(channelName)
+        // alterna entre tipo de canal dinamicamente
+        const channel = isPrivate ? echo.private(channelName) : echo.channel(channelName)
 
         if (mode === 'notification') {
           channel.notification((notification: Notificacao) => {
@@ -231,7 +242,12 @@ const useEcho = ({ channelName, mode, eventName }: UseEchoOptions) => {
 
       if (echo) {
         try {
-          echo.leaveChannel(channelName)
+          // Garante a saída correta dependendo se foi privado ou público
+          if (isPrivate) {
+            echo.leave(`private-${channelName}`)
+          } else {
+            echo.leaveChannel(channelName)
+          }
           echo.disconnect()
         } catch {
           // Silenciosamente ignora erros de desconexão

@@ -13,8 +13,12 @@ import dayjs from '@/lib/dayjs'
 import { cn } from '@/lib/utils'
 import type { ApiResponse } from '@/types/api-response'
 import { type Notificacao } from '@/types/app'
+import { useAuth } from '@/hooks/use-auth'
 
 const HeaderNotifications = () => {
+  // ID do usuário logado, necessário para o canal privado
+  const { user } = useAuth();
+
   const scrollRef = useRef<HTMLDivElement>(null)
   const notificationSound = useRef<HTMLAudioElement | null>(null)
   const lastPlayTimeRef = useRef<number>(0)
@@ -62,11 +66,22 @@ const HeaderNotifications = () => {
     }
   }, [])
 
-  // Só inicializa o Echo quando o user estiver carregado
-  const { messages, clearMessages } = useEcho({
+  // ==========================================
+  // 📡 1. CANAL PÚBLICO (Avisos Globais)
+  // ==========================================
+  const { messages: globalMessages, clearMessages: clearGlobalMessages } = useEcho({
     channelName: 'global-notifications',
     mode: 'event',
     eventName: 'global.notification',
+  })
+
+  // ==========================================
+  // 🔒 2. CANAL PRIVADO (Notificação do Usuário)
+  // ==========================================
+  const { messages: userMessages, clearMessages: clearUserMessages } = useEcho({
+    channelName: `notifications.${user?.id}`,
+    mode: 'notification', // ou mode: 'event' e eventName: 'user.notification'
+    isPrivate: true, // Privado
   })
 
   const [open, setOpen] = useState(false)
@@ -117,33 +132,33 @@ const HeaderNotifications = () => {
     }
   }, [open])
 
+  // =========================================================
+  // 🔔 PROCESSA MENSAGENS RECEBIDAS (MÉTODO UNIFICADO)
+  // =========================================================
   useEffect(() => {
-    if (messages.length > 0 && notificationSound.current) {
-      console.log('[HeaderNotifications] Mensagens recebidas:', messages)
+    // Une as mensagens vindas de ambos os canais
+    const newIncomingMessages = [...globalMessages, ...userMessages]
 
-      setNotifications((prev) => {
-        return [
-          ...prev,
-          ...messages.map((message) => {
-            console.log('[HeaderNotifications] Processando mensagem:', message)
-            return {
-              id: message.id,
-              titulo: message.titulo,
-              mensagem: message.mensagem,
-              tipo: message.tipo,
-              link: message.link,
-              data_envio: message.data_envio,
-              lida: message.lida,
-            }
-          }),
-        ]
-      })
+    if (newIncomingMessages.length > 0) {
+      console.log('[HeaderNotifications] Novas mensagens recebidas:', newIncomingMessages)
 
-      // Reproduzir som com debounce para evitar pool exhausted
+      setNotifications((prev) => [
+        ...prev,
+        ...newIncomingMessages.map((message) => ({
+          id: message.id,
+          titulo: message.titulo,
+          mensagem: message.mensagem,
+          tipo: message.tipo,
+          link: message.link,
+          data_envio: message.data_envio,
+          lida: message.lida ?? false,
+        })),
+      ])
+
+      // Toca o som de notificação
       const now = Date.now()
       if (notificationSound.current && now - lastPlayTimeRef.current > PLAY_DEBOUNCE_MS) {
         try {
-          // Reinicia o áudio se já estiver tocando
           notificationSound.current.currentTime = 0
           notificationSound.current.play()
           lastPlayTimeRef.current = now
@@ -152,9 +167,11 @@ const HeaderNotifications = () => {
         }
       }
 
-      clearMessages()
+      // Limpa os buffers dos dois hooks para não processar repetido
+      if (globalMessages.length > 0) clearGlobalMessages()
+      if (userMessages.length > 0) clearUserMessages()
     }
-  }, [messages, clearMessages])
+  }, [globalMessages, userMessages, clearGlobalMessages, clearUserMessages])
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
