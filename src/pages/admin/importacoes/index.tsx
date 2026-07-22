@@ -66,7 +66,7 @@ function ImporterCard({
 
     pollingRef.current = setInterval(async () => {
       try {
-        const resp = await axios.get(`${apiUrl}/imports/${batch.id}`, {
+        const resp = await axios.get(`${apiUrl}/importar/${batch.id}`, {
           headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
         });
         const fresh = resp.data?.data as ImportBatch | undefined;
