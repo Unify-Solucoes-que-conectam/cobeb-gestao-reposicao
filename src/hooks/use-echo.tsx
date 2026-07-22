@@ -88,17 +88,7 @@ const useEcho = ({ channelName, mode, eventName }: UseEchoOptions) => {
           forceTLS,
           enabledTransports: ['ws', 'wss'],
           activityTimeout: 30000,
-          pongTimeout: 10000,
-          authEndpoint: `${import.meta.env.VITE_API_URL}/broadcasting/auth`,
-          auth: {
-            headers: {
-              get 'Authorization'() {
-                const token = localStorage.getItem('auth_token')
-                return token ? `Bearer ${token}` : ''
-              },
-              'Accept': 'application/json',
-            },
-          },
+          pongTimeout: 15000,
         }
 
         // só define portas se o env existiu e foi convertido para número válido
@@ -147,7 +137,7 @@ const useEcho = ({ channelName, mode, eventName }: UseEchoOptions) => {
           }
         })
 
-        const channel = echo.private(channelName)
+        const channel = echo.channel(channelName)
 
         if (mode === 'notification') {
           channel.notification((notification: Notificacao) => {
