@@ -7,7 +7,6 @@ import notificationAudio from '@/assets/notification.mp3'
 import { Button } from '@/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Tooltip } from '@/components/ui/tooltip'
-import { useAuth } from '@/hooks/use-auth'
 import useEcho from '@/hooks/use-echo'
 import axios from '@/lib/axios'
 import dayjs from '@/lib/dayjs'
@@ -19,9 +18,6 @@ const HeaderNotifications = () => {
   const scrollRef = useRef<HTMLDivElement>(null)
   const notificationSound = useRef<HTMLAudioElement | null>(null)
   const lastPlayTimeRef = useRef<number>(0)
-
-  // dados do usuário
-  const { user } = useAuth()
 
   // Prevenir múltiplas reproduções em um curto período de tempo
   const PLAY_DEBOUNCE_MS = 500
@@ -68,9 +64,9 @@ const HeaderNotifications = () => {
 
   // Só inicializa o Echo quando o user estiver carregado
   const { messages, clearMessages } = useEcho({
-    channelName: user ? `notifications.${user.id}` : '',
+    channelName: 'global-notifications',
     mode: 'event',
-    eventName: 'notification.created',
+    eventName: 'global.notification',
   })
 
   const [open, setOpen] = useState(false)
