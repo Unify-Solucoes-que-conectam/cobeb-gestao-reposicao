@@ -90,13 +90,26 @@ export default function ClienteCard({ cliente, type = 'list', onClick }: Cliente
               className='w-full bg-primary text-white h-10 rounded-xl text-sm font-semibold shadow-sm'
               onClick={() => 
 
-                navigate(`/client/avarias-registradas`, {
+                navigate(`/client/registrar-avarias`, {
                   state: { cliente },
                 })
               }
             >
               <PlusIcon className='size-5 mr-1' strokeWidth={2.5} />
               Registrar Avarias
+            </Button>
+
+            <Button
+              className='w-full bg-white border border-slate-200 text-slate-800 hover:bg-slate-50 h-10 rounded-xl text-sm font-semibold shadow-sm'
+              variant='ghost'
+              onClick={() =>
+
+                navigate(`/client/avarias-registradas`, {
+                  state: { cliente },
+                })
+              }
+            >
+              Histórico de Avarias
             </Button>
 
             <Button
