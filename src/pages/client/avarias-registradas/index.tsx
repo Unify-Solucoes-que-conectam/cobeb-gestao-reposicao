@@ -17,11 +17,8 @@ import {
 } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import { useHeader } from '@/hooks/mobile/use-header'
-import { useAuth } from '@/hooks/use-auth'
-import axios from '@/lib/axios'
-import { mapaService } from '@/services/api.service'
-import { ApiResponse } from '@/types/api-response'
-import { Avaria, Cliente } from '@/types/consults'
+import { clienteService, tiposAvariaService } from '@/services/api.service'
+import { Avaria, Cliente, TiposAvaria } from '@/types/consults'
 
 export default function ClientAvariasRegistradas() {
   // ============= HOOKS =============
@@ -29,17 +26,19 @@ export default function ClientAvariasRegistradas() {
   const { setPageTitle, setPageDescription, setShowBackButton } = useHeader()
   const location = useLocation()
 
-  const { user } = useAuth()
-
   // ============= STATES =============
-  const [cliente, setCliente] = useState<Cliente | undefined>(location.state?.cliente as Cliente | undefined)
+  const cliente = location.state?.cliente as Cliente | undefined
   const [avarias, setAvarias] = useState<Avaria[]>([])
+  const [tiposAvaria, setTiposAvaria] = useState<TiposAvaria[]>([])
   const [selectedStatus, setSelectedStatus] = useState<string | undefined>(undefined)
   const [spinners, setSpinners] = useState({ geral: false })
 
-  const fetchAvarias = async ({ signal, status }: { signal?: AbortSignal; status?: string } = {}) => {
+  /**
+   * Consultar avarias do cliente selecionado, filtrando por status (opcional)
+   */
+  const fetchAvarias = async ({ signal, tipo_avaria_id }: { signal?: AbortSignal; tipo_avaria_id?: string } = {}) => {
     setSpinners({ ...spinners, geral: true })
-    const response = await mapaService.avarias({ id: user?.motorista.mapa.id || '', status }, signal);
+    const response = await clienteService.avarias({ id: cliente?.id || '', tipo_avaria_id: tipo_avaria_id === 'todos' ? undefined : tipo_avaria_id }, signal);
 
     if (response.success) {
       setAvarias(response.data);
@@ -47,6 +46,19 @@ export default function ClientAvariasRegistradas() {
       toast.error(response.message || 'Erro ao consultar avarias');
     }
     setSpinners({ ...spinners, geral: false })
+  }
+
+  /**
+   * função para consultar tipos de avaria
+   */
+  const fetchTiposAvaria = async () => {
+    const response = await tiposAvariaService.read();
+
+    if (response.success) {
+      setTiposAvaria(response.data);
+    } else {
+      toast.error(response.message || 'Erro ao consultar tipos de avaria');
+    }
   }
 
   // ============= EFFECTS =============
@@ -60,47 +72,32 @@ export default function ClientAvariasRegistradas() {
       // Fallback de segurança: se o usuário recarregar a página (F5), ou acessar a URL direto
       setPageTitle('Registrar Avarias')
       setPageDescription('Carregando informações...')
-
-      if (location.state?.cliente?.id) getClientDetails()
     }
   }, [setPageTitle, setPageDescription, cliente])
 
   useEffect(() => {
-    fetchAvarias({ status: selectedStatus });
+    fetchTiposAvaria();
+    fetchAvarias({ tipo_avaria_id: selectedStatus });
   }, [selectedStatus])
-
-  // ============= HANDLERS =============
-  const getClientDetails = async () => {
-    try {
-      const res = await axios.get<ApiResponse<Cliente>>(`/clientes/${location.state?.cliente?.id}`)
-
-      const { data } = res.data
-
-      if (res.data.success) {
-        setCliente(data)
-      }
-    } catch (err) {
-      toast.error(
-        'Erro ao buscar detalhes do cliente. Contate o administrador do sistema caso o erro persista!'
-      )
-      console.error('Erro ao buscar detalhes do cliente', err)
-    }
-  }
 
   return (
     <div className='flex flex-1 flex-col min-h-0 w-full bg-slate-50'>
       <div className='flex justify-between items-center shrink-0 z-10'>
-        <h1 className='text-sm font-semibold'>Avarias Registradas (0)</h1>
-        <Select defaultValue='000' onValueChange={(value) => setSelectedStatus(value)}>
+        <h1 className='text-sm font-semibold'>Avarias Registradas ({avarias.length})</h1>
+        <Select defaultValue='todos' onValueChange={(value) => setSelectedStatus(value)}>
           <SelectTrigger className='w-32 h-9 text-sm bg-white'>
             <SelectValue placeholder='Tipos de Avaria' />
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>
-              <SelectItem value='000'>Todos</SelectItem>
-              <SelectItem value='avariado'>Avariado</SelectItem>
-              <SelectItem value='faltante'>Faltante</SelectItem>
-              <SelectItem value='inversao'>Inversão</SelectItem>
+              <SelectItem value='todos'>Todos</SelectItem>
+              {
+                tiposAvaria.map((tipo) => (
+                  <SelectItem key={tipo.id} value={tipo.id}>
+                    {tipo.nome}
+                  </SelectItem>
+                ))
+              }
             </SelectGroup>
           </SelectContent>
         </Select>
@@ -127,7 +124,7 @@ export default function ClientAvariasRegistradas() {
           ) : (
             <div className='flex flex-col gap-4 mt-3'>
               {avarias.map((avaria) => (
-                <AvariaCard key={avaria.id} data={avaria} />
+                <AvariaCard key={avaria.id} data={avaria} reloadData={fetchAvarias}/>
               ))}
             </div>
           )}

@@ -117,6 +117,18 @@ export const avariaService = {
     }
   },
 
+  enviar: async (id: string) => {
+    try {
+      const response = await axios.put<ApiResponse>(`/avarias/${id}/status`, {
+        status: 'enviada'
+      });
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  },
+
   atualizarQuantidadeAvariada: async (avariaId: string, produtoId: string, quantidade: number) => {
     try {
       const response = await axios.put<ApiResponse>(`/avarias/${avariaId}/produtos/${produtoId}`, {
@@ -130,7 +142,7 @@ export const avariaService = {
   }
 }
 
-interface ClienteService {
+export interface ClienteService {
   read: (params: {
     search?: string
   }) => Promise<ApiResponse<Cliente[]>>
@@ -144,13 +156,19 @@ interface ClienteService {
     id: string
     search?: string
   }) => Promise<ApiResponse<NotaFiscal>>
+
+  avarias: (params: {
+    id: string
+    [key: string]: string | undefined
+  }, signal?: AbortSignal) => Promise<ApiResponse<Avaria[]>>
 }
 export const clienteService: ClienteService = {
-  read: async ({ search }) => {
+  read: async (params) => {
     try {
       const response = await axios.get<ApiResponse<Cliente[]>>(`/clientes`, {
         params: {
-          search,
+          ...params,
+          search: params.search,
         }
       });
 
@@ -179,6 +197,20 @@ export const clienteService: ClienteService = {
   notaFiscal: async ({ id, search }) => {
     try {
       const response = await axios.get<ApiResponse<NotaFiscal>>(`/clientes/${id}/notas-fiscais/${search}`);
+
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  },
+
+  avarias: async ({ id, ...params }, signal) => {
+    try {
+      const response = await axios.get<ApiResponse<Avaria[]>>(`/clientes/${id}/avarias`, {
+        params,
+        signal
+      });
 
       return response.data;
     } catch (error) {
