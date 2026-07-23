@@ -7,18 +7,19 @@ import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/in
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useHeader } from "@/hooks/mobile/use-header";
+import { useAuth } from "@/hooks/use-auth";
 import { useDebounce } from "@/hooks/use-debounce";
 import axios from "@/lib/axios";
-import { avariaService, notaFiscalService, tiposAvariaService } from "@/services/api.service";
+import { avariaService, clienteService, tiposAvariaService } from "@/services/api.service";
 import { ApiResponse } from "@/types/api-response";
 import { Cliente, NotaFiscal, TiposAvaria } from "@/types/consults";
 import { convertFileToBase64 } from "@/utils/conversors";
 import { formatCurrency } from "@/utils/formatters";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CameraIcon, CheckIcon, FileTextIcon, ImageIcon, MinusIcon, PlusIcon, SendIcon, TriangleAlertIcon, XIcon } from "lucide-react";
+import { AlertTriangleIcon, CameraIcon, CheckIcon, FileTextIcon, ImageIcon, MinusIcon, PackageIcon, PackageXIcon, PlusIcon, SendIcon, TriangleAlertIcon, XIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { useLocation, useSearchParams } from "react-router";
+import { useLocation } from "react-router";
 import { toast } from "sonner";
 import { CadastrarAvariaSchema, initValues, schema } from "./schemas/avaria";
 
@@ -26,10 +27,9 @@ export default function ClientRegistrarAvarias() {
 
   // ===================================== Hooks ====================================
   const { setPageTitle, setPageDescription, setShowBackButton } = useHeader()
-  const [searchParams] = useSearchParams()
-  const clienteId = searchParams.get('clienteId')
-  const mapaId = searchParams.get('mapaId')
+  const { user } = useAuth()
   const location = useLocation()
+  const clienteInfo = location.state?.cliente as Cliente | undefined
 
   // ===================== Formulário de cadastro de avarias =======================
   const form = useForm<CadastrarAvariaSchema>({
@@ -40,7 +40,7 @@ export default function ClientRegistrarAvarias() {
 
   // =============================== States de dados ===============================
   const [tiposAvaria, setTiposAvaria] = useState<TiposAvaria[]>([]);
-  const [cliente, setCliente] = useState<Cliente | undefined>(location.state?.clienteInfo)
+  const [cliente, setCliente] = useState<Cliente | undefined>(clienteInfo)
   const [anexos, setAnexos] = useState<{ id: string; name: string; base64: string }[]>([]);
 
   // =============================== States de passos ===============================
@@ -51,7 +51,7 @@ export default function ClientRegistrarAvarias() {
    */
   const getClientDetails = async () => {
     try {
-      const res = await axios.get<ApiResponse<Cliente>>(`/clientes/${clienteId}`, {
+      const res = await axios.get<ApiResponse<Cliente>>(`/clientes/${clienteInfo?.id}`, {
         params: {
           detalhar: true,
         },
@@ -77,9 +77,8 @@ export default function ClientRegistrarAvarias() {
 
     const response = await avariaService.create({
       cliente_id: cliente?.id || '',
-      mapa_id: mapaId || '',
-      notas_fiscais: [notaFiscalData?.id || ''],
-      produtos: notaFiscalData?.produtos.filter(produto => produto.codigo === data.produto).map(produto => ({
+      motorista_id: user?.motorista.id || '',
+      produtos: notaFiscalData?.produtos.filter(produto => produto.codigo === data.produto || produto.ean === data.produto).map(produto => ({
         produto_id: produto.id,
         tipo_avaria_id: data.tipo_avaria,
         quantidade: data.quantidade_avariada,
@@ -97,6 +96,9 @@ export default function ClientRegistrarAvarias() {
         anexos: []
       })
       setAnexos([]);
+
+      // consulta notas fiscais novamente para atualizar a quantidade de produtos disponíveis
+      notaFiscalDebounced(notaFiscalWatcher);
     } else {
       toast.error(response.message || 'Erro ao registrar avaria');
     }
@@ -123,14 +125,14 @@ export default function ClientRegistrarAvarias() {
     setShowBackButton(true)
 
     if (cliente) {
-      setPageTitle(cliente.nome_fantasia || 'Registrar Avarias')
+      setPageTitle(cliente.razao_social || 'Registrar Avarias')
       setPageDescription(`Cód: ${cliente.codigo} • ${cliente.endereco}`)
     } else {
       // Fallback de segurança: se o usuário recarregar a página (F5), ou acessar a URL direto
       setPageTitle('Registrar Avarias')
       setPageDescription('Carregando informações...')
 
-      if (clienteId) getClientDetails()
+      if (clienteInfo?.id) getClientDetails()
     }
   }, [setPageTitle, setPageDescription, cliente]);
 
@@ -159,8 +161,8 @@ export default function ClientRegistrarAvarias() {
     }
 
     try {
-      const response = await notaFiscalService.read(numeroNota, true);
-      const notaFiscal = response.data[0];
+      const response = await clienteService.notaFiscal({ id: cliente!.id, search: numeroNota });
+      const notaFiscal = response.data;
 
       if (notaFiscal) {
         setNotaFiscalData(notaFiscal);
@@ -185,7 +187,7 @@ export default function ClientRegistrarAvarias() {
   /**
    * Verifica se o produto informado está presente na nota fiscal
    */
-  const produtoEncontrado = notaFiscalData?.produtos.find(produto => produto.codigo === form.getValues('produto'));
+  const produtoEncontrado = notaFiscalData?.produtos.find(produto => produto.codigo === form.getValues('produto') || produto.ean === form.getValues('produto'));
 
   /**
    * useDebounce para controlar campo produto
@@ -203,6 +205,19 @@ export default function ClientRegistrarAvarias() {
   }, 800);
 
   /**
+   * função para calcular o valor de todos os produtos na nota
+   */
+  const calculateTotalValue = (nota: NotaFiscal) => {
+    let total = 0
+
+    nota.produtos.forEach((produto) => {
+      total += parseFloat(produto.valor_total)
+    })
+
+    return total
+  }
+
+  /**
    * useEffect para disparar a consulta da nota fiscal quando o campo for alterado
    */
   useEffect(() => {
@@ -217,6 +232,29 @@ export default function ClientRegistrarAvarias() {
       produtoDebounced();
     }
   }, [produtoWatcher, notaFiscalData]);
+
+  /**
+   * useEffect para captar qualquer alteração nos campos do formulário
+   */
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+
+    // Função auxiliar para agilizar o foco
+    const delayFocus = (fieldName: "produto") => {
+      timer = setTimeout(() => {
+        form.setFocus(fieldName);
+      }, 100); // 100ms é o suficiente para não travar a UI
+    };
+
+    if (notaFiscalData !== null) {
+      delayFocus('produto');
+    }
+
+    // Função de limpeza real do useEffect
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [notaFiscalData]);
 
   return (
     <div className="flex flex-col w-full h-full bg-slate-50 overflow-y-auto no-scrollbar">
@@ -275,13 +313,19 @@ export default function ClientRegistrarAvarias() {
                   {
                     notaFiscalData !== null && (
                       <CardFooter className="p-2">
-                        <Card className="flex items-center p-3 w-full justify-between">
-                          <CardHeader className="p-0">
-                            <CardTitle>NF {notaFiscalData.numero}</CardTitle>
-                            <CardDescription className="font-thin">Cliente: {notaFiscalData.cliente.razao_social}</CardDescription>
+                        <Card className="w-full p-3">
+                          <CardHeader className="p-0 pb-2 border-b">
+                            <CardTitle className="flex justify-between items-center text-lg m-0">
+                              NF {notaFiscalData.numero}
+                              <span className="text-primary">{formatCurrency(calculateTotalValue(notaFiscalData))}</span>
+                            </CardTitle>
+                            <CardDescription className="m-0">
+                              Pedido: <strong>#{notaFiscalData.pedido}</strong>
+                            </CardDescription>
                           </CardHeader>
-                          <CardContent className="text-blue-700 font-bold text-xl p-0">
-                            {formatCurrency(notaFiscalData.valor_total)}
+                          <CardContent className="p-0 pt-2 text-xs text-gray-500 flex items-center gap-2">
+                            <PackageIcon size={20} />
+                            <span>{notaFiscalData.produtos.length} {notaFiscalData.produtos.length === 1 ? 'item encontrado' : 'itens encontrados'}</span>
                           </CardContent>
                         </Card>
                       </CardFooter>
@@ -325,7 +369,7 @@ export default function ClientRegistrarAvarias() {
                           placeholder="Ex: 7001"
                         />
                         <InputGroupAddon>
-                          <FileTextIcon />
+                          <PackageIcon />
                         </InputGroupAddon>
                       </InputGroup>
                     </FormControl>
@@ -337,20 +381,31 @@ export default function ClientRegistrarAvarias() {
                     produtoEncontrado && (
                       <CardFooter className="p-2">
                         <Card className="p-3 w-full">
-                          <CardHeader className="p-0 w-full">
-                            <div className="w-full">
-                              <CardTitle
-                                title={produtoEncontrado.descricao}
-                                className="w-full"
-                              >
-                                {produtoEncontrado.descricao}
-                              </CardTitle>
-                            </div>
-                            <CardDescription className="font-thin flex justify-between">
-                              <span>Código: {produtoEncontrado.codigo}</span>
-                              <span>Disponível: {produtoEncontrado.quantidade}</span>
+                          <CardHeader className="p-0 w-full border-b pb-2">
+                            <CardTitle
+                              title={produtoEncontrado.descricao}
+                              className="text-md flex items-center justify-between"
+                            >
+                              <span>{produtoEncontrado.descricao}</span>
+                              <span className="text-primary">{formatCurrency(parseFloat(produtoEncontrado.valor_total) / produtoEncontrado.quantidade)}</span>
+                            </CardTitle>
+                            <CardDescription className="flex justify-between">
+                              <span>Código: <strong>#{produtoEncontrado.codigo}</strong></span>
+                              <span>Unidades: {produtoEncontrado.quantidade}</span>
                             </CardDescription>
                           </CardHeader>
+                          {
+                            produtoEncontrado.quantidade_avariada && (
+                              <CardContent className="p-0 pt-2 text-xs flex justify-between items-center text-amber-600">
+                                <div className="flex items-center gap-2">
+                                  <PackageXIcon size={20} />
+                                  <span>{produtoEncontrado.quantidade_avariada} {produtoEncontrado.quantidade_avariada === 1 ? 'item avariado' : 'itens avariados'}</span>
+                                </div>
+
+                                <AlertTriangleIcon size={20} />
+                              </CardContent>
+                            )
+                          }
                         </Card>
                       </CardFooter>
                     )
@@ -438,10 +493,32 @@ export default function ClientRegistrarAvarias() {
                           </Button>
                           <Input
                             type="number"
-                            value={field.value ?? 0}
-                            onChange={(e) => field.onChange(Number(e.target.value))}
+                            // Exibe vazio se for 0/null/undefined para não travar o "0" visualmente ao digitar
+                            value={field.value || ''}
+                            placeholder="0"
                             min={0}
                             max={produtoEncontrado?.quantidade ?? 999}
+                            onChange={(e) => {
+                              const raw = e.target.value;
+
+                              // Permite apagar o campo sem forçar o 0 de imediato
+                              if (raw === '') {
+                                field.onChange('');
+                                return;
+                              }
+
+                              const max = produtoEncontrado?.quantidade;
+                              const parsed = Math.max(0, parseInt(raw, 10) || 0);
+
+                              // Aplica o limite máximo se houver produto carregado
+                              field.onChange(max !== undefined && parsed > max ? max : parsed);
+                            }}
+                            onBlur={() => {
+                              // Ao sair do campo vazio ou inválido, garante que o valor volte a ser 0
+                              if (!field.value || field.value < 0) {
+                                field.onChange(0);
+                              }
+                            }}
                             className="text-center flex-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                             disabled={!tipoAvariaWatcher}
                           />
@@ -478,7 +555,7 @@ export default function ClientRegistrarAvarias() {
               </CardDescription>
             </CardHeader>
 
-            <StepOverlay disabled={quantidadeAvariadaWatcher === 0} />
+            <StepOverlay disabled={!quantidadeAvariadaWatcher && quantidadeAvariadaWatcher === 0} />
           </Card>
 
           {/* IMAGEM_FIELD */}

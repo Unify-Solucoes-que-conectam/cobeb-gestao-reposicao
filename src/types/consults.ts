@@ -15,18 +15,19 @@ export type Avaria = Base & {
 export type Produto = Base & {
   codigo: string
   descricao: string
-  quantidade: number
-  marca: Marca | null
-  embalagem: Embalagem | null
+  marca: TipoMarca
+  embalagem: Embalagem
   ean: string
 }
 
-export type Marca = Base & {
+export type TipoMarca = {
+  id: string
   codigo: string
   descricao: string
 }
 
-export type Embalagem = Base & {
+export type Embalagem = {
+  id: string
   codigo: string
   descricao: string
 }
@@ -42,13 +43,13 @@ export type Cluster = Base & {
 }
 
 export type Categoria = Base & {
-  codigo: string
   descricao: string
 }
 
-export type Contato = Base & {
-  tipo: string
-  valor: string
+export type Contato = {
+  id: string
+  telefone: string
+  isWhatsapp: boolean
 }
 
 export type Anexo = Base & {
@@ -67,6 +68,9 @@ export type Motorista = Base & {
 }
 
 export type Cliente = Base & {
+  filial: Filial
+  categoria: Categoria
+  contatos: Contato[]
   codigo: string
   documento: string
   nome_fantasia: string
@@ -79,38 +83,33 @@ export type Cliente = Base & {
   cep: string
   latitude: number
   longitude: number
-  categoria: string
+  status: 'ativo' | 'inativo'
   tipo_pessoa: string
-  pdv_ativo: boolean
-  contatos: Contato[]
-  qntd_notas_fiscais?: number // quantidade de notas fiscais associadas ao cliente, se solicitadas via parâmetro na consulta
-  qntd_produtos?: number // quantidade de produtos associados às notas fiscais do cliente, se solicitadas via parâmetro na consulta
+  quantidade_notas: number
 }
 
 export type NotaFiscal = Base & {
   numero: string
   pedido: string
-  mapa: string
-  cliente: Cliente
-  produtos: Produto[]
-  data_operacao: string
+  operacao: string
   data_emissao: string
-  valor_bruto: number
-  total_desconto: number
-  valor_total: number
-  status: string
+  produtos: (ProdutoNotaFiscal & Produto)[]
 }
 
 export type Mapa = {
+  id: string
   codigo: string
-  status: "ativo" | "inativo"
-  motorista: Motorista
-  clientes: Cliente[]
-  notas_fiscais: Exclude<NotaFiscal, 'produtos' | 'cliente' | 'mapa'>[]
-  usuario_responsavel_id: string
+  data_entrega: string
+  placa: string
 }
 
 export type TiposAvaria = Base & {
   nome: string
   descricao: string
+}
+
+export type ProdutoNotaFiscal = Base & {
+  quantidade: number
+  quantidade_avariada?: number
+  valor_total: string
 }

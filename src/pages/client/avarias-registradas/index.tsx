@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 
 import { FolderOpenIcon, LoaderCircleIcon, PlusIcon } from 'lucide-react'
-import { useLocation, useNavigate, useSearchParams } from 'react-router'
+import { useLocation, useNavigate } from 'react-router'
 import { toast } from 'sonner'
 
 import AvariaCard from '@/components/custom/avaria-card'
@@ -17,7 +17,9 @@ import {
 } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import { useHeader } from '@/hooks/mobile/use-header'
+import { useAuth } from '@/hooks/use-auth'
 import axios from '@/lib/axios'
+import { mapaService } from '@/services/api.service'
 import { ApiResponse } from '@/types/api-response'
 import { Avaria, Cliente } from '@/types/consults'
 
@@ -25,74 +27,52 @@ export default function ClientAvariasRegistradas() {
   // ============= HOOKS =============
   const navigate = useNavigate()
   const { setPageTitle, setPageDescription, setShowBackButton } = useHeader()
-  const [searchParams] = useSearchParams()
-  const clienteId = searchParams.get('clienteId')
-  const mapaId = searchParams.get('mapaId')
   const location = useLocation()
 
+  const { user } = useAuth()
+
   // ============= STATES =============
-  const [cliente, setCliente] = useState<Cliente | undefined>(location.state?.clienteInfo)
+  const [cliente, setCliente] = useState<Cliente | undefined>(location.state?.cliente as Cliente | undefined)
   const [avarias, setAvarias] = useState<Avaria[]>([])
   const [selectedStatus, setSelectedStatus] = useState<string | undefined>(undefined)
   const [spinners, setSpinners] = useState({ geral: false })
 
-  const fetchAvarias = async () => {
-    try {
-      setSpinners((prev) => ({ ...prev, geral: true }));
+  const fetchAvarias = async ({ signal, status }: { signal?: AbortSignal; status?: string } = {}) => {
+    setSpinners({ ...spinners, geral: true })
+    const response = await mapaService.avarias({ id: user?.motorista.mapa.id || '', status }, signal);
 
-      const response = await axios.get<ApiResponse<Avaria[]>>('/avarias', {
-        params: {
-          search: '',
-          status: selectedStatus,
-          filial: undefined,
-          clienteId,
-          dataInicial: undefined,
-          dataFinal: undefined,
-        }
-      });
-      const { data } = response;
-
-      if (data.success) {
-        setAvarias(data.data);
-      } else {
-        toast.error(data.message || "Erro ao carregar avarias");
-      }
-    } catch (error) {
-      toast.error("Erro ao carregar avarias");
-      console.error("Error loading avarias:", error);
-    } finally {
-      setSpinners((prev) => ({ ...prev, geral: false }));
+    if (response.success) {
+      setAvarias(response.data);
+    } else {
+      toast.error(response.message || 'Erro ao consultar avarias');
     }
-  };
+    setSpinners({ ...spinners, geral: false })
+  }
 
   // ============= EFFECTS =============
   useEffect(() => {
     setShowBackButton(true)
 
     if (cliente) {
-      setPageTitle(cliente.nome_fantasia || 'Registrar Avarias')
+      setPageTitle(cliente.razao_social || 'Registrar Avarias')
       setPageDescription(`Cód: ${cliente.codigo} • ${cliente.endereco}`)
     } else {
       // Fallback de segurança: se o usuário recarregar a página (F5), ou acessar a URL direto
       setPageTitle('Registrar Avarias')
       setPageDescription('Carregando informações...')
 
-      if (clienteId) getClientDetails()
+      if (location.state?.cliente?.id) getClientDetails()
     }
   }, [setPageTitle, setPageDescription, cliente])
 
   useEffect(() => {
-    fetchAvarias();
-  }, [])
+    fetchAvarias({ status: selectedStatus });
+  }, [selectedStatus])
 
   // ============= HANDLERS =============
   const getClientDetails = async () => {
     try {
-      const res = await axios.get<ApiResponse<Cliente>>(`/clientes/${clienteId}`, {
-        params: {
-          detalhar: true,
-        },
-      })
+      const res = await axios.get<ApiResponse<Cliente>>(`/clientes/${location.state?.cliente?.id}`)
 
       const { data } = res.data
 
@@ -160,11 +140,9 @@ export default function ClientAvariasRegistradas() {
         <Button
           variant='outline'
           className='w-full h-12 shadow-sm border-slate-200 hover:bg-slate-50'
-          onClick={() =>
-            navigate(
-              `/client/registrar-avarias?clienteId=${cliente?.id}&mapaId=${mapaId}&codigo=${cliente?.codigo}&nome_fantasia=${cliente?.nome_fantasia}&endereco=${cliente?.endereco}`
-            )
-          }
+          onClick={() => navigate('/client/registrar-avarias', {
+            state: { cliente },
+          })}
         >
           <PlusIcon className='text-xs font-medium text-primary mr-2' />
           <span className='font-semibold text-primary'>Adicionar Avaria</span>

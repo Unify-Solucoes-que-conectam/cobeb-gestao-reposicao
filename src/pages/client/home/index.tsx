@@ -7,12 +7,11 @@ import Loader from '@/components/custom/loader'
 import SearchPanel from '@/components/custom/search-panel'
 import { useHeader } from '@/hooks/mobile/use-header'
 import { useAuth } from '@/hooks/use-auth'
-import axios from '@/lib/axios'
-import { ApiResponse } from '@/types/api-response'
 import { Cliente } from '@/types/consults'
 
 import ClienteCard from './components/cliente-card'
 import DetectClientCard from './components/detect-client-card'
+import { mapaService } from '@/services/api.service'
 
 export default function ClientHome() {
   // ============ HOOKS ===========
@@ -40,34 +39,29 @@ export default function ClientHome() {
     setShowBackButton(false)
     setPageTitle(user?.nome ? user.nome : 'Bem-vindo!')
     setPageDescription('')
-    fetchClients();
   }, [])
 
   // ============ FETCHERS ===========
-  const fetchClients = async () => {
-    try {
-      setClienteSelecionado(null)
-      setSpinners((prev) => ({ ...prev, geral: true }))
+  const fetchClients = async ({ signal }: { signal?: AbortSignal } = {}) => {
+    setSpinners({ ...spinners, geral: true })
+    const response = await mapaService.clientes({ id: user?.motorista.mapa.id || '' }, signal);
 
-      const response = await axios.get<ApiResponse<Cliente[]>>('/clientes', {
-        params: {
-          search: filters.busca,
-          detalhar: true, // solicitar detalhes dos clientes
-        },
-      })
-      const { data } = response
-      if (data.success) {
-        setClients(data.data)
-      } else {
-        toast.error(data.message || 'Erro ao carregar clientes')
-      }
-    } catch (error) {
-      toast.error('Erro ao carregar clientes')
-      console.error('Error loading clients:', error)
-    } finally {
-      setSpinners((prev) => ({ ...prev, geral: false }))
+    if (response.success) {
+      setClients(response.data);
+    } else {
+      toast.error(response.message || 'Erro ao consultar clientes');
     }
+    setSpinners({ ...spinners, geral: false })
   }
+
+  // useEffect para consultar dados iniciais
+  useEffect(() => {
+
+    const controller = new AbortController();
+    const signal = controller.signal;
+
+    fetchClients({ signal });
+  }, [])
 
   return (
     <div className='flex flex-col h-full space-y-3'>
@@ -98,14 +92,7 @@ export default function ClientHome() {
         ) : clienteSelecionado ? (
           <ClienteCard
             key={clienteSelecionado.id}
-            cliente={
-              {
-                ...clienteSelecionado,
-                mapa: {
-                  id: user?.mapa.id || ''
-                }
-              }
-            }
+            cliente={clienteSelecionado}
             type='selected'
             onClick={() => {
               setClienteSelecionado(null)
@@ -128,12 +115,7 @@ export default function ClientHome() {
           clientes.map((cliente) => (
             <ClienteCard
               key={cliente.id}
-              cliente={{
-                ...cliente,
-                mapa: {
-                  id: user?.mapa.id || ''
-                }
-              }}
+              cliente={cliente}
               onClick={() => setClienteSelecionado(cliente)}
             />
           ))

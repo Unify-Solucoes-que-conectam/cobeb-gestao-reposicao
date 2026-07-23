@@ -1,6 +1,6 @@
-import axios from "@/lib/axios"
+import axios from "@/lib/axios";
 import { ApiResponse } from "@/types/api-response";
-import { NotaFiscal, Produto, TiposAvaria } from "@/types/consults";
+import { Avaria, Cliente, NotaFiscal, Produto, TiposAvaria } from "@/types/consults";
 
 /**
  * TiposAvaria service
@@ -20,14 +20,21 @@ export const tiposAvariaService = {
 /**
  * NotaFiscal service
  */
+interface NotaFiscalReadParams {
+  search?: string;
+  individual?: boolean;
+  clienteId?: string;
+}
 export const notaFiscalService = {
-  read: async (search?: string, individual = false) => {
+  read: async (params: NotaFiscalReadParams, signal?: AbortSignal) => {
     try {
-      const response = await axios.get<ApiResponse<NotaFiscal[]>>(`/notas-fiscais${individual && search ? `/${search}` : ''}`, {
+      const response = await axios.get<ApiResponse<NotaFiscal[]>>(`/notas-fiscais${params.individual && params.search ? `/${params.search}` : ''}`, {
         params: {
-          ...(!individual ? { search } : {}),
+          ...(!params.individual ? { search: params.search } : {}),
+          clienteId: params.clienteId,
           detalhar: true
-        }
+        },
+        signal
       });
       return response.data;
     } catch (error) {
@@ -64,8 +71,7 @@ export const avariaService = {
 
   create: async (data: {
     cliente_id: string
-    mapa_id: string | null
-    notas_fiscais: string[]
+    motorista_id: string
     produtos: Array<{
       produto_id: string
       tipo_avaria_id: string
@@ -116,6 +122,101 @@ export const avariaService = {
       const response = await axios.put<ApiResponse>(`/avarias/${avariaId}/produtos/${produtoId}`, {
         quantidade
       });
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
+}
+
+interface ClienteService {
+  read: (params: {
+    search?: string
+  }) => Promise<ApiResponse<Cliente[]>>
+
+  notasFiscais: (params: {
+    id: string
+    search?: string
+  }) => Promise<ApiResponse<NotaFiscal[]>>
+
+  notaFiscal: (params: {
+    id: string
+    search?: string
+  }) => Promise<ApiResponse<NotaFiscal>>
+}
+export const clienteService: ClienteService = {
+  read: async ({ search }) => {
+    try {
+      const response = await axios.get<ApiResponse<Cliente[]>>(`/clientes`, {
+        params: {
+          search,
+        }
+      });
+
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  },
+
+  notasFiscais: async ({ id, search }) => {
+    try {
+      const response = await axios.get<ApiResponse<NotaFiscal[]>>(`/clientes/${id}/notas-fiscais`, {
+        params: {
+          search,
+        }
+      });
+
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  },
+
+  notaFiscal: async ({ id, search }) => {
+    try {
+      const response = await axios.get<ApiResponse<NotaFiscal>>(`/clientes/${id}/notas-fiscais/${search}`);
+
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
+}
+
+interface MapaService {
+  clientes: (params: {
+    id: string
+  }, signal?: AbortSignal) => Promise<ApiResponse<Cliente[]>>
+
+  avarias: (params: {
+    id: string
+    [key: string]: string | undefined
+  }, signal?: AbortSignal) => Promise<ApiResponse<Avaria[]>>
+}
+export const mapaService: MapaService = {
+  clientes: async ({ id }, signal) => {
+    try {
+      const response = await axios.get<ApiResponse<Cliente[]>>(`/mapas/${id}/clientes`, { signal });
+
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  },
+
+  avarias: async (params, signal) => {
+    try {
+      const response = await axios.get<ApiResponse<Avaria[]>>(`/mapas/${params.id}/avarias`, {
+        signal,
+        params
+      });
+
       return response.data;
     } catch (error) {
       console.error(error);
