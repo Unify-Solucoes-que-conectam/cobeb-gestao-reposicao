@@ -17,8 +17,8 @@ import {
 } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import { useHeader } from '@/hooks/mobile/use-header'
-import { clienteService, tiposAvariaService } from '@/services/api.service'
-import { Avaria, Cliente, TiposAvaria } from '@/types/consults'
+import { clienteService } from '@/services/api.service'
+import { Avaria, Cliente } from '@/types/consults'
 
 export default function ClientAvariasRegistradas() {
   // ============= HOOKS =============
@@ -29,16 +29,15 @@ export default function ClientAvariasRegistradas() {
   // ============= STATES =============
   const cliente = location.state?.cliente as Cliente | undefined
   const [avarias, setAvarias] = useState<Avaria[]>([])
-  const [tiposAvaria, setTiposAvaria] = useState<TiposAvaria[]>([])
   const [selectedStatus, setSelectedStatus] = useState<string | undefined>(undefined)
   const [spinners, setSpinners] = useState({ geral: false })
 
   /**
    * Consultar avarias do cliente selecionado, filtrando por status (opcional)
    */
-  const fetchAvarias = async ({ signal, tipo_avaria_id }: { signal?: AbortSignal; tipo_avaria_id?: string } = {}) => {
+  const fetchAvarias = async ({ signal, status }: { signal?: AbortSignal; status?: string } = {}) => {
     setSpinners({ ...spinners, geral: true })
-    const response = await clienteService.avarias({ id: cliente?.id || '', tipo_avaria_id: tipo_avaria_id === 'todos' ? undefined : tipo_avaria_id }, signal);
+    const response = await clienteService.avarias({ id: cliente?.id || '', status: status === 'todos' ? undefined : status }, signal);
 
     if (response.success) {
       setAvarias(response.data);
@@ -46,19 +45,6 @@ export default function ClientAvariasRegistradas() {
       toast.error(response.message || 'Erro ao consultar avarias');
     }
     setSpinners({ ...spinners, geral: false })
-  }
-
-  /**
-   * função para consultar tipos de avaria
-   */
-  const fetchTiposAvaria = async () => {
-    const response = await tiposAvariaService.read();
-
-    if (response.success) {
-      setTiposAvaria(response.data);
-    } else {
-      toast.error(response.message || 'Erro ao consultar tipos de avaria');
-    }
   }
 
   // ============= EFFECTS =============
@@ -76,8 +62,7 @@ export default function ClientAvariasRegistradas() {
   }, [setPageTitle, setPageDescription, cliente])
 
   useEffect(() => {
-    fetchTiposAvaria();
-    fetchAvarias({ tipo_avaria_id: selectedStatus });
+    fetchAvarias({ status: selectedStatus });
   }, [selectedStatus])
 
   return (
@@ -90,14 +75,11 @@ export default function ClientAvariasRegistradas() {
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>
-              <SelectItem value='todos'>Todos</SelectItem>
-              {
-                tiposAvaria.map((tipo) => (
-                  <SelectItem key={tipo.id} value={tipo.id}>
-                    {tipo.nome}
-                  </SelectItem>
-                ))
-              }
+              <SelectItem value='todos'>Todas</SelectItem>
+              <SelectItem value='pendente'>Pendentes</SelectItem>
+              <SelectItem value='enviada'>Enviadas</SelectItem>
+              <SelectItem value='aprovada'>Aprovadas</SelectItem>
+              <SelectItem value='reprovada'>Reprovadas</SelectItem>
             </SelectGroup>
           </SelectContent>
         </Select>
@@ -105,7 +87,12 @@ export default function ClientAvariasRegistradas() {
 
       <div className='flex-1 flex flex-col min-h-0 w-full'>
         <ScrollArea className='h-full w-full [&>[data-radix-scroll-area-viewport]>div]:h-full'>
-          {avarias.length === 0 ? (
+          {spinners.geral ? (
+            <div className='flex flex-col items-center justify-center h-full gap-2 p-4'>
+              <LoaderCircleIcon className='animate-spin' size={32} strokeWidth={2} />
+              Carregando histórico de avarias...
+            </div>
+          ) : avarias.length === 0 ? (
             <div className='flex flex-col items-center justify-center h-full gap-2 p-4'>
               <div className='bg-gray-200 p-8 rounded-xl border-gray-300 border-2'>
                 <FolderOpenIcon className='text-gray-500' size={32} strokeWidth={2} />
@@ -117,14 +104,10 @@ export default function ClientAvariasRegistradas() {
                 </p>
               </div>
             </div>
-          ) : spinners.geral ? (
-            <div className='flex flex-col items-center justify-center h-full gap-2 p-4'>
-              <LoaderCircleIcon className='animate-spin' size={32} strokeWidth={2} />
-            </div>
           ) : (
             <div className='flex flex-col gap-4 mt-3'>
               {avarias.map((avaria) => (
-                <AvariaCard key={avaria.id} data={avaria} reloadData={fetchAvarias}/>
+                <AvariaCard key={avaria.id} data={avaria} reloadData={fetchAvarias} />
               ))}
             </div>
           )}

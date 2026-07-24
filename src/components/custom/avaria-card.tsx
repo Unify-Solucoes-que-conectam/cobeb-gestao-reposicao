@@ -7,6 +7,7 @@ import VisualizarAvaria from '@/pages/admin/avarias/visualizar-avaria';
 import { avariaService } from '@/services/api.service';
 import { Avaria } from '@/types/consults';
 import {
+  AlertTriangleIcon,
   CalendarIcon,
   CheckIcon,
   ClockIcon,
@@ -164,7 +165,7 @@ export default function AvariaCard(props: AvariaCardProps) {
 
             <div className="flex gap-2">
               <CalendarIcon size={14} className='text-slate-300' />
-              {dayjs(props.data.created_at).format('DD/MM/YYYY HH:mm')}
+              {dayjs(props.data.data_emissao).format('DD/MM/YYYY HH:mm')}
             </div>
           </CardDescription>
         </div>
@@ -229,11 +230,18 @@ export default function AvariaCard(props: AvariaCardProps) {
         {user?.role === 'motorista' && (
           <>
             {props.data.status === 'pendente' && (
-              <Button onClick={handleEnviar} disabled={spinners.enviando} loading={spinners.enviando}>
-                {
-                  spinners.enviando ? 'Enviando...' : 'Enviar para análise'
-                }
-              </Button>
+              dayjs(props.data.data_emissao).isBefore(dayjs(), 'day') && !spinners.enviando ? (
+                <div className="text-sm w-full text-amber-600 flex gap-2 items-center">
+                  <AlertTriangleIcon size={16} className="mr-1" />
+                  <p>Envio atrasado, contate o monitoramento!</p>
+                </div>
+              ) : (
+                <Button className="w-full" onClick={handleEnviar} disabled={spinners.enviando || dayjs(props.data.data_emissao).isBefore(dayjs(), 'day')} loading={spinners.enviando}>
+                  {
+                    spinners.enviando ? 'Enviando...' : 'Enviar para análise'
+                  }
+                </Button>
+              )
             )}
 
             {props.data.status === 'enviada' && (
@@ -260,7 +268,7 @@ export default function AvariaCard(props: AvariaCardProps) {
         )}
 
         {/* Botões de Ação (Aparecem apenas quando pendente e para perfis com permissão) */}
-        {status === 'pendente' && user?.role !== 'motorista' && (
+        {props.data.status === 'pendente' && user?.role !== 'motorista' && (
           <>
             <Button
               onClick={handleReprovar}
