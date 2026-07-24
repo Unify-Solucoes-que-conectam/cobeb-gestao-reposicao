@@ -16,7 +16,7 @@ import { Cliente, NotaFiscal, TiposAvaria } from "@/types/consults";
 import { convertFileToBase64 } from "@/utils/conversors";
 import { formatCurrency } from "@/utils/formatters";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AlertTriangleIcon, CameraIcon, CheckIcon, FileTextIcon, ImageIcon, MinusIcon, PackageIcon, PackageXIcon, PlusIcon, SendIcon, TriangleAlertIcon, XIcon } from "lucide-react";
+import { AlertTriangleIcon, CameraIcon, CheckIcon, FileTextIcon, ImageIcon, MinusIcon, NotepadTextIcon, PackageIcon, PackageXIcon, PlusIcon, TriangleAlertIcon, XIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useLocation } from "react-router";
@@ -688,8 +688,8 @@ export default function ClientRegistrarAvarias() {
 
         <div className="absolute bottom-0 left-0 w-full p-3 bg-background z-50">
           <Button className="h-14 w-full" disabled={!form.formState.isValid} onClick={form.handleSubmit(handleSubmit)}>
-            <SendIcon />
-            ENVIAR AVARIA
+            <NotepadTextIcon />
+            REGISTRAR AVARIA
           </Button>
         </div>
       </Form>
