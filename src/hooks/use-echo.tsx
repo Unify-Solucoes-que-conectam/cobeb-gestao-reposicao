@@ -90,6 +90,7 @@ const useEcho = ({ channelName, mode, eventName, isPrivate }: UseEchoOptions) =>
           enabledTransports: ['ws', 'wss'],
           activityTimeout: 30000,
           pongTimeout: 15000,
+          authEndpoint: `${import.meta.env.VITE_API_URL}/broadcasting/auth`,
           auth: {
             headers: {
               get 'Authorization'() {
