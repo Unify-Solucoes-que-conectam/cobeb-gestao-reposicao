@@ -43,6 +43,12 @@ export default function ClientHome() {
 
   // ============ FETCHERS ===========
   const fetchClients = async ({ signal }: { signal?: AbortSignal } = {}) => {
+
+    // validar se os dados necessários estão disponíveis
+    if (!user?.motorista.mapa.id) {
+      return
+    }
+
     setSpinners({ ...spinners, geral: true })
     const response = await mapaService.clientes({ id: user?.motorista.mapa.id || '' }, signal);
 
