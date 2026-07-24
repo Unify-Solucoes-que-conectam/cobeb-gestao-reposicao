@@ -11,6 +11,7 @@ export type Avaria = Base & {
   anexos: Anexo[]
   nota_fiscal: NotaFiscal
 
+  cliente?: Cliente // para consulta no painel
   motorista?: Motorista // para consulta no painel
 }
 
@@ -107,8 +108,10 @@ export type Mapa = {
   placa: string
 }
 
+export type TipoAvariaCodes = '5' | '39'
+
 export type TiposAvaria = Base & {
-  codigo: string
+  codigo: TipoAvariaCodes
   nome: string
   descricao: string
 }
@@ -121,11 +124,11 @@ export type ProdutoNotaFiscal = Base & {
 
 export type ItemAvaria = Base & {
   quantidade_avariada: number
-  produto: Array<{
+  produto: {
     id: string
-    quantidade_avariada: number
     codigo: string
     descricao: string
-  }>
+    quantidade_total: number
+  }
   tipo_avaria: TiposAvaria
 }

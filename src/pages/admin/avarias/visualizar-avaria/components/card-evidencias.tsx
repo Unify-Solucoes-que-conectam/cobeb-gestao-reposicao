@@ -1,8 +1,8 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import VisualizarDocumento from "@/components/custom/visualizar-documento"
 import { Anexo, Avaria } from "@/types/consults"
 import { TruckIcon } from "lucide-react"
 import VisualizarEvidencias from "./visualizar-evidencias"
-import VisualizarDocumento from "@/components/custom/visualizar-documento"
+import { Card, CardContent } from "@/components/ui/card"
 
 interface CardEvidenciasProps {
   anexos: Anexo[]
@@ -12,26 +12,26 @@ interface CardEvidenciasProps {
 export default function CardEvidencias(props: CardEvidenciasProps) {
 
   return (
-    <Card className='w-full md:w-90'>
-      <CardHeader>
-        <CardTitle className='flex items-center text-md gap-2'>
-          <TruckIcon className='text-primary' />
-          Evidências
-        </CardTitle>
-      </CardHeader>
+    <div className='flex flex-wrap gap-4'>
+      <div className='flex items-center text-md gap-2'>
+        <TruckIcon className='text-primary' />
+        Evidências
+      </div>
 
-      <CardContent className='grid grid-cols-2 gap-2'>
-        {
-          props.anexos.length > 0 ? (
-            props.anexos.slice(0, 4).map((anexo, index) => (
-              <CardEvidencia key={anexo.id}  anexo={anexo} anexos={props.anexos} avaria={props.avaria} amount={props.anexos.length} currentIndex={index}/>
-            ))
-          ) : (
-            <p>Nenhuma evidência disponível.</p>
-          )
-        }
-      </CardContent>
-    </Card>
+      <Card>
+        <CardContent className='grid grid-cols-2 gap-2 p-2'>
+          {
+            props.anexos.length > 0 ? (
+              props.anexos.slice(0, 4).map((anexo, index) => (
+                <CardEvidencia key={anexo.id} anexo={anexo} anexos={props.anexos} avaria={props.avaria} amount={props.anexos.length} currentIndex={index} />
+              ))
+            ) : (
+              <p>Nenhuma evidência disponível.</p>
+            )
+          }
+        </CardContent>
+      </Card>
+    </div>
   )
 }
 
@@ -54,7 +54,7 @@ export function CardEvidencia(props: CardEvidenciaProps) {
       />
       {
         props.amount > 4 && props.currentIndex === 3 && (
-          <VisualizarEvidencias avaria={props.avaria} evidencias={props.anexos}/>
+          <VisualizarEvidencias avaria={props.avaria} evidencias={props.anexos} />
         )
       }
     </div>

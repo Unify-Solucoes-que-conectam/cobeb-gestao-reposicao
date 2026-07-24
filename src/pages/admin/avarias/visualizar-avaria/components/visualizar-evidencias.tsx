@@ -33,7 +33,7 @@ export default function VisualizarEvidencias(props: VisualizarEvidenciasProps) {
           </DialogHeader>
 
           <Card className='p-2'>
-            <CardContent className='grid grid-cols-3 gap-2 overflow-auto h-96 p-0'>
+            <CardContent className='grid grid-cols-3 gap-2 overflow-auto h-auto p-0'>
               {
                 props.evidencias.map(evidencia => (
                   <VisualizarDocumento

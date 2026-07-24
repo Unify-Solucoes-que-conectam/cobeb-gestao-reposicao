@@ -11,7 +11,7 @@ export default function VisualizarDocumento({ isImage, fileUrl, fileId }: Visual
     <Dialog>
       <DialogTrigger asChild>
         <div key={fileId} className='hover:bg-accent/70 cursor-pointer relative flex justify-center items-center'>
-          <img src={fileUrl} alt={`evidência_${fileId}`} className='w-full h-auto rounded-md p-4 border object-contain' />
+          <img src={fileUrl} alt={`evidência_${fileId}`} className='w-full h-auto rounded-md border object-cover' />
         </div>
       </DialogTrigger>
 
@@ -31,7 +31,7 @@ export default function VisualizarDocumento({ isImage, fileUrl, fileId }: Visual
               src={fileUrl}
               alt={`evidência_${fileId}`}
               // Ajustado para ficar igual ao iframe: borda, fundo arredondado e contido na caixa
-              className="w-full h-[75vh] object-contain rounded-md border bg-accent/20"
+              className="w-full h-auto object-contain rounded-md border bg-accent/20"
             />
           ) : (
             <iframe

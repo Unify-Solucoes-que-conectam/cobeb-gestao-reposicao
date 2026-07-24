@@ -1,6 +1,6 @@
 import axios from "@/lib/axios";
 import { ApiResponse } from "@/types/api-response";
-import { Avaria, Cliente, NotaFiscal, Produto, TiposAvaria } from "@/types/consults";
+import { Avaria, Cliente, ItemAvaria, NotaFiscal, Produto, TiposAvaria } from "@/types/consults";
 
 /**
  * TiposAvaria service
@@ -144,6 +144,41 @@ export const avariaService = {
       const response = await axios.put<ApiResponse>(`/avarias/${avariaId}/produtos/${produtoId}`, {
         quantidade
       });
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  },
+
+  read: async (params: {
+    [key: string]: string | undefined
+  }, signal?: AbortSignal) => {
+    try {
+      const response = await axios.get<ApiResponse<Avaria[]>>(`/avarias`, {
+        params,
+        signal
+      });
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
+}
+
+/**
+ * ItemAvariaService
+ */
+export interface ItemAvariaService {
+  read: (params: {
+    id: string
+  }, signal?: AbortSignal) => Promise<ApiResponse<ItemAvaria[]>>
+}
+export const itemAvariaService: ItemAvariaService = {
+  read: async ({ id }, signal) => {
+    try {
+      const response = await axios.get<ApiResponse<ItemAvaria[]>>(`/avarias/${id}/produtos`, { signal });
       return response.data;
     } catch (error) {
       console.error(error);

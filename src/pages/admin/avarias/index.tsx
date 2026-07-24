@@ -14,10 +14,8 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
-import axios from "@/lib/axios";
-import dayjs from "@/lib/dayjs";
 import { cn } from "@/lib/utils";
-import { ApiResponse } from "@/types/api-response";
+import { avariaService } from "@/services/api.service";
 import { Avaria } from "@/types/consults";
 import { ArrowDownUpIcon, ArrowRightLeftIcon, Building2Icon, SearchIcon, SquaresSubtractIcon, Trash2Icon } from "lucide-react";
 import { toast } from "sonner";
@@ -92,34 +90,22 @@ export default function AdminAvarias() {
   ]
 
   // ============== HANDLERS ===============
-  const fetchAvarias = async () => {
-    try {
-      setSpinners((prev) => ({ ...prev, geral: true }));
+  /**
+   * Consultar avarias, filtrando por status (opcional)
+   */
+  const fetchAvarias = async ({ signal, status }: { signal?: AbortSignal; status?: string } = {}) => {
+    setSpinners(prev => ({ ...prev, geral: true }));
+    const response = await avariaService.read({ status: status === 'todos' ? undefined : status }, signal);
 
-      const response = await axios.get<ApiResponse<Avaria[]>>('/avarias', {
-        params: {
-          search: filters.busca,
-          status: filters.status !== 'todas' ? filters.status : undefined,
-          filial: filters.filial !== 'todas' ? filters.filial : undefined,
-          dataInicial: filters.dataInicial ? dayjs(filters.dataInicial).toISOString() : undefined,
-          dataFinal: filters.dataFinal ? dayjs(filters.dataFinal).toISOString() : undefined,
-        }
-      });
-      const { data } = response;
-
-      if (data.success) {
-        setAvarias(data.data);
-        setOrderedAvarias(data.data);
-      } else {
-        toast.error(data.message || "Erro ao carregar avarias");
-      }
-    } catch (error) {
-      toast.error("Erro ao carregar avarias");
-      console.error("Error loading avarias:", error);
-    } finally {
-      setSpinners((prev) => ({ ...prev, geral: false }));
+    if (response.success) {
+      setAvarias(response.data);
+      setOrderedAvarias(response.data);
+    } else {
+      toast.error(response.message || 'Erro ao consultar avarias');
     }
-  };
+
+    setSpinners(prev => ({ ...prev, geral: false }));
+  }
 
   // ============== FUNCTIONS ===============
 

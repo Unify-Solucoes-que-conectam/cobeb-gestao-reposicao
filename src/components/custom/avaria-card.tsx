@@ -225,15 +225,15 @@ export default function AvariaCard(props: AvariaCardProps) {
             </div>
           </CardTitle>
           <CardDescription className='flex justify-between text-xs px-4 py-2'>
-            <div className="flex gap-2">
+            <span className="flex gap-2">
               <FileTextIcon size={14} className='text-slate-300' />
               Nota Fiscal: #{props.data.nota_fiscal.numero}
-            </div>
+            </span>
 
-            <div className="flex gap-2">
+            <span className="flex gap-2">
               <CalendarIcon size={14} className='text-slate-300' />
               Registrada em: {dayjs(props.data.data_emissao).format('DD/MM/YYYY HH:mm')}
-            </div>
+            </span>
           </CardDescription>
         </div>
       </CardHeader>
