@@ -17,13 +17,13 @@ interface CardNotaFiscalProps {
 export default function CardNotaFiscal(props: CardNotaFiscalProps) {
 
   return (
-    <div className='flex-1 flex flex-col gap-3'>
+    <div className='flex-1 flex flex-col gap-3 max-h-[calc(100vh-12rem)]'>
       <div className="flex gap-2 items-center">
         <FileTextIcon className='text-primary' />
         Notas Fiscais e Produtos
       </div>
 
-      <div className='flex flex-col gap-2'>
+      <div className='flex flex-col gap-2 overflow-auto max-h-[calc(100vh-12rem)]'>
         {
           props.itens.map(item => (
             <CardItemAvaria
@@ -50,7 +50,7 @@ export function CardItemAvaria(props: CardItemAvariaProps) {
 
   const handleEditClick = (item: ItemAvaria) => {
     setEditingItemId(item.id);
-    setNewQuantity(item.quantidade_avariada);
+    setNewQuantity(item.produto.quantidade_avariada);
   };
 
   const handleSave = async (produtoId: string) => {
@@ -170,9 +170,9 @@ export function CardItemAvaria(props: CardItemAvariaProps) {
           ) : (
             // MODO LEITURA
             <div className="flex items-center gap-3">
-                <p className="text-sm font-medium">{props.item.quantidade_avariada} unidades</p>
-              <Badge className={`text-xs font-semibold rounded-md ${statusColors[props.item.tipo_avaria.codigo]}`}>
-                {statusLabels[props.item.tipo_avaria.codigo]}
+              <p className="text-sm font-medium">{props.item.produto.quantidade_avariada} unidades</p>
+              <Badge className={`text-xs font-semibold rounded-md ${statusColors[props.item.produto.tipo_avaria.codigo]}`}>
+                {statusLabels[props.item.produto.tipo_avaria.codigo]}
               </Badge>
               <Button
                 size="icon"

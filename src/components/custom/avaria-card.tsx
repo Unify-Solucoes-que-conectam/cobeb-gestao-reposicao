@@ -72,6 +72,16 @@ export default function AvariaCard(props: AvariaCardProps) {
     trocada: 'Trocada'
   };
 
+  const produtoStatusColor = {
+    '5': 'bg-yellow-100 text-yellow-500 border-yellow-200 hover:bg-yellow-200 hover:text-yellow-500',
+    '39': 'bg-violet-100 text-violet-500 border-violet-200 hover:bg-violet-200 hover:text-blue-500',
+  };
+
+  const produtoStatusLabels = {
+    '5': 'Avariado',
+    '39': 'Inversão',
+  };
+
   // Limite de produtos a serem exibidos antes do "ver mais"
   const MAX_VISIBLE_PRODUCTS = 3;
   const visibleProducts = items.map(item => item.produto).flat().slice(0, MAX_VISIBLE_PRODUCTS);
@@ -89,8 +99,13 @@ export default function AvariaCard(props: AvariaCardProps) {
       props.reloadData?.();
     } else {
       toast.error(response.message || 'Erro ao aprovar avaria');
-      setSpinners(prev => ({ ...prev, aprovando: false }));
+      
+      if (response.error_code === 'WHATSAPP_NOTIFICATION_FAILED') {
+        props.reloadData?.();
+      }
     }
+
+    setSpinners(prev => ({ ...prev, aprovando: false }));
   }
 
   /**
@@ -105,6 +120,10 @@ export default function AvariaCard(props: AvariaCardProps) {
       props.reloadData?.();
     } else {
       toast.error(response.message || 'Erro ao reprovar avaria');
+      
+      if (response.error_code === 'WHATSAPP_NOTIFICATION_FAILED') {
+        props.reloadData?.();
+      }
     }
 
     setSpinners(prev => ({ ...prev, reprovando: false }));
@@ -254,9 +273,15 @@ export default function AvariaCard(props: AvariaCardProps) {
                     <span className="text-slate-400 font-normal mr-1">[{p.codigo}]</span>
                     {p.descricao}
                   </span>
-                  <Badge className="text-[10px] font-bold px-1.5 py-0.5 rounded shrink-0">
-                    {p.quantidade_avariada} un
-                  </Badge>
+
+                  <div className="flex items-center gap-1.5">
+                    <Badge className={`text-xs font-semibold rounded-md ${produtoStatusColor[p.tipo_avaria.codigo]}`}>
+                      {produtoStatusLabels[p.tipo_avaria.codigo]}
+                    </Badge>
+                    <Badge className="text-[10px] font-bold px-1.5 py-0.5 rounded shrink-0">
+                      {p.quantidade_avariada} un
+                    </Badge>
+                  </div>
                 </div>
               ))}
               {remainingCount > 0 && (
@@ -335,7 +360,7 @@ export default function AvariaCard(props: AvariaCardProps) {
         )}
 
         {/* Botões de Ação (Aparecem apenas quando pendente e para perfis com permissão) */}
-        {props.data.status === 'pendente' && user?.role !== 'motorista' && (
+        {props.data.status === 'enviada' && user?.role !== 'motorista' && (
           <>
             <Button
               onClick={handleReprovar}

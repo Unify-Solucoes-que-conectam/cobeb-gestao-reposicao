@@ -123,12 +123,12 @@ export type ProdutoNotaFiscal = Base & {
 }
 
 export type ItemAvaria = Base & {
-  quantidade_avariada: number
   produto: {
     id: string
     codigo: string
     descricao: string
+    quantidade_avariada: number
     quantidade_total: number
+    tipo_avaria: TiposAvaria
   }
-  tipo_avaria: TiposAvaria
 }

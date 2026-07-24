@@ -13,4 +13,5 @@ export type ApiResponse<T = unknown> = {
   data: T
   pagination?: PaginationData
   debug_errors?: Record<string, string[]>
+  error_code?: string
 }

@@ -54,7 +54,7 @@ export default function VisualizarAvaria(props: VisualizarAvariaProps) {
         </Button>
       </DialogTrigger>
 
-      <DialogContent className='md:max-w-6xl'>
+      <DialogContent className='md:max-w-5xl max-h-[calc(100vh-4rem)]'>
         <DialogHeader className="border-b pb-3">
           <DialogTitle className='flex items-center gap-3'>
             Detalhes da Avaria #{props.avaria.id}
