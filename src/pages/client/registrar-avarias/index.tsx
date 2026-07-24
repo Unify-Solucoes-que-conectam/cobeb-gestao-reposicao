@@ -12,11 +12,11 @@ import { useDebounce } from "@/hooks/use-debounce";
 import axios from "@/lib/axios";
 import { avariaService, clienteService, tiposAvariaService } from "@/services/api.service";
 import { ApiResponse } from "@/types/api-response";
-import { Cliente, NotaFiscal, TiposAvaria } from "@/types/consults";
+import { Avaria, Cliente, NotaFiscal, TiposAvaria } from "@/types/consults";
 import { convertFileToBase64 } from "@/utils/conversors";
 import { formatCurrency } from "@/utils/formatters";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AlertTriangleIcon, CameraIcon, CheckIcon, FileTextIcon, ImageIcon, MinusIcon, NotepadTextIcon, PackageIcon, PackageXIcon, PlusIcon, TriangleAlertIcon, XIcon } from "lucide-react";
+import { AlertTriangleIcon, CameraIcon, CheckIcon, FileTextIcon, ImageIcon, MinusIcon, NotepadTextIcon, PackageIcon, PackageXIcon, PlusIcon, SendIcon, TriangleAlertIcon, XIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useLocation } from "react-router";
@@ -30,6 +30,7 @@ export default function ClientRegistrarAvarias() {
   const { user } = useAuth()
   const location = useLocation()
   const clienteInfo = location.state?.cliente as Cliente | undefined
+  const avariasCache = location.state?.avarias as Avaria[] | undefined
 
   // ===================== Formulário de cadastro de avarias =======================
   const form = useForm<CadastrarAvariaSchema>({
@@ -41,7 +42,15 @@ export default function ClientRegistrarAvarias() {
   // =============================== States de dados ===============================
   const [tiposAvaria, setTiposAvaria] = useState<TiposAvaria[]>([]);
   const [cliente, setCliente] = useState<Cliente | undefined>(clienteInfo)
+  const [avarias, setAvarias] = useState<Avaria[]>(avariasCache || [])
   const [anexos, setAnexos] = useState<{ id: string; name: string; base64: string }[]>([]);
+  const [avariasPendentes, setAvariasPendentes] = useState<Avaria[]>([]);
+
+  // =============================== States de controle =============================
+  const [progress, setProgress] = useState<string[]>([]);
+  const [spinners, setSpinners] = useState({
+    enviando: false,
+  });
 
   // =============================== States de passos ===============================
   const [notaFiscalData, setNotaFiscalData] = useState<NotaFiscal | null>(null);
@@ -99,6 +108,9 @@ export default function ClientRegistrarAvarias() {
 
       // consulta notas fiscais novamente para atualizar a quantidade de produtos disponíveis
       notaFiscalDebounced(notaFiscalWatcher);
+
+      // consulta avarias novamente para atualizar a lista de avarias do cliente
+      fetchAvarias();
     } else {
       toast.error(response.message || 'Erro ao registrar avaria');
     }
@@ -118,6 +130,42 @@ export default function ClientRegistrarAvarias() {
   }
 
   /**
+   * Consultar avarias do cliente selecionado, filtrando por status (opcional)
+   */
+  const fetchAvarias = async ({ signal, status }: { signal?: AbortSignal; status?: string } = {}) => {
+    const response = await clienteService.avarias({ id: cliente?.id || '', status: status === 'todos' ? undefined : status }, signal);
+
+    if (response.success) {
+      setAvarias(response.data);
+      setAvariasPendentes(response.data.filter(a => a.status === 'pendente'));
+    } else {
+      toast.error(response.message || 'Erro ao consultar avarias');
+    }
+  }
+
+  /**
+   * função para enviar a avaria
+   */
+  const handleEnviar = async () => {
+    setSpinners(prev => ({ ...prev, enviando: true }));
+
+    setProgress([]);
+
+    for (const avaria of avariasPendentes) {
+      const response = await avariaService.enviar(avaria.id);
+
+      if (response.success) {
+        setProgress(prev => [...prev, avaria.id]);
+      }
+    }
+    
+    toast.success('Todas as avarias foram enviadas com sucesso!');
+    setProgress([]);
+    setSpinners(prev => ({ ...prev, enviando: false }));
+    fetchAvarias();
+  };
+
+  /**
    * useEffect a ser disparado ao carregar página
    */
   useEffect(() => {
@@ -135,6 +183,14 @@ export default function ClientRegistrarAvarias() {
 
       if (clienteInfo?.id) getClientDetails()
     }
+
+    if (!avariasCache?.length) {
+      fetchAvarias()
+    } else {
+      setAvariasPendentes(avariasCache.filter(a => a.status === 'pendente'));
+    }
+
+
   }, [setPageTitle, setPageDescription, cliente]);
 
   // =================================== Watchers ==================================
@@ -269,7 +325,7 @@ export default function ClientRegistrarAvarias() {
       ]} />
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col gap-4 pb-20">
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col gap-4 pb-35">
 
           {/* NOTA_FISCAL_FIELD */}
           <FormField
@@ -687,10 +743,22 @@ export default function ClientRegistrarAvarias() {
 
         </form>
 
-        <div className="absolute bottom-0 left-0 w-full p-3 bg-background z-50">
-          <Button className="h-14 w-full" disabled={!form.formState.isValid} onClick={form.handleSubmit(handleSubmit)}>
-            <NotepadTextIcon />
-            REGISTRAR AVARIA
+        <div className="absolute bottom-0 left-0 w-full p-3 bg-background z-50 flex flex-col gap-2">
+          <Button className="h-14 w-full" disabled={!form.formState.isValid || form.formState.isSubmitting} loading={form.formState.isSubmitting} onClick={form.handleSubmit(handleSubmit)}>
+            {!form.formState.isSubmitting && <NotepadTextIcon className="mr-2" />}
+            {form.formState.isSubmitting ? 'Registrando Avaria...' : 'Registrar Avaria'}
+          </Button>
+          <Button variant="outline" type="button" className="relative h-14 w-full" disabled={form.formState.isSubmitting || spinners.enviando || avarias.filter(a => a.status === 'pendente').length === 0} loading={spinners.enviando} onClick={handleEnviar}>
+            {!spinners.enviando && <SendIcon className="mr-2" />}
+            {spinners.enviando ? 'Enviando avarias registradas...' : `Enviar avarias registradas (${avariasPendentes.length})`}
+
+            {/* PROGRESS LAYER (calcula a porcentagem de avarias pendentes) */}
+            <div
+              className="absolute left-0 top-0 bg-blue-500/30 animate-pulse h-full rounded-md transition-all duration-300"
+              style={{
+                width: `${avariasPendentes.length > 0 ? (progress.length / avariasPendentes.length) * 100 : 0}%`
+              }}
+            ></div>
           </Button>
         </div>
       </Form>

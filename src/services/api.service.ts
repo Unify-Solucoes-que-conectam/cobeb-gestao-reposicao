@@ -129,6 +129,16 @@ export const avariaService = {
     }
   },
 
+  remover: async (id: string) => {
+    try {
+      const response = await axios.delete<ApiResponse>(`/avarias/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  },
+
   atualizarQuantidadeAvariada: async (avariaId: string, produtoId: string, quantidade: number) => {
     try {
       const response = await axios.put<ApiResponse>(`/avarias/${avariaId}/produtos/${produtoId}`, {

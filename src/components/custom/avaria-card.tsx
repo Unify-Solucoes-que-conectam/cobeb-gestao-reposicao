@@ -1,3 +1,4 @@
+import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,6 +16,7 @@ import {
   FileTextIcon,
   LayersIcon,
   MessageCircleIcon,
+  TrashIcon,
   TruckIcon,
   XIcon
 } from 'lucide-react';
@@ -30,6 +32,7 @@ export type Spinners = {
   aprovando: boolean;
   reprovando: boolean;
   enviando: boolean;
+  removendo: boolean;
 }
 
 /**
@@ -45,7 +48,8 @@ export default function AvariaCard(props: AvariaCardProps) {
   const [spinners, setSpinners] = useState<Spinners>({
     aprovando: false,
     reprovando: false,
-    enviando: false
+    enviando: false,
+    removendo: false
   })
   const [copied, setCopied] = useState(false);
 
@@ -124,6 +128,23 @@ export default function AvariaCard(props: AvariaCardProps) {
   }
 
   /**
+   * função para remover a avaria
+   */
+  const handleRemover = async () => {
+    setSpinners(prev => ({ ...prev, removendo: true }));
+    const response = await avariaService.remover(props.data.id);
+    if (response.success) {
+      // Atualizar o status localmente ou refetch os dados
+      toast.success('Avaria removida com sucesso!');
+      props.reloadData?.();
+    } else {
+      toast.error(response.message || 'Erro ao remover avaria');
+    }
+
+    setSpinners(prev => ({ ...prev, removendo: false }));
+  }
+
+  /**
    * Função para copiar o ID da avaria para a área de transferência
    */
   const handleCopyId = () => {
@@ -153,19 +174,65 @@ export default function AvariaCard(props: AvariaCardProps) {
                 }
               </h1>
             </div>
-            <Badge className={`text-[11px] font-semibold px-2.5 py-1 rounded-md border ${statusColors[props.data.status]}`}>
-              {statusLabels[props.data.status]}
-            </Badge>
+
+            <div className="flex items-center gap-2">
+              <Badge className={`text-xs font-semibold rounded-md ${statusColors[props.data.status]}`}>
+                {statusLabels[props.data.status]}
+              </Badge>
+
+              {
+                props.data.status === 'pendente' && user?.role === 'motorista' && (
+                  <AlertDialog>
+
+                    <AlertDialogTrigger asChild>
+                      <Button variant='outline' size='icon'>
+                        <TrashIcon size={14} className='text-red-500' />
+                      </Button>
+                    </AlertDialogTrigger>
+
+                    <AlertDialogContent className="w-[90%] max-w-95 rounded-3xl p-6 bg-white gap-6">
+
+                      <AlertDialogHeader className="flex flex-col items-center text-center space-y-2">
+                        <AlertDialogTitle className="text-lg leading-snug font-semibold text-slate-900">
+                          Você tem certeza que deseja remover esta avaria?
+                        </AlertDialogTitle>
+                        <AlertDialogDescription className="text-xs font-medium text-slate-500">
+                          Ao continuar a avaria será removida do sistema.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+
+                      <AlertDialogFooter className="flex flex-col gap-3 sm:flex-col sm:space-x-0">
+
+                        <AlertDialogCancel className="w-full h-11 mt-0 rounded-xl border border-slate-200 font-semibold text-slate-800 bg-white hover:bg-slate-50 shadow-sm">
+                          Cancelar
+                        </AlertDialogCancel>
+
+                        <Button
+                          onClick={handleRemover}
+                          disabled={spinners.removendo}
+                          loading={spinners.removendo}
+                          className="w-full h-11 rounded-xl bg-red-500 hover:bg-red-700 text-white font-semibold shadow-sm"
+                        >
+                          {spinners.removendo ? 'Removendo Avaria...' : 'Remover Avaria'}
+                        </Button>
+
+                      </AlertDialogFooter>
+
+                    </AlertDialogContent>
+                  </AlertDialog>
+                )
+              }
+            </div>
           </CardTitle>
           <CardDescription className='flex justify-between text-xs px-4 py-2'>
             <div className="flex gap-2">
               <FileTextIcon size={14} className='text-slate-300' />
-              #{props.data.nota_fiscal.numero}
+              Nota Fiscal: #{props.data.nota_fiscal.numero}
             </div>
 
             <div className="flex gap-2">
               <CalendarIcon size={14} className='text-slate-300' />
-              {dayjs(props.data.data_emissao).format('DD/MM/YYYY HH:mm')}
+              Registrada em: {dayjs(props.data.data_emissao).format('DD/MM/YYYY HH:mm')}
             </div>
           </CardDescription>
         </div>

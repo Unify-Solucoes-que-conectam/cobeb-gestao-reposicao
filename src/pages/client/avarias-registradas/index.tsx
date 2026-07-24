@@ -122,7 +122,7 @@ export default function ClientAvariasRegistradas() {
           variant='outline'
           className='w-full h-12 shadow-sm border-slate-200 hover:bg-slate-50'
           onClick={() => navigate('/client/registrar-avarias', {
-            state: { cliente },
+            state: { cliente, avarias },
           })}
         >
           <PlusIcon className='text-xs font-medium text-primary mr-2' />
