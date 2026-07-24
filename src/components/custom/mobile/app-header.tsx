@@ -1,15 +1,15 @@
-import { Logo } from '../logo'
 import { ArrowLeftIcon, LogOutIcon } from 'lucide-react'
 import { useNavigate } from 'react-router'
+import { Logo } from '../logo'
 
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { useHeader } from '@/hooks/mobile/use-header'
 import { useAuth } from '@/hooks/use-auth'
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'
 
 export function AppHeader() {
   // =============== HOOKS =============
-  const { pageTitle, pageDescription, showBackButton } = useHeader()
+  const { pageTitle, pageDescription, showBackButton, showLogoutButton } = useHeader()
   const { signOut } = useAuth()
   const navigate = useNavigate()
 
@@ -42,44 +42,48 @@ export function AppHeader() {
         </div>
       </div>
 
-      <div className='flex gap-2'>
-  <AlertDialog>
-    
-    <AlertDialogTrigger asChild>
-      <Button className='size-10 rounded-lg shadow-accent-foreground hover:bg-red-500'>
-        <LogOutIcon className='size-6' />
-      </Button>
-    </AlertDialogTrigger>
-    
-    <AlertDialogContent className="w-[90%] max-w-[380px] rounded-3xl p-6 bg-white gap-6">
-      
-      <AlertDialogHeader className="flex flex-col items-center text-center space-y-2">
-        <AlertDialogTitle className="text-lg leading-snug font-semibold text-slate-900">
-          Você tem certeza que deseja sair?
-        </AlertDialogTitle>
-        <AlertDialogDescription className="text-xs font-medium text-slate-500">
-          Ao continuar sua conta será desconectada do aplicativo.
-        </AlertDialogDescription>
-      </AlertDialogHeader>
+      {
+        showLogoutButton && (
+          <div className='flex gap-2'>
+            <AlertDialog>
 
-      <AlertDialogFooter className="flex flex-col gap-3 sm:flex-col sm:space-x-0">
-        
-        <AlertDialogCancel className="w-full h-11 mt-0 rounded-xl border border-slate-200 font-semibold text-slate-800 bg-white hover:bg-slate-50 shadow-sm">
-          Cancelar
-        </AlertDialogCancel>
-        
-        <AlertDialogAction 
-          onClick={signOut} 
-          className="w-full h-11 rounded-xl bg-red-500 hover:bg-red-700 text-white font-semibold shadow-sm"
-        >
-          Desconectar
-        </AlertDialogAction>
-        
-      </AlertDialogFooter>
+              <AlertDialogTrigger asChild>
+                <Button className='size-10 rounded-lg shadow-accent-foreground hover:bg-red-500'>
+                  <LogOutIcon className='size-6' />
+                </Button>
+              </AlertDialogTrigger>
 
-    </AlertDialogContent>
-  </AlertDialog>
-</div>
+              <AlertDialogContent className="w-[90%] max-w-95 rounded-3xl p-6 bg-white gap-6">
+
+                <AlertDialogHeader className="flex flex-col items-center text-center space-y-2">
+                  <AlertDialogTitle className="text-lg leading-snug font-semibold text-slate-900">
+                    Você tem certeza que deseja sair?
+                  </AlertDialogTitle>
+                  <AlertDialogDescription className="text-xs font-medium text-slate-500">
+                    Ao continuar sua conta será desconectada do aplicativo.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+
+                <AlertDialogFooter className="flex flex-col gap-3 sm:flex-col sm:space-x-0">
+
+                  <AlertDialogCancel className="w-full h-11 mt-0 rounded-xl border border-slate-200 font-semibold text-slate-800 bg-white hover:bg-slate-50 shadow-sm">
+                    Cancelar
+                  </AlertDialogCancel>
+
+                  <AlertDialogAction
+                    onClick={signOut}
+                    className="w-full h-11 rounded-xl bg-red-500 hover:bg-red-700 text-white font-semibold shadow-sm"
+                  >
+                    Desconectar
+                  </AlertDialogAction>
+
+                </AlertDialogFooter>
+
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        )
+      }
     </header>
   )
 }

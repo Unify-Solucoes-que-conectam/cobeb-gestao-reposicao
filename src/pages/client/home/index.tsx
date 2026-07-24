@@ -15,7 +15,7 @@ import { mapaService } from '@/services/api.service'
 
 export default function ClientHome() {
   // ============ HOOKS ===========
-  const { setShowBackButton, setPageDescription, setPageTitle } = useHeader()
+  const { setShowBackButton, setPageDescription, setPageTitle, setShowLogoutButton } = useHeader()
   const { user } = useAuth()
 
   // ============ STATES ===========
@@ -39,6 +39,7 @@ export default function ClientHome() {
     setShowBackButton(false)
     setPageTitle(user?.nome ? user.nome : 'Bem-vindo!')
     setPageDescription('')
+    setShowLogoutButton(true)
   }, [])
 
   // ============ FETCHERS ===========

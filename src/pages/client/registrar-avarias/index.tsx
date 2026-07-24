@@ -26,7 +26,7 @@ import { CadastrarAvariaSchema, initValues, schema } from "./schemas/avaria";
 export default function ClientRegistrarAvarias() {
 
   // ===================================== Hooks ====================================
-  const { setPageTitle, setPageDescription, setShowBackButton } = useHeader()
+  const { setPageTitle, setPageDescription, setShowBackButton, setShowLogoutButton } = useHeader()
   const { user } = useAuth()
   const location = useLocation()
   const clienteInfo = location.state?.cliente as Cliente | undefined
@@ -123,6 +123,7 @@ export default function ClientRegistrarAvarias() {
   useEffect(() => {
     fetchTiposAvaria();
     setShowBackButton(true)
+    setShowLogoutButton(false)
 
     if (cliente) {
       setPageTitle(cliente.razao_social || 'Registrar Avarias')

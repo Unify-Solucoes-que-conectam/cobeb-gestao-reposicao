@@ -23,7 +23,7 @@ import { Avaria, Cliente } from '@/types/consults'
 export default function ClientAvariasRegistradas() {
   // ============= HOOKS =============
   const navigate = useNavigate()
-  const { setPageTitle, setPageDescription, setShowBackButton } = useHeader()
+  const { setPageTitle, setPageDescription, setShowBackButton, setShowLogoutButton } = useHeader()
   const location = useLocation()
 
   // ============= STATES =============
@@ -54,6 +54,7 @@ export default function ClientAvariasRegistradas() {
     if (cliente) {
       setPageTitle(cliente.razao_social || 'Registrar Avarias')
       setPageDescription(`Cód: ${cliente.codigo} • ${cliente.endereco}`)
+      setShowLogoutButton(false)
     } else {
       // Fallback de segurança: se o usuário recarregar a página (F5), ou acessar a URL direto
       setPageTitle('Registrar Avarias')
