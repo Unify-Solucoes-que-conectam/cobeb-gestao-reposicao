@@ -33,7 +33,7 @@ export default function VisualizarAvaria(props: VisualizarAvariaProps) {
   // ======================= Variáveis ====================
   const statusColors = {
     pendente: 'bg-gray-100 text-gray-500 border-gray-200 hover:bg-gray-200 hover:text-gray-500',
-    enviada: 'bg-yellow-100 text-yellow-500 border-yellow-200 hover:bg-yellow-200 hover:text-yellow-500',
+    aguardando_aprovacao: 'bg-yellow-100 text-yellow-500 border-yellow-200 hover:bg-yellow-200 hover:text-yellow-500',
     aprovada: 'bg-green-100 text-green-500 border-green-200 hover:bg-green-200 hover:text-green-500',
     reprovada: 'bg-red-100 text-red-500 border-red-200 hover:bg-red-200 hover:text-red-500',
     trocada: 'bg-violet-100 text-violet-500 border-violet-200 hover:bg-violet-200 hover:text-blue-500'
@@ -41,7 +41,7 @@ export default function VisualizarAvaria(props: VisualizarAvariaProps) {
 
   const statusLabels = {
     pendente: 'Aguardando Envio',
-    enviada: 'Enviada',
+    aguardando_aprovacao: 'Aguardando Aprovação',
     aprovada: 'Aprovada',
     reprovada: 'Reprovada',
     trocada: 'Trocada'

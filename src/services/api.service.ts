@@ -1,6 +1,6 @@
 import axios from "@/lib/axios";
 import { ApiResponse } from "@/types/api-response";
-import { Avaria, Cliente, ItemAvaria, Mapa, Motorista, NotaFiscal, Produto, TiposAvaria } from "@/types/consults";
+import { Avaria, Cliente, Filial, ItemAvaria, Mapa, Motorista, NotaFiscal, Produto, TiposAvaria } from "@/types/consults";
 
 /**
  * TiposAvaria service
@@ -121,7 +121,7 @@ export const avariaService = {
   enviar: async (id: string) => {
     try {
       const response = await axios.put<ApiResponse>(`/avarias/${id}/status`, {
-        status: 'enviada'
+        status: 'aguardando_aprovacao'
       });
       return response.data;
     } catch (error) {
@@ -368,6 +368,26 @@ export const authService = {
   }) => {
     try {
       const response = await axios.post<ApiResponse>(`/auth/change-password`, data);
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
+}
+
+/**
+ * Filial service
+ */
+export const filialService = {
+  read: async (params: {
+    [key: string]: string | undefined
+  }, signal?: AbortSignal) => {
+    try {
+      const response = await axios.get<ApiResponse<Filial[]>>(`/filiais`, {
+        params,
+        signal
+      });
       return response.data;
     } catch (error) {
       console.error(error);

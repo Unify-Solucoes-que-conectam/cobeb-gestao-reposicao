@@ -78,7 +78,7 @@ export default function ClientAvariasRegistradas() {
             <SelectGroup>
               <SelectItem value='todos'>Todas</SelectItem>
               <SelectItem value='pendente'>Pendentes</SelectItem>
-              <SelectItem value='enviada'>Enviadas</SelectItem>
+              <SelectItem value='aguardando_aprovacao'>Aguardando Aprovação</SelectItem>
               <SelectItem value='aprovada'>Aprovadas</SelectItem>
               <SelectItem value='reprovada'>Reprovadas</SelectItem>
             </SelectGroup>
