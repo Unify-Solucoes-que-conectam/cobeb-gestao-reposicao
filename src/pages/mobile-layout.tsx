@@ -2,8 +2,24 @@ import { Outlet } from 'react-router';
 
 import { AppHeader } from '@/components/custom/mobile/app-header';
 import { HeaderProvider } from '@/providers/mobile/HeaderProvider';
+import { useAuth } from '@/hooks/use-auth';
+import { useEffect } from 'react';
 
 export default function MobileLayout() {
+
+  // checar seção do usuário
+  const { checkSession } = useAuth();
+
+  useEffect(() => {
+    
+    const timeoutId = setTimeout(() => {
+      checkSession();
+    }, 1000);
+
+    return () => {
+      clearTimeout(timeoutId);
+    }
+  }, [])
 
   return (
     <HeaderProvider>

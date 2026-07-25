@@ -1,6 +1,6 @@
 import axios from "@/lib/axios";
 import { ApiResponse } from "@/types/api-response";
-import { Avaria, Cliente, ItemAvaria, NotaFiscal, Produto, TiposAvaria } from "@/types/consults";
+import { Avaria, Cliente, ItemAvaria, Mapa, Motorista, NotaFiscal, Produto, TiposAvaria } from "@/types/consults";
 
 /**
  * TiposAvaria service
@@ -275,6 +275,15 @@ interface MapaService {
     id: string
     [key: string]: string | undefined
   }, signal?: AbortSignal) => Promise<ApiResponse<Avaria[]>>
+
+  read: (params: {
+    [key: string]: string | undefined
+  }, signal?: AbortSignal) => Promise<ApiResponse<Mapa[]>>
+
+  designarMotorista: (params: {
+    mapaId: string
+    motoristaId: string
+  }, signal?: AbortSignal) => Promise<ApiResponse>
 }
 export const mapaService: MapaService = {
   clientes: async ({ id }, signal) => {
@@ -295,6 +304,51 @@ export const mapaService: MapaService = {
         params
       });
 
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  },
+
+  read: async (params, signal) => {
+    try {
+      const response = await axios.get<ApiResponse<Mapa[]>>(`/mapas`, {
+        signal,
+        params
+      });
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  },
+
+  designarMotorista: async ({ mapaId, motoristaId }, signal) => {
+    try {
+      const response = await axios.put<ApiResponse>(`/mapas/${mapaId}/designar-motorista/${motoristaId}`, { signal });
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  },
+}
+
+/**
+ * Motorista service
+ */
+export const motoristaService = {
+  read: async (params: {
+    filial_id: string
+    status?: string
+    only_without_map?: boolean
+  }, signal?: AbortSignal) => {
+    try {
+      const response = await axios.get<ApiResponse<Motorista[]>>(`/motoristas`, {
+        params,
+        signal
+      });
       return response.data;
     } catch (error) {
       console.error(error);

@@ -106,6 +106,9 @@ export type Mapa = {
   codigo: string
   data_entrega: string
   placa: string
+  filial: Filial
+  motorista: Motorista | null
+  clientes: Cliente[]
 }
 
 export type TipoAvariaCodes = '5' | '39'

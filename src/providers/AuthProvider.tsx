@@ -21,6 +21,7 @@ interface AuthContextType extends AuthState {
   signUp: (signUpData: SignUpSchema) => Promise<{ success: boolean; message: string }>
   signOut: () => Promise<void>
   changePassword: (changePasswordData: ChangePasswordSchema) => Promise<{ success: boolean; message: string }>
+  checkSession: () => Promise<boolean>
   isAuthenticated: boolean
 }
 
@@ -146,6 +147,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }
 
+  const checkSession = async (): Promise<boolean> => {
+    try {
+      const response = await axios.get<ApiResponse<{ usuario: Usuario; menus: Menu[] }>>('/auth/check-session');
+      return response.data.success;
+    } catch (error: any) {
+      console.error('Erro ao verificar sessão', error)
+      return false;
+    }
+  }
+
   const value: AuthContextType = {
     ...state,
     setLoading,
@@ -153,6 +164,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     signUp,
     signOut,
     changePassword,
+    checkSession,
     isAuthenticated: !!state.token && !!state.user,
   }
 
