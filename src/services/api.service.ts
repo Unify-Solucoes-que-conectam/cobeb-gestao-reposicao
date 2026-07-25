@@ -356,3 +356,22 @@ export const motoristaService = {
     }
   }
 }
+
+/**
+ * Auth service
+ */
+export const authService = {
+  changePassword: async (data: {
+    senha_antiga: string
+    senha_nova: string
+    confirmar_senha_nova: string
+  }) => {
+    try {
+      const response = await axios.post<ApiResponse>(`/auth/change-password`, data);
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
+}

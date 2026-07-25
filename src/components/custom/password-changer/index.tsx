@@ -29,10 +29,12 @@ import { useTheme } from '@/hooks/use-theme'
 interface PasswordChangerDialogProps {
   user_id: string;
   onSuccess: () => void;
+  pageMode?: 'change-password' | 'first-access';
 }
 export default function PasswordChangerDialog({
   user_id,
-  onSuccess
+  onSuccess,
+  pageMode = 'change-password'
 }: PasswordChangerDialogProps) {
 
   // =============== FORM ===============
@@ -52,7 +54,7 @@ export default function PasswordChangerDialog({
 
   // =============== STATES ===============
   const [spinner, setSpinner] = useState(false)
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(pageMode === 'first-access' ? true : false)
 
   // =============== HANDLERS ===============
   const handleSubmit = async (data: Schema) => {
@@ -102,12 +104,13 @@ export default function PasswordChangerDialog({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Tooltip content="Clique para alterar a senha" color='warning' variant={ theme === 'dark' ? 'outline' : 'solid'}>
-          <Button variant={ theme === 'dark' ? 'outline' : 'solid'} color='warning' size="icon">
+          <Button variant={ theme === 'dark' ? 'outline' : 'solid'} color='warning' size={pageMode === 'first-access' ? 'icon' : 'default'} className={cn({ 'w-full': pageMode === 'first-access' })}>
             <KeyRoundIcon />
+            {pageMode === 'first-access' ? <span>Alterar senha</span> : null}
           </Button>
         </Tooltip>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle>Alterar Senha</DialogTitle>
         </DialogHeader>
