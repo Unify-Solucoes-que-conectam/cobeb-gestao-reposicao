@@ -6,8 +6,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/use-auth";
 import { useHeader } from "@/hooks/use-header";
 import axios from "@/lib/axios";
-import { IMPORTER_CONFIGS, generateTemplate, type ImporterConfig } from "@/lib/xlsx-helpers";
-import { DownloadIcon, UploadIcon } from "lucide-react";
+import { IMPORTER_CONFIGS, type ImporterConfig } from "@/lib/xlsx-helpers";
+import { UploadIcon } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -44,11 +44,6 @@ function ImporterCard({
     const isActive = initialBatch.status === "pending" || initialBatch.status === "processing";
     setImporting(isActive);
   }, [initialBatch]);
-
-  const handleDownloadTemplate = () => {
-    generateTemplate(config);
-    toast.success(`Template ${config.label} baixado!`);
-  };
 
   const handleBatchUpdate = useCallback(
     (nextBatch: ImportBatch) => {
@@ -142,23 +137,18 @@ function ImporterCard({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={handleDownloadTemplate}>
-            <DownloadIcon className="h-4 w-4 mr-1" /> Template
+        <div className="flex-1">
+          <Button
+            size="sm"
+            className="w-full"
+            disabled={importing}
+            type="button"
+            onClick={() => fileRef.current?.click()}
+          >
+            {importing ? <Loader /> : <UploadIcon className="h-4 w-4 mr-1" />}
+            {importing ? "Importando..." : "Importar"}
           </Button>
-          <div className="flex-1">
-            <Button
-              size="sm"
-              className="w-full"
-              disabled={importing}
-              type="button"
-              onClick={() => fileRef.current?.click()}
-            >
-              {importing ? <Loader /> : <UploadIcon className="h-4 w-4 mr-1" />}
-              {importing ? "Importando..." : "Importar"}
-            </Button>
-            <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleImport} disabled={importing} />
-          </div>
+          <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleImport} disabled={importing} />
         </div>
         <ImportProgressPanel
           batchId={batch?.id}
@@ -181,17 +171,20 @@ export default function AdminImportacoes() {
   const { setPageBreadcrumbs } = useHeader();
 
   // ================ CALLBACKS ================
-  const entityConfigs = IMPORTER_CONFIGS.filter((c) =>
+  const cadastrosConfigs = IMPORTER_CONFIGS.filter((c) =>
     ["clientes", "produtos", "motoristas"].includes(c.key)
   );
-  const nfConfigs = IMPORTER_CONFIGS.filter((c) =>
-    ["mapas", "vendas_trocas"].includes(c.key)
+  const mapasConfigs = IMPORTER_CONFIGS.filter((c) =>
+    ["mapas"].includes(c.key)
+  );
+  const vendasTrocasConfigs = IMPORTER_CONFIGS.filter((c) =>
+    ["vendas_trocas"].includes(c.key)
   );
 
   const loadActiveBatches = useCallback(async () => {
     if (!apiUrl || !token) return;
     try {
-      const response = await axios.get(`${apiUrl}/imports`, {
+      const response = await axios.get(`${apiUrl}/importar`, {
         headers: {
           Authorization: `Bearer ${token}`,
           Accept: "application/json",
@@ -255,25 +248,35 @@ export default function AdminImportacoes() {
         Baixe o template XLSX, preencha e importe. Cadastros auxiliares devem ser importados antes de clientes, produtos e notas fiscais.
       </p>
 
-      <Tabs defaultValue="auxiliares" className="w-full">
+      <Tabs defaultValue="cadastros" className="w-full">
         <TabsList className="w-full grid grid-cols-3">
-          <TabsTrigger className="dark:data-[state=active]:bg-primary!" value="entidades">Cadastros</TabsTrigger>
-          <TabsTrigger className="dark:data-[state=active]:bg-primary!" value="notas">Notas Fiscais</TabsTrigger>
+          <TabsTrigger className="dark:data-[state=active]:bg-primary!" value="cadastros">Cadastros</TabsTrigger>
+          <TabsTrigger className="dark:data-[state=active]:bg-primary!" value="mapas">Mapas</TabsTrigger>
+          <TabsTrigger className="dark:data-[state=active]:bg-primary!" value="vendas_trocas">Vendas & Trocas</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="entidades" className="space-y-3 mt-4">
+        <TabsContent value="cadastros" className="space-y-3 mt-4">
           <p className="text-xs text-muted-foreground">Cadastre clientes, produtos e motoristas.</p>
           <div className="grid gap-3 md:grid-cols-2">
-            {entityConfigs.map((c) => (
+            {cadastrosConfigs.map((c) => (
               <ImporterCard key={c.key} config={c} initialBatch={activeBatches[c.key]} onBatchChange={handleBatchChange} />
             ))}
           </div>
         </TabsContent>
 
-        <TabsContent value="notas" className="space-y-3 mt-4">
-          <p className="text-xs text-muted-foreground">Importe notas fiscais e seus produtos. Clientes e produtos devem existir primeiro.</p>
+        <TabsContent value="mapas" className="space-y-3 mt-4">
+          <p className="text-xs text-muted-foreground">Importe mapas. Clientes, produtos e motoristas devem existir primeiro.</p>
           <div className="grid gap-3 md:grid-cols-2">
-            {nfConfigs.map((c) => (
+            {mapasConfigs.map((c) => (
+              <ImporterCard key={c.key} config={c} initialBatch={activeBatches[c.key]} onBatchChange={handleBatchChange} />
+            ))}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="vendas_trocas" className="space-y-3 mt-4">
+          <p className="text-xs text-muted-foreground">Importe vendas e trocas. Clientes, produtos e motoristas devem existir primeiro.</p>
+          <div className="grid gap-3 md:grid-cols-2">
+            {vendasTrocasConfigs.map((c) => (
               <ImporterCard key={c.key} config={c} initialBatch={activeBatches[c.key]} onBatchChange={handleBatchChange} />
             ))}
           </div>
