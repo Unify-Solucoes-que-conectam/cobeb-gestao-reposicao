@@ -178,7 +178,7 @@ export interface ItemAvariaService {
 export const itemAvariaService: ItemAvariaService = {
   read: async ({ id }, signal) => {
     try {
-      const response = await axios.get<ApiResponse<ItemAvaria[]>>(`/avarias/${id}/produtos`, { signal });
+      const response = await axios.get<ApiResponse<ItemAvaria[]>>(`/avarias/${id}/itens`, { signal });
       return response.data;
     } catch (error) {
       console.error(error);

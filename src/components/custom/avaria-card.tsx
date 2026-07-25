@@ -15,7 +15,6 @@ import {
   CopyIcon,
   FileTextIcon,
   LayersIcon,
-  MessageCircleIcon,
   TrashIcon,
   TruckIcon,
   XIcon
@@ -29,8 +28,6 @@ interface AvariaCardProps {
 }
 
 export type Spinners = {
-  aprovando: boolean;
-  reprovando: boolean;
   enviando: boolean;
   removendo: boolean;
 }
@@ -46,8 +43,6 @@ export default function AvariaCard(props: AvariaCardProps) {
 
   // ======================= States ===================
   const [spinners, setSpinners] = useState<Spinners>({
-    aprovando: false,
-    reprovando: false,
     enviando: false,
     removendo: false
   })
@@ -86,48 +81,6 @@ export default function AvariaCard(props: AvariaCardProps) {
   const MAX_VISIBLE_PRODUCTS = 3;
   const visibleProducts = items.map(item => item.produto).flat().slice(0, MAX_VISIBLE_PRODUCTS);
   const remainingCount = items.map(item => item.produto).flat().length - MAX_VISIBLE_PRODUCTS;
-
-  /**
-   * função para aprovar a avaria
-   */
-  const handleAprovar = async () => {
-    setSpinners(prev => ({ ...prev, aprovando: true }));
-    const response = await avariaService.aprovar(props.data.id);
-    if (response.success) {
-      // Atualizar o status localmente ou refetch os dados
-      toast.success('Avaria aprovada com sucesso!');
-      props.reloadData?.();
-    } else {
-      toast.error(response.message || 'Erro ao aprovar avaria');
-      
-      if (response.error_code === 'WHATSAPP_NOTIFICATION_FAILED') {
-        props.reloadData?.();
-      }
-    }
-
-    setSpinners(prev => ({ ...prev, aprovando: false }));
-  }
-
-  /**
-   * função para reprovar a avaria
-   */
-  const handleReprovar = async () => {
-    setSpinners(prev => ({ ...prev, reprovando: true }));
-    const response = await avariaService.reprovar(props.data.id);
-    if (response.success) {
-      // Atualizar o status localmente ou refetch os dados
-      toast.success('Avaria reprovada com sucesso!');
-      props.reloadData?.();
-    } else {
-      toast.error(response.message || 'Erro ao reprovar avaria');
-      
-      if (response.error_code === 'WHATSAPP_NOTIFICATION_FAILED') {
-        props.reloadData?.();
-      }
-    }
-
-    setSpinners(prev => ({ ...prev, reprovando: false }));
-  }
 
   /**
    * função para enviar a avaria
@@ -359,36 +312,10 @@ export default function AvariaCard(props: AvariaCardProps) {
           </>
         )}
 
-        {/* Botões de Ação (Aparecem apenas quando pendente e para perfis com permissão) */}
-        {props.data.status === 'enviada' && user?.role !== 'motorista' && (
-          <>
-            <Button
-              onClick={handleReprovar}
-              color="destructive"
-              disabled={spinners.reprovando || spinners.aprovando}
-              loading={spinners.reprovando}
-            >
-              {!spinners.reprovando && <MessageCircleIcon size={16} />}
-              {spinners.reprovando ? 'Processando...' : 'Reprovar'}
-            </Button>
-
-            <Button
-              onClick={handleAprovar}
-              color="success"
-              disabled={spinners.aprovando || spinners.reprovando}
-              loading={spinners.aprovando}
-            >
-              {!spinners.aprovando && <MessageCircleIcon size={16} />}
-              {spinners.aprovando ? 'Processando...' : 'Aprovar e Notificar Cliente'}
-            </Button>
-          </>
-        )}
-
         {/* Botão de Monitoramento (Exclusivo para Monitoramento) */}
         {user?.role === 'monitoramento' && (
-          <VisualizarAvaria spinners={spinners} avaria={props.data} reload={() => props.reloadData?.()} />
+          <VisualizarAvaria avaria={props.data} reload={() => props.reloadData?.()} />
         )}
-
       </CardFooter>
     </Card >
   );
