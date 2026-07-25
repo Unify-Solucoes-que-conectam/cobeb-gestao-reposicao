@@ -1,9 +1,10 @@
+import MotivoReprovacao from "@/components/custom/motivo-reprovacao";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { avariaService } from "@/services/api.service";
 import { Avaria } from "@/types/consults";
-import { EyeIcon, MessageCircleIcon } from "lucide-react";
+import { CheckIcon, EyeIcon, XIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import CardContextoRota from "./components/card-contexto-rota";
@@ -75,9 +76,9 @@ export default function VisualizarAvaria(props: VisualizarAvariaProps) {
   /**
    * função para reprovar a avaria
    */
-  const handleReprovar = async () => {
+  const handleReprovar = async (motivo: string) => {
     setSpinners(prev => ({ ...prev, reprovando: true }));
-    const response = await avariaService.reprovar(props.avaria.id);
+    const response = await avariaService.reprovar(props.avaria.id, motivo);
     if (response.success) {
       // Atualizar o status localmente ou refetch os dados
       toast.success('Avaria reprovada com sucesso!');
@@ -133,15 +134,18 @@ export default function VisualizarAvaria(props: VisualizarAvariaProps) {
 
         <DialogFooter className="border-t p-3">
           {/* Botões de Ação (Aparecem apenas quando pendente e para perfis com permissão) */}
-          <Button
-            onClick={handleReprovar}
-            color="destructive"
-            disabled={spinners.reprovando || spinners.aprovando}
+          <MotivoReprovacao
             loading={spinners.reprovando}
+            handleConfirm={(motivo) => handleReprovar(motivo)}
           >
-            {!spinners.reprovando && <MessageCircleIcon size={16} />}
-            {spinners.reprovando ? 'Processando...' : 'Reprovar'}
-          </Button>
+            <Button
+              color="destructive"
+              disabled={spinners.reprovando || spinners.aprovando}
+            >
+              <XIcon size={16} />
+              Reprovar
+            </Button>
+          </MotivoReprovacao>
 
           <Button
             onClick={handleAprovar}
@@ -149,8 +153,8 @@ export default function VisualizarAvaria(props: VisualizarAvariaProps) {
             disabled={spinners.aprovando || spinners.reprovando}
             loading={spinners.aprovando}
           >
-            {!spinners.aprovando && <MessageCircleIcon size={16} />}
-            {spinners.aprovando ? 'Processando...' : 'Aprovar e Notificar Cliente'}
+            {!spinners.aprovando && <CheckIcon size={16} />}
+            {spinners.aprovando ? 'Processando...' : 'Aprovar'}
           </Button>
         </DialogFooter>
       </DialogContent>

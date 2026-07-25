@@ -105,10 +105,11 @@ export const avariaService = {
     }
   },
 
-  reprovar: async (id: string) => {
+  reprovar: async (id: string, motivo: string) => {
     try {
       const response = await axios.put<ApiResponse>(`/avarias/${id}/status`, {
-        status: 'reprovada'
+        status: 'reprovada',
+        motivo_reprovacao: motivo
       });
       return response.data;
     } catch (error) {
