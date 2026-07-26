@@ -1,21 +1,20 @@
 import { NotificationType } from "@/hooks/use-echo";
-import { Motorista } from "./consults";
+import { Filial, Mapa } from "./consults";
 
 export type Usuario = {
   id: string;
-  cpf: string;
   nome: string;
+  cpf: string;
   role: 'monitoramento' | 'motorista';
   primeiro_acesso: boolean;
-  mapa: {
+  motorista: {
     id: string
     codigo: string
     status: string
-    motorista_id: string
-    usuario_responsavel_id: string
-    created_at: string
-    updated_at: string
-    motorista: Motorista
+    data_admissao: string
+    data_inativacao: string | null
+    mapa: Mapa
+    filial: Filial
   }
 }
 

@@ -10,7 +10,7 @@ export const schema = z.object({
       nome: z.string().min(1, 'Nome do anexo é obrigatório'),
       base64: z.string().min(1, 'Base64 do anexo é obrigatório'),
     })
-  ),
+  ).min(1, 'É necessário anexar pelo menos um arquivo'),
 })
 
 export type CadastrarAvariaSchema = z.infer<typeof schema>

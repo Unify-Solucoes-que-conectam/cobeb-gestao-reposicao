@@ -12,17 +12,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 const API_IMPORT_TYPES = new Set([
-  "filiais",
-  "tipos_pessoa",
-  "tipos_marca",
-  "embalagens",
-  "clusters",
-  "categorias",
-  "clientes",
   "produtos",
+  "clientes",
   "motoristas",
-  "notas_fiscais",
-  "produtos_nf",
+  "mapas",
+  "vendas_trocas"
 ]);
 
 function ImporterCard({
@@ -39,7 +33,6 @@ function ImporterCard({
   const fileRef = useRef<HTMLInputElement>(null);
   const apiUrl = import.meta.env.VITE_API_URL as string | undefined;
   const { token } = useAuth();
-  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Sync from parent (e.g. on mount / after loadActiveBatches)
   useEffect(() => {
@@ -51,44 +44,6 @@ function ImporterCard({
     const isActive = initialBatch.status === "pending" || initialBatch.status === "processing";
     setImporting(isActive);
   }, [initialBatch]);
-
-  // Polling fallback: when batch is active, poll the API every 3s in case WebSocket isn't available
-  useEffect(() => {
-    if (!batch || !apiUrl || !token) return;
-    const isActive = batch.status === "pending" || batch.status === "processing";
-    if (!isActive) {
-      if (pollingRef.current) {
-        clearInterval(pollingRef.current);
-        pollingRef.current = null;
-      }
-      return;
-    }
-
-    pollingRef.current = setInterval(async () => {
-      try {
-        const resp = await axios.get(`${apiUrl}/imports/${batch.id}`, {
-          headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
-        });
-        const fresh = resp.data?.data as ImportBatch | undefined;
-        if (fresh) {
-          setBatch(fresh);
-          onBatchChange?.(config.key, fresh);
-          if (fresh.status === "completed" || fresh.status === "failed") {
-            setImporting(false);
-          }
-        }
-      } catch {
-        // ignore polling errors
-      }
-    }, 3000);
-
-    return () => {
-      if (pollingRef.current) {
-        clearInterval(pollingRef.current);
-        pollingRef.current = null;
-      }
-    };
-  }, [batch?.id, batch?.status, apiUrl, token, config.key, onBatchChange]);
 
   const handleDownloadTemplate = () => {
     generateTemplate(config);
@@ -182,7 +137,8 @@ function ImporterCard({
       <CardHeader className="pb-3">
         <CardTitle className="text-base">{config.label}</CardTitle>
         <CardDescription className="text-xs">
-          Colunas: {config.columns.map((c) => c.header).join(", ")}
+          O arquivo de importação deve conter obrigatoriamente as colunas: <br></br>
+          <strong>{config.columns.map((c) => c.header).join(", ")}</strong>
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -225,15 +181,11 @@ export default function AdminImportacoes() {
   const { setPageBreadcrumbs } = useHeader();
 
   // ================ CALLBACKS ================
-
-  const lookupConfigs = IMPORTER_CONFIGS.filter((c) =>
-    ["filiais", "clusters", "tipos_marca", "embalagens", "categorias", "tipos_pessoa"].includes(c.key)
-  );
   const entityConfigs = IMPORTER_CONFIGS.filter((c) =>
     ["clientes", "produtos", "motoristas"].includes(c.key)
   );
   const nfConfigs = IMPORTER_CONFIGS.filter((c) =>
-    ["notas_fiscais", "produtos_nf"].includes(c.key)
+    ["mapas", "vendas_trocas"].includes(c.key)
   );
 
   const loadActiveBatches = useCallback(async () => {
@@ -305,19 +257,9 @@ export default function AdminImportacoes() {
 
       <Tabs defaultValue="auxiliares" className="w-full">
         <TabsList className="w-full grid grid-cols-3">
-          <TabsTrigger className="dark:data-[state=active]:bg-primary!" value="auxiliares">Auxiliares</TabsTrigger>
           <TabsTrigger className="dark:data-[state=active]:bg-primary!" value="entidades">Cadastros</TabsTrigger>
           <TabsTrigger className="dark:data-[state=active]:bg-primary!" value="notas">Notas Fiscais</TabsTrigger>
         </TabsList>
-
-        <TabsContent value="auxiliares" className="space-y-3 mt-4">
-          <p className="text-xs text-muted-foreground">Importe primeiro os cadastros auxiliares (filiais, clusters, etc).</p>
-          <div className="grid gap-3 md:grid-cols-2">
-            {lookupConfigs.map((c) => (
-              <ImporterCard key={c.key} config={c} initialBatch={activeBatches[c.key]} onBatchChange={handleBatchChange} />
-            ))}
-          </div>
-        </TabsContent>
 
         <TabsContent value="entidades" className="space-y-3 mt-4">
           <p className="text-xs text-muted-foreground">Cadastre clientes, produtos e motoristas.</p>
