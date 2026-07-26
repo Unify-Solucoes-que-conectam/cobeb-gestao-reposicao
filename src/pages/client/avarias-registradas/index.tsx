@@ -26,6 +26,8 @@ export default function ClientAvariasRegistradas() {
   const { setPageTitle, setPageDescription, setShowBackButton, setShowLogoutButton } = useHeader()
   const location = useLocation()
 
+  const { user } = useAuth()
+
   // ============= STATES =============
   const cliente = location.state?.cliente as Cliente | undefined
   const [avarias, setAvarias] = useState<Avaria[]>([])

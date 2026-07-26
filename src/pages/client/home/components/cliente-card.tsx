@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import { Cliente } from '@/types/consults'
+import { cn } from '@/lib/utils'
 
 interface ClienteCardProps {
   cliente: Cliente

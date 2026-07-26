@@ -395,3 +395,98 @@ export const filialService = {
     }
   }
 }
+
+interface ClienteService {
+  read: (params: {
+    search?: string
+  }) => Promise<ApiResponse<Cliente[]>>
+
+  notasFiscais: (params: {
+    id: string
+    search?: string
+  }) => Promise<ApiResponse<NotaFiscal[]>>
+
+  notaFiscal: (params: {
+    id: string
+    search?: string
+  }) => Promise<ApiResponse<NotaFiscal>>
+}
+export const clienteService: ClienteService = {
+  read: async ({ search }) => {
+    try {
+      const response = await axios.get<ApiResponse<Cliente[]>>(`/clientes`, {
+        params: {
+          search,
+        }
+      });
+
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  },
+
+  notasFiscais: async ({ id, search }) => {
+    try {
+      const response = await axios.get<ApiResponse<NotaFiscal[]>>(`/clientes/${id}/notas-fiscais`, {
+        params: {
+          search,
+        }
+      });
+
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  },
+
+  notaFiscal: async ({ id, search }) => {
+    try {
+      const response = await axios.get<ApiResponse<NotaFiscal>>(`/clientes/${id}/notas-fiscais/${search}`);
+
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
+}
+
+interface MapaService {
+  clientes: (params: {
+    id: string
+  }, signal?: AbortSignal) => Promise<ApiResponse<Cliente[]>>
+
+  avarias: (params: {
+    id: string
+    [key: string]: string | undefined
+  }, signal?: AbortSignal) => Promise<ApiResponse<Avaria[]>>
+}
+export const mapaService: MapaService = {
+  clientes: async ({ id }, signal) => {
+    try {
+      const response = await axios.get<ApiResponse<Cliente[]>>(`/mapas/${id}/clientes`, { signal });
+
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  },
+
+  avarias: async (params, signal) => {
+    try {
+      const response = await axios.get<ApiResponse<Avaria[]>>(`/mapas/${params.id}/avarias`, {
+        signal,
+        params
+      });
+
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
+}
