@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 import Echo, { type Broadcaster } from 'laravel-echo'
 
@@ -259,7 +259,7 @@ const useEcho = ({ channelName, mode, eventName, isPrivate }: UseEchoOptions) =>
 
   const clearMessages = () => setMessages([])
 
-  const disconnect = () => {
+  const disconnect = useCallback(() => {
     if (echoRef.current) {
       try {
         echoRef.current.disconnect()
@@ -267,7 +267,7 @@ const useEcho = ({ channelName, mode, eventName, isPrivate }: UseEchoOptions) =>
         // Ignore disconnect errors
       }
     }
-  }
+  }, [])
 
   return {
     messages,
