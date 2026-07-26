@@ -1,4 +1,6 @@
 import {
+  ArrowRightLeft,
+  HistoryIcon,
   MapIcon,
   PlusIcon,
   TagIcon
@@ -8,6 +10,7 @@ import { useNavigate } from 'react-router'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
+import { cn } from '@/lib/utils'
 import { Cliente } from '@/types/consults'
 import { cn } from '@/lib/utils'
 
@@ -22,10 +25,10 @@ export default function ClienteCard({ cliente, type = 'list', onClick }: Cliente
 
   return (
     <Card className={
-        cn('flex flex-col rounded-2xl shadow-sm transition-all cursor-pointer hover:border-blue-600', {
-          'bg-blue-50 border-blue-600': type === 'selected',
-        })
-      }
+      cn('flex flex-col rounded-2xl shadow-sm transition-all cursor-pointer hover:border-blue-600', {
+        'bg-blue-50 border-blue-600': type === 'selected',
+      })
+    }
       onClick={onClick}
     >
       <div className='flex justify-between items-start p-4 gap-4'>
@@ -88,9 +91,9 @@ export default function ClienteCard({ cliente, type = 'list', onClick }: Cliente
           <div className='flex flex-col gap-3 px-4 pb-4 pt-2'>
             <Button
               className='w-full bg-primary text-white h-10 rounded-xl text-sm font-semibold shadow-sm'
-              onClick={() => 
+              onClick={() =>
 
-                navigate(`/client/avarias-registradas`, {
+                navigate(`/client/registrar-avarias`, {
                   state: { cliente },
                 })
               }
@@ -102,8 +105,23 @@ export default function ClienteCard({ cliente, type = 'list', onClick }: Cliente
             <Button
               className='w-full bg-white border border-slate-200 text-slate-800 hover:bg-slate-50 h-10 rounded-xl text-sm font-semibold shadow-sm'
               variant='ghost'
+              onClick={() =>
+
+                navigate(`/client/avarias-registradas`, {
+                  state: { cliente },
+                })
+              }
+            >
+              <HistoryIcon />
+              Histórico de Avarias
+            </Button>
+
+            <Button
+              className='w-full bg-white border border-slate-200 text-slate-800 hover:bg-slate-50 h-10 rounded-xl text-sm font-semibold shadow-sm'
+              variant='ghost'
               onClick={onClick}
             >
+              <ArrowRightLeft />
               Escolher outro
             </Button>
           </div>

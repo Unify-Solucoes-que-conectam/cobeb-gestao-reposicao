@@ -17,29 +17,29 @@ import {
 } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import { useHeader } from '@/hooks/mobile/use-header'
-import { useAuth } from '@/hooks/use-auth'
-import axios from '@/lib/axios'
-import { mapaService } from '@/services/api.service'
-import { ApiResponse } from '@/types/api-response'
+import { clienteService } from '@/services/api.service'
 import { Avaria, Cliente } from '@/types/consults'
 
 export default function ClientAvariasRegistradas() {
   // ============= HOOKS =============
   const navigate = useNavigate()
-  const { setPageTitle, setPageDescription, setShowBackButton } = useHeader()
+  const { setPageTitle, setPageDescription, setShowBackButton, setShowLogoutButton } = useHeader()
   const location = useLocation()
 
   const { user } = useAuth()
 
   // ============= STATES =============
-  const [cliente, setCliente] = useState<Cliente | undefined>(location.state?.cliente as Cliente | undefined)
+  const cliente = location.state?.cliente as Cliente | undefined
   const [avarias, setAvarias] = useState<Avaria[]>([])
   const [selectedStatus, setSelectedStatus] = useState<string | undefined>(undefined)
   const [spinners, setSpinners] = useState({ geral: false })
 
+  /**
+   * Consultar avarias do cliente selecionado, filtrando por status (opcional)
+   */
   const fetchAvarias = async ({ signal, status }: { signal?: AbortSignal; status?: string } = {}) => {
     setSpinners({ ...spinners, geral: true })
-    const response = await mapaService.avarias({ id: user?.motorista.mapa.id || '', status }, signal);
+    const response = await clienteService.avarias({ id: cliente?.id || '', status: status === 'todos' ? undefined : status }, signal);
 
     if (response.success) {
       setAvarias(response.data);
@@ -56,12 +56,11 @@ export default function ClientAvariasRegistradas() {
     if (cliente) {
       setPageTitle(cliente.razao_social || 'Registrar Avarias')
       setPageDescription(`Cód: ${cliente.codigo} • ${cliente.endereco}`)
+      setShowLogoutButton(false)
     } else {
       // Fallback de segurança: se o usuário recarregar a página (F5), ou acessar a URL direto
       setPageTitle('Registrar Avarias')
       setPageDescription('Carregando informações...')
-
-      if (location.state?.cliente?.id) getClientDetails()
     }
   }, [setPageTitle, setPageDescription, cliente])
 
@@ -69,38 +68,21 @@ export default function ClientAvariasRegistradas() {
     fetchAvarias({ status: selectedStatus });
   }, [selectedStatus])
 
-  // ============= HANDLERS =============
-  const getClientDetails = async () => {
-    try {
-      const res = await axios.get<ApiResponse<Cliente>>(`/clientes/${location.state?.cliente?.id}`)
-
-      const { data } = res.data
-
-      if (res.data.success) {
-        setCliente(data)
-      }
-    } catch (err) {
-      toast.error(
-        'Erro ao buscar detalhes do cliente. Contate o administrador do sistema caso o erro persista!'
-      )
-      console.error('Erro ao buscar detalhes do cliente', err)
-    }
-  }
-
   return (
     <div className='flex flex-1 flex-col min-h-0 w-full bg-slate-50'>
       <div className='flex justify-between items-center shrink-0 z-10'>
-        <h1 className='text-sm font-semibold'>Avarias Registradas (0)</h1>
-        <Select defaultValue='000' onValueChange={(value) => setSelectedStatus(value)}>
+        <h1 className='text-sm font-semibold'>Avarias Registradas ({avarias.length})</h1>
+        <Select defaultValue='todos' onValueChange={(value) => setSelectedStatus(value)}>
           <SelectTrigger className='w-32 h-9 text-sm bg-white'>
             <SelectValue placeholder='Tipos de Avaria' />
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>
-              <SelectItem value='000'>Todos</SelectItem>
-              <SelectItem value='avariado'>Avariado</SelectItem>
-              <SelectItem value='faltante'>Faltante</SelectItem>
-              <SelectItem value='inversao'>Inversão</SelectItem>
+              <SelectItem value='todos'>Todas</SelectItem>
+              <SelectItem value='pendente'>Pendentes</SelectItem>
+              <SelectItem value='aguardando_aprovacao'>Aguardando Aprovação</SelectItem>
+              <SelectItem value='aprovada'>Aprovadas</SelectItem>
+              <SelectItem value='reprovada'>Reprovadas</SelectItem>
             </SelectGroup>
           </SelectContent>
         </Select>
@@ -108,7 +90,12 @@ export default function ClientAvariasRegistradas() {
 
       <div className='flex-1 flex flex-col min-h-0 w-full'>
         <ScrollArea className='h-full w-full [&>[data-radix-scroll-area-viewport]>div]:h-full'>
-          {avarias.length === 0 ? (
+          {spinners.geral ? (
+            <div className='flex flex-col items-center justify-center h-full gap-2 p-4'>
+              <LoaderCircleIcon className='animate-spin' size={32} strokeWidth={2} />
+              Carregando histórico de avarias...
+            </div>
+          ) : avarias.length === 0 ? (
             <div className='flex flex-col items-center justify-center h-full gap-2 p-4'>
               <div className='bg-gray-200 p-8 rounded-xl border-gray-300 border-2'>
                 <FolderOpenIcon className='text-gray-500' size={32} strokeWidth={2} />
@@ -120,14 +107,10 @@ export default function ClientAvariasRegistradas() {
                 </p>
               </div>
             </div>
-          ) : spinners.geral ? (
-            <div className='flex flex-col items-center justify-center h-full gap-2 p-4'>
-              <LoaderCircleIcon className='animate-spin' size={32} strokeWidth={2} />
-            </div>
           ) : (
             <div className='flex flex-col gap-4 mt-3'>
               {avarias.map((avaria) => (
-                <AvariaCard key={avaria.id} data={avaria} />
+                <AvariaCard key={avaria.id} data={avaria} reloadData={fetchAvarias} />
               ))}
             </div>
           )}
@@ -141,7 +124,7 @@ export default function ClientAvariasRegistradas() {
           variant='outline'
           className='w-full h-12 shadow-sm border-slate-200 hover:bg-slate-50'
           onClick={() => navigate('/client/registrar-avarias', {
-            state: { cliente },
+            state: { cliente, avarias },
           })}
         >
           <PlusIcon className='text-xs font-medium text-primary mr-2' />

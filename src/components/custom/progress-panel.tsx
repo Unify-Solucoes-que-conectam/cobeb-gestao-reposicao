@@ -1,6 +1,5 @@
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { useAuth } from '@/hooks/use-auth';
 import useEcho from '@/hooks/use-echo';
 import { CheckCircle2, Loader2, XCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -24,12 +23,12 @@ type ImportProgressPanelProps = {
 
 export function ImportProgressPanel({ batchId, initialBatch, onUpdate }: ImportProgressPanelProps) {
   const [batch, setBatch] = useState<ImportBatch | null>(initialBatch ?? null);
-  const { token } = useAuth();
 
   const { messages, disconnect } = useEcho({
     channelName: batchId ? `imports.${batchId}` : '',
     mode: 'event',
     eventName: 'import.progress.updated',
+    isPrivate: true,
   });
 
   useEffect(() => {
@@ -37,17 +36,18 @@ export function ImportProgressPanel({ batchId, initialBatch, onUpdate }: ImportP
   }, [initialBatch]);
 
   useEffect(() => {
+    console.log('Received messages:', messages);
     if (!messages.length) return;
     const latest = messages[messages.length - 1] as unknown as ImportBatch;
     setBatch(latest);
     onUpdate?.(latest);
   }, [messages, onUpdate]);
 
-  useEffect(() => () => {
-    if (token) {
+  useEffect(() => {
+    return () => {
       disconnect();
-    }
-  }, [disconnect, token]);
+    };
+  }, [disconnect]);
 
   if (!batch) return null;
 

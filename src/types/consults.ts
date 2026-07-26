@@ -1,15 +1,18 @@
 import { Base } from "./app"
 
-export type StatusAvaria = 'pendente' | 'aprovada' | 'reprovada'
+export type StatusAvaria = 'pendente' | 'aguardando_aprovacao' | 'aprovada' | 'reprovada' | 'trocada'
 
 export type Avaria = Base & {
   status: StatusAvaria
-  mapa: Mapa
-  cliente: Cliente
-  notas_fiscais: NotaFiscal[]
-  produtos: Produto[]
+  data_emissao: string
+  data_aprovacao: string | null
+  motivo_reprovacao: string | null
+  itens: ItemAvaria[]
   anexos: Anexo[]
-  usuario_responsavel_id: string
+  nota_fiscal: NotaFiscal
+
+  cliente?: Cliente // para consulta no painel
+  motorista?: Motorista // para consulta no painel
 }
 
 export type Produto = Base & {
@@ -65,6 +68,8 @@ export type Motorista = Base & {
   data_admissao: string
   filial: Filial
   cluster: Cluster
+
+  mapa?: Mapa // para consulta no painel
 }
 
 export type Cliente = Base & {
@@ -101,9 +106,15 @@ export type Mapa = {
   codigo: string
   data_entrega: string
   placa: string
+  filial: Filial
+  motorista: Motorista | null
+  clientes: Cliente[]
 }
 
+export type TipoAvariaCodes = '5' | '39'
+
 export type TiposAvaria = Base & {
+  codigo: TipoAvariaCodes
   nome: string
   descricao: string
 }
@@ -112,4 +123,15 @@ export type ProdutoNotaFiscal = Base & {
   quantidade: number
   quantidade_avariada?: number
   valor_total: string
+}
+
+export type ItemAvaria = Base & {
+  produto: {
+    id: string
+    codigo: string
+    descricao: string
+    quantidade_avariada: number
+    quantidade_total: number
+    tipo_avaria: TiposAvaria
+  }
 }

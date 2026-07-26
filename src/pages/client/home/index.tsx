@@ -9,14 +9,21 @@ import { useHeader } from '@/hooks/mobile/use-header'
 import { useAuth } from '@/hooks/use-auth'
 import { Cliente } from '@/types/consults'
 
+import { mapaService } from '@/services/api.service'
 import ClienteCard from './components/cliente-card'
 import DetectClientCard from './components/detect-client-card'
-import { mapaService } from '@/services/api.service'
+import { useNavigate } from 'react-router'
 
 export default function ClientHome() {
   // ============ HOOKS ===========
-  const { setShowBackButton, setPageDescription, setPageTitle } = useHeader()
-  const { user } = useAuth()
+  const { setShowBackButton, setPageDescription, setPageTitle, setShowLogoutButton } = useHeader()
+  const { user, checkSession } = useAuth()
+  const navigate = useNavigate()
+
+  // verifica se é a primeira vez que o usuário está acessando a tela de clientes
+  if (user?.primeiro_acesso) {
+    navigate('/client/change-password')
+  }
 
   // ============ STATES ===========
   const [switched, setSwitched] = useState(false)
@@ -39,10 +46,19 @@ export default function ClientHome() {
     setShowBackButton(false)
     setPageTitle(user?.nome ? user.nome : 'Bem-vindo!')
     setPageDescription('')
+    setShowLogoutButton(true)
   }, [])
 
   // ============ FETCHERS ===========
   const fetchClients = async ({ signal }: { signal?: AbortSignal } = {}) => {
+
+    
+    // validar se os dados necessários estão disponíveis
+    if (!user?.motorista.mapa.id) {
+      checkSession()
+      return
+    }
+
     setSpinners({ ...spinners, geral: true })
     const response = await mapaService.clientes({ id: user?.motorista.mapa.id || '' }, signal);
 

@@ -8,6 +8,7 @@ import SearchPanel from "@/components/custom/search-panel";
 import { useHeader } from "@/hooks/use-header";
 import { Filial, Mapa } from "@/types/consults";
 import MapaCard from "./components/mapa-card";
+import { mapaService } from "@/services/api.service";
 
 export default function AdminUsuarios() {
 
@@ -38,35 +39,26 @@ export default function AdminUsuarios() {
   }, []);
 
   useEffect(() => {
-    fetchMaps()
+    fetchMapas()
     fetchFiliais()
   }, []);
 
   // =============== HANDLERS ===============
-  const fetchMaps = async () => {
-    try {
-      setSpinners((prev) => ({ ...prev, geral: true }));
+  /**
+   * Consultar avarias do cliente selecionado, filtrando por status (opcional)
+   */
+  const fetchMapas = async ({ signal }: { signal?: AbortSignal } = {}) => {
+    setSpinners((prev) => ({ ...prev, geral: true }));
+    const response = await mapaService.read({}, signal);
 
-      const response = await axios.get<ApiResponse<Mapa[]>>('/mapas', {
-        params: {
-          search: filters.busca,
-          filial: filters.filial !== 'todas' ? filters.filial : undefined,
-        }
-      });
-      const { data } = response;
-
-      if (data.success) {
-        setMaps(data.data);
-      } else {
-        toast.error(data.message || "Erro ao carregar mapas");
-      }
-    } catch (error) {
-      toast.error("Erro ao carregar mapas");
-      console.error("Error loading mapas:", error);
-    } finally {
-      setSpinners((prev) => ({ ...prev, geral: false }));
+    if (response.success) {
+      setMaps(response.data);
+    } else {
+      toast.error(response.message || 'Erro ao consultar avarias');
     }
-  };
+
+    setSpinners((prev) => ({ ...prev, geral: false }));
+  }
 
   const fetchFiliais = async () => {
     try {
@@ -105,7 +97,7 @@ export default function AdminUsuarios() {
           ...filiais.map(filial => ({ label: filial.descricao, value: filial.id }))
         ]}
         onFilterChange={(newFilters) => setFilters({ ...filters, filial: newFilters[0].value })}
-        fetchData={fetchMaps}
+        fetchData={fetchMapas}
       />
 
       {
@@ -115,7 +107,7 @@ export default function AdminUsuarios() {
           <div className="space-y-4">
             {
               maps.length > 0 ? (
-                maps.map((mapa) => <MapaCard key={mapa.codigo} data={mapa} />)
+                maps.map((mapa) => <MapaCard key={mapa.codigo} data={mapa} reload={fetchMapas} />)
               ) : (
                 <div className="text-center py-8 text-muted-foreground">Nenhum mapa encontrado</div>
               )
