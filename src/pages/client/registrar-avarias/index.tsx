@@ -684,6 +684,7 @@ export default function ClientRegistrarAvarias() {
                               accept="image/*"
                               multiple
                               className="hidden"
+                              capture="environment"
                               onChange={async (e) => {
                                 const files = e.target.files;
                                 if (!files || files.length === 0) return;
