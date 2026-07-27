@@ -125,6 +125,7 @@ const useEcho = ({ channelName, mode, eventName, isPrivate }: UseEchoOptions) =>
             setConnectionStatus('connected')
             setError(null)
             reconnectAttemptsRef.current = 0
+            console.log('[WebSocket] Conectado com sucesso ✅')
           }
         })
 
