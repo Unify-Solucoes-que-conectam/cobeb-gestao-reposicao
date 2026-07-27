@@ -36,7 +36,7 @@ interface Filters {
 export default function AdminAvarias() {
 
   // =============== HOOKS   ===============
-  const { setPageBreadcrumbs } = useHeader();
+  const { setPageBreadcrumbs, notificationReceived } = useHeader();
 
   // ============== FILTERS ===============
   const [filters, setFilters] = useState<Filters>({
@@ -128,7 +128,7 @@ export default function AdminAvarias() {
     }, 500);
 
     return () => clearTimeout(debounceTimeout);
-  }, [filters]);
+  }, [filters, notificationReceived]);
 
   return (
     <div className="flex flex-col gap-6 h-full">
