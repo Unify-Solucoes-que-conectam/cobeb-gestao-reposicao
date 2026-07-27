@@ -12,6 +12,7 @@ interface CardNotaFiscalProps {
   avariaId: string
   notaFiscal: NotaFiscal
   itens: ItemAvaria[]
+  canEdit: boolean
 }
 
 export default function CardNotaFiscal(props: CardNotaFiscalProps) {
@@ -28,8 +29,9 @@ export default function CardNotaFiscal(props: CardNotaFiscalProps) {
           props.itens.map(item => (
             <CardItemAvaria
               key={item.id}
-              item={item}
               avariaId={props.avariaId}
+              canEdit={props.canEdit}
+              item={item}
             />
           ))
         }
@@ -41,6 +43,7 @@ export default function CardNotaFiscal(props: CardNotaFiscalProps) {
 interface CardItemAvariaProps {
   item: ItemAvaria;
   avariaId: string;
+  canEdit: boolean;
 }
 
 export function CardItemAvaria(props: CardItemAvariaProps) {
@@ -201,6 +204,7 @@ export function CardItemAvaria(props: CardItemAvariaProps) {
               onClick={() => handleEditClick(props.item)}
               className="h-8 w-8 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
               title="Editar quantidade"
+              disabled={isSaving || !props.canEdit}
             >
               <PencilIcon size={16} />
             </Button>

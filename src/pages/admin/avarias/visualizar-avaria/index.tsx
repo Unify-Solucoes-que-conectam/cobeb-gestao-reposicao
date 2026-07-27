@@ -125,38 +125,42 @@ export default function VisualizarAvaria(props: VisualizarAvariaProps) {
         </DialogHeader>
 
         <div className='flex flex-wrap gap-4 p-3 overflow-hidden'>
-          <CardNotaFiscal avariaId={props.avaria.id} notaFiscal={props.avaria.nota_fiscal} itens={props.avaria.itens} />
+          <CardNotaFiscal avariaId={props.avaria.id} notaFiscal={props.avaria.nota_fiscal} itens={props.avaria.itens} canEdit={props.avaria.status === 'aguardando_aprovacao'} />
           <div className='w-full md:w-90 flex flex-col gap-4'>
             <CardContextoRota motorista={props.avaria.motorista!} />
             <CardEvidencias avaria={props.avaria} anexos={props.avaria.anexos} />
           </div>
         </div>
 
-        <DialogFooter className="border-t p-3">
-          {/* Botões de Ação (Aparecem apenas quando pendente e para perfis com permissão) */}
-          <MotivoReprovacao
-            loading={spinners.reprovando}
-            handleConfirm={(motivo) => handleReprovar(motivo)}
-          >
-            <Button
-              color="destructive"
-              disabled={spinners.reprovando || spinners.aprovando}
-            >
-              <XIcon size={16} />
-              Reprovar
-            </Button>
-          </MotivoReprovacao>
+        {
+          props.avaria.status === 'aguardando_aprovacao' && (
+            <DialogFooter className="border-t p-3">
+              {/* Botões de Ação (Aparecem apenas quando pendente e para perfis com permissão) */}
+              <MotivoReprovacao
+                loading={spinners.reprovando}
+                handleConfirm={(motivo) => handleReprovar(motivo)}
+              >
+                <Button
+                  color="destructive"
+                  disabled={spinners.reprovando || spinners.aprovando}
+                >
+                  <XIcon size={16} />
+                  Reprovar
+                </Button>
+              </MotivoReprovacao>
 
-          <Button
-            onClick={handleAprovar}
-            color="success"
-            disabled={spinners.aprovando || spinners.reprovando}
-            loading={spinners.aprovando}
-          >
-            {!spinners.aprovando && <CheckIcon size={16} />}
-            {spinners.aprovando ? 'Processando...' : 'Aprovar'}
-          </Button>
-        </DialogFooter>
+              <Button
+                onClick={handleAprovar}
+                color="success"
+                disabled={spinners.aprovando || spinners.reprovando}
+                loading={spinners.aprovando}
+              >
+                {!spinners.aprovando && <CheckIcon size={16} />}
+                {spinners.aprovando ? 'Processando...' : 'Aprovar'}
+              </Button>
+            </DialogFooter>
+          )
+        }
       </DialogContent>
     </Dialog>
   )
