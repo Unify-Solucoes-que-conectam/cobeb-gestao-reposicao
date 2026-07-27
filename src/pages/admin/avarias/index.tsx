@@ -36,7 +36,7 @@ interface Filters {
 export default function AdminAvarias() {
 
   // =============== HOOKS   ===============
-  const { setPageBreadcrumbs } = useHeader();
+  const { setPageBreadcrumbs, notificationReceived } = useHeader();
 
   // ============== FILTERS ===============
   const [filters, setFilters] = useState<Filters>({
@@ -62,7 +62,6 @@ export default function AdminAvarias() {
     ]);
 
     fetchFiliais();
-    fetchAvarias();
   }, [])
 
   const dashboards: Dashboard[] = [
@@ -84,9 +83,9 @@ export default function AdminAvarias() {
   /**
    * Consultar avarias, filtrando por status (opcional)
    */
-  const fetchAvarias = async ({ signal, search, status, filial }: { signal?: AbortSignal; search?: string; status?: string, filial?: string } = {}) => {
+  const fetchAvarias = async ({ signal }: { signal?: AbortSignal } = {}) => {
     setSpinners(prev => ({ ...prev, geral: true }));
-    const response = await avariaService.read({ search: search, status: status === 'todos' ? undefined : status, filialId: filial === 'todas' ? undefined : filial }, signal);
+    const response = await avariaService.read({ search: filters.busca, status: filters.status === 'todas' ? undefined : filters.status, filialId: filters.filial === 'todas' ? undefined : filters.filial }, signal);
 
     if (response.success) {
       setAvarias(response.data);
@@ -125,11 +124,11 @@ export default function AdminAvarias() {
 
     // debounce para evitar múltiplas requisições em sequência ao digitar na busca
     const debounceTimeout = setTimeout(() => {
-      fetchAvarias({ search: filters.busca, status: filters.status, filial: filters.filial });
+      fetchAvarias();
     }, 500);
 
     return () => clearTimeout(debounceTimeout);
-  }, [filters]);
+  }, [filters, notificationReceived]);
 
   return (
     <div className="flex flex-col gap-6 h-full">
@@ -145,6 +144,10 @@ export default function AdminAvarias() {
           </InputGroupAddon>
           <InputGroupAddon align="inline-end">{avarias.length} results</InputGroupAddon>
         </InputGroup>
+
+        <Button onClick={() => fetchAvarias()}>
+          <SearchIcon size={16} />
+        </Button>
 
         <Select defaultValue="todos" onValueChange={(value) => setFilters(prev => ({ ...prev, status: value }))}>
           <SelectTrigger className="w-45">

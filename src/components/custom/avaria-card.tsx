@@ -204,7 +204,7 @@ export default function AvariaCard(props: AvariaCardProps) {
 
             <span className="flex gap-2">
               <CalendarIcon size={14} className='text-slate-300' />
-              Registrada em: {dayjs(props.data.data_emissao).format('DD/MM/YYYY HH:mm')}
+              Registrada em: {dayjs(props.data.data_emissao).format('DD/MM/YYYY')}
             </span>
           </CardDescription>
         </div>

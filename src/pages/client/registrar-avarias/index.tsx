@@ -438,13 +438,13 @@ export default function ClientRegistrarAvarias() {
                     produtoEncontrado && (
                       <CardFooter className="p-2">
                         <Card className="p-3 w-full">
-                          <CardHeader className="p-0 w-full border-b pb-2">
+                          <CardHeader className="p-0 w-full">
                             <CardTitle
                               title={produtoEncontrado.descricao}
                               className="text-md flex items-center justify-between"
                             >
                               <span>{produtoEncontrado.descricao}</span>
-                              <span className="text-primary">{formatCurrency(parseFloat(produtoEncontrado.valor_total) / produtoEncontrado.quantidade)}</span>
+                              <span className="text-primary">{formatCurrency(parseFloat(produtoEncontrado.valor_total) / (produtoEncontrado.quantidade === 0 ? produtoEncontrado.quantidade_avariada ?? 0 : produtoEncontrado.quantidade))}</span>
                             </CardTitle>
                             <CardDescription className="flex justify-between">
                               <span>Código: <strong>#{produtoEncontrado.codigo}</strong></span>
@@ -452,8 +452,8 @@ export default function ClientRegistrarAvarias() {
                             </CardDescription>
                           </CardHeader>
                           {
-                            produtoEncontrado.quantidade_avariada && (
-                              <CardContent className="p-0 pt-2 text-xs flex justify-between items-center text-amber-600">
+                            produtoEncontrado.quantidade_avariada && produtoEncontrado.quantidade_avariada > 0 ? (
+                              <CardContent className="p-0 pt-2 border-t text-xs flex justify-between items-center text-amber-600">
                                 <div className="flex items-center gap-2">
                                   <PackageXIcon size={20} />
                                   <span>{produtoEncontrado.quantidade_avariada} {produtoEncontrado.quantidade_avariada === 1 ? 'item avariado' : 'itens avariados'}</span>
@@ -461,7 +461,7 @@ export default function ClientRegistrarAvarias() {
 
                                 <AlertTriangleIcon size={20} />
                               </CardContent>
-                            )
+                            ) : null
                           }
                         </Card>
                       </CardFooter>
@@ -684,6 +684,7 @@ export default function ClientRegistrarAvarias() {
                               accept="image/*"
                               multiple
                               className="hidden"
+                              capture="environment"
                               onChange={async (e) => {
                                 const files = e.target.files;
                                 if (!files || files.length === 0) return;

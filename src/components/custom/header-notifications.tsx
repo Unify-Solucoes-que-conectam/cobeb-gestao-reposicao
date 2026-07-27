@@ -14,10 +14,12 @@ import { cn } from '@/lib/utils'
 import type { ApiResponse } from '@/types/api-response'
 import { type Notificacao } from '@/types/app'
 import { useAuth } from '@/hooks/use-auth'
+import { useHeader } from '@/hooks/use-header'
 
 const HeaderNotifications = () => {
   // ID do usuário logado, necessário para o canal privado
   const { user } = useAuth();
+  const { emitNotificationReceived } = useHeader();
 
   const scrollRef = useRef<HTMLDivElement>(null)
   const notificationSound = useRef<HTMLAudioElement | null>(null)
@@ -140,6 +142,7 @@ const HeaderNotifications = () => {
     const newIncomingMessages = [...globalMessages, ...userMessages]
 
     if (newIncomingMessages.length > 0) {
+      emitNotificationReceived(); // Emite o evento para o HeaderProvider que novas notificações foram recebidas
       console.log('[HeaderNotifications] Novas mensagens recebidas:', newIncomingMessages)
 
       setNotifications((prev) => [
@@ -171,6 +174,8 @@ const HeaderNotifications = () => {
       if (globalMessages.length > 0) clearGlobalMessages()
       if (userMessages.length > 0) clearUserMessages()
     }
+
+
   }, [globalMessages, userMessages, clearGlobalMessages, clearUserMessages])
 
   return (
