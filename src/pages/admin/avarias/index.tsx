@@ -62,7 +62,6 @@ export default function AdminAvarias() {
     ]);
 
     fetchFiliais();
-    fetchAvarias();
   }, [])
 
   const dashboards: Dashboard[] = [
@@ -125,7 +124,7 @@ export default function AdminAvarias() {
 
     // debounce para evitar múltiplas requisições em sequência ao digitar na busca
     const debounceTimeout = setTimeout(() => {
-      fetchAvarias({ search: filters.busca, status: filters.status, filial: filters.filial });
+      fetchAvarias({ search: filters.busca, status: filters.status === 'todas' ? undefined : filters.status, filial: filters.filial === 'todas' ? undefined : filters.filial });
     }, 500);
 
     return () => clearTimeout(debounceTimeout);

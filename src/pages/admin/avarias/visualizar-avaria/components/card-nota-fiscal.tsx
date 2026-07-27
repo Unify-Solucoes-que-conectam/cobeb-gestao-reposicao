@@ -68,6 +68,8 @@ export function CardItemAvaria(props: CardItemAvariaProps) {
         fetchItensAvaria({ signal });
         // reseta a quantidade nova para evitar que o valor antigo seja exibido ao reabrir o modo de edição
         setNewQuantity(null);
+      } else {
+        toast.error(response.message || 'Erro ao atualizar quantidade. Tente novamente mais tarde.');
       }
     } catch (error) {
       console.error("Erro ao atualizar quantidade", error);
