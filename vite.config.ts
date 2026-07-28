@@ -76,7 +76,7 @@ export default defineConfig({
             handler: 'NetworkOnly',
             options: {
               backgroundSync: {
-                name: 'sync-queue-data',
+                name: 'sync-post-data',
                 options: {
                   maxRetentionTime: 24 * 60 // Tenta reenviar por até 24 horas
                 }
@@ -89,7 +89,7 @@ export default defineConfig({
             handler: 'NetworkOnly',
             options: {
               backgroundSync: {
-                name: 'sync-queue-data',
+                name: 'sync-update-data',
                 options: {
                   maxRetentionTime: 24 * 60 // Tenta reenviar por até 24 horas
                 }
@@ -102,7 +102,7 @@ export default defineConfig({
             handler: 'NetworkOnly',
             options: {
               backgroundSync: {
-                name: 'sync-queue-data',
+                name: 'sync-delete-data',
                 options: {
                   maxRetentionTime: 24 * 60 // Tenta reenviar por até 24 horas
                 }
