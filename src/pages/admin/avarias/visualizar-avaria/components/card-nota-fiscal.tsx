@@ -107,7 +107,7 @@ export function CardItemAvaria(props: CardItemAvariaProps) {
   }
 
   return (
-    <Card className={`group transition-all duration-200 hover:shadow-md border border-slate-200 border-l-4 bg-white ${props.item.produto.tipo_avaria.codigo === '5'
+    <Card className={`group transition-all duration-200 hover:shadow-md border border-l-4 ${props.item.produto.tipo_avaria.codigo === '5'
       ? 'border-l-amber-500'
       : props.item.produto.tipo_avaria.codigo === '39'
         ? 'border-l-purple-500'
@@ -116,12 +116,12 @@ export function CardItemAvaria(props: CardItemAvariaProps) {
       <CardContent className="p-3.5">
         {/* Topo do Card: Nome do Produto e Código */}
         <div className="flex items-start justify-between gap-3">
-          <h4 className="font-bold text-slate-800 text-sm leading-snug group-hover:text-blue-600 transition-colors">
+          <h4 className="font-bold text-sm leading-snug transition-colors">
             {props.item.produto.descricao}
           </h4>
           <Badge
             variant="outline"
-            className="font-mono text-[11px] font-semibold bg-slate-50 text-slate-600 border-slate-200 shrink-0 whitespace-nowrap"
+            className="font-mono text-[11px] font-semibold shrink-0 whitespace-nowrap"
           >
             CÓD: {props.item.produto.codigo}
           </Badge>
@@ -131,7 +131,7 @@ export function CardItemAvaria(props: CardItemAvariaProps) {
         <div className="flex items-center justify-between pt-2.5 mt-2.5 border-t border-slate-100 text-xs">
           {/* Lado Esquerdo: Quantidade e Badge de Status */}
           <div className="flex items-center gap-2">
-            <Badge className="font-bold text-slate-700 bg-slate-100 hover:bg-slate-100 px-2.5 py-1 rounded-lg flex gap-1 items-center">
+            <Badge className="font-bold text-slate-700 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg flex gap-1 items-center">
               {updatedItem?.produto.quantidade_avariada ?? props.item.produto.quantidade_avariada} <span className="font-normal text-slate-500">
                 {(updatedItem?.produto.quantidade_avariada === 1 || props.item.produto.quantidade_avariada === 1) ? 'unidade avariada' : 'unidades avariadas'}
               </span>
