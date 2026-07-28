@@ -96,7 +96,6 @@ export type Cliente = Base & {
 export type NotaFiscal = Base & {
   numero: string
   pedido: string
-  operacao: string
   data_emissao: string
   produtos: (ProdutoNotaFiscal & Produto)[]
 }
