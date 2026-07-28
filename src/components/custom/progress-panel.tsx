@@ -1,6 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import useEcho from '@/hooks/use-echo';
+import dayjs from '@/lib/dayjs';
 import { CheckCircle2, Loader2, XCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
@@ -13,6 +14,7 @@ export type ImportBatch = {
   percentage: number;
   last_log: string | null;
   current_step: string | null;
+  updated_at: string;
 };
 
 type ImportProgressPanelProps = {
@@ -78,9 +80,18 @@ export function ImportProgressPanel({ batchId, initialBatch, onUpdate }: ImportP
       {(isActive || batch.percentage > 0) && (
         <Progress value={batch.percentage} className="h-1.5" />
       )}
-      {batch.last_log && (
-        <p className="text-muted-foreground truncate">{batch.last_log}</p>
-      )}
+      <div className="flex justify-between items-center">
+        {batch.last_log && (
+          <p className="text-muted-foreground truncate">{batch.last_log}</p>
+        )}
+        {
+          batch.updated_at && (
+            <p className="text-muted-foreground text-xs">
+              Última importação: {dayjs(batch.updated_at).format('DD/MM/YYYY HH:mm:ss')}
+            </p>
+          )
+        }
+      </div>
     </div>
   );
 }
