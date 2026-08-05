@@ -4,9 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/hooks/use-auth';
 import dayjs from '@/lib/dayjs';
+import { cn } from '@/lib/utils';
 import VisualizarAvaria from '@/pages/admin/avarias/visualizar-avaria';
 import { avariaService } from '@/services/api.service';
 import { Avaria } from '@/types/consults';
+import { formatPhoneDisplay } from '@/utils/formatters';
 import {
   AlertTriangleIcon,
   CalendarIcon,
@@ -269,7 +271,15 @@ export default function AvariaCard(props: AvariaCardProps) {
       </CardContent>
 
       {/* Footer / Ações */}
-      <CardFooter className="px-4 py-3 flex items-center justify-end gap-2 border-t">
+      <CardFooter className={cn("px-4 py-3 flex items-center gap-2 border-t justify-end", {
+        "justify-between": props.data.cliente?.contatos && user?.role === 'monitoramento'
+      })}>
+
+        {
+          user?.role === 'monitoramento' && props.data.cliente?.contatos && (
+            <p className="text-sm text-muted-foreground">Notificações enviadas para o número: {formatPhoneDisplay(props.data.cliente?.contatos.find(contato => contato.isWhatsapp)?.telefone ?? '')}</p>
+          )
+        }
 
         {/* Mensagens de status (Exclusivas para Motorista) */}
         {user?.role === 'motorista' && (
