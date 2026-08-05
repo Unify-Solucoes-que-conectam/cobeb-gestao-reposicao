@@ -70,7 +70,7 @@ const useEcho = ({ channelName, mode, eventName, isPrivate }: UseEchoOptions) =>
           ; (window as any).Pusher = Pusher
 
         // helpers
-        const envPort = import.meta.env.VITE_REVERB_PORT
+        const envPort = import.meta.env.VITE_APP_MODE === 'development' ? import.meta.env.VITE_REVERB_PORT : undefined
         const parsedPort =
           typeof envPort === 'string' && envPort.trim() !== '' ? Number(envPort) : undefined
         const scheme =
