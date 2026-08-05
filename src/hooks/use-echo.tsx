@@ -65,19 +65,19 @@ const useEcho = ({ channelName, mode, eventName, isPrivate }: UseEchoOptions) =>
         setConnectionStatus('connecting')
 
         const Echo = (await import('laravel-echo')).default
-        const Pusher = (await import('pusher-js')).default
-
-          ; (window as any).Pusher = Pusher
+        const Pusher = (await import('pusher-js')).default; 
+        (window as any).Pusher = Pusher
 
         // helpers
-        const envPort = import.meta.env.VITE_APP_MODE === 'development' ? import.meta.env.VITE_REVERB_PORT : undefined
-        const parsedPort =
-          typeof envPort === 'string' && envPort.trim() !== '' ? Number(envPort) : undefined
         const scheme =
           import.meta.env.VITE_REVERB_SCHEME ||
           (typeof window !== 'undefined' && window.location.protocol.replace(':', '')) ||
           'https'
         const forceTLS = scheme === 'https'
+
+        const port = import.meta.env.VITE_REVERB_PORT
+          ? Number(import.meta.env.VITE_REVERB_PORT)
+          : (forceTLS ? 443 : 80)
 
         // monte as opções dinamicamente, assim evitamos passar 0/NaN
         const echoOptions: Broadcaster['reverb']['options'] = {
@@ -86,6 +86,8 @@ const useEcho = ({ channelName, mode, eventName, isPrivate }: UseEchoOptions) =>
           wsHost:
             import.meta.env.VITE_REVERB_HOST ||
             (typeof window !== 'undefined' ? window.location.hostname : 'localhost'),
+          wsPort: port,
+          wssPort: port,
           forceTLS,
           enabledTransports: ['ws', 'wss'],
           activityTimeout: 30000,
@@ -103,9 +105,9 @@ const useEcho = ({ channelName, mode, eventName, isPrivate }: UseEchoOptions) =>
         }
 
         // só define portas se o env existiu e foi convertido para número válido
-        if (typeof parsedPort !== 'undefined' && !Number.isNaN(parsedPort) && parsedPort > 0) {
-          echoOptions.wsPort = parsedPort
-          echoOptions.wssPort = parsedPort
+        if (typeof port !== 'undefined' && !Number.isNaN(port) && port > 0) {
+          echoOptions.wsPort = port
+          echoOptions.wssPort = port
         }
 
         echo = new Echo(echoOptions)
