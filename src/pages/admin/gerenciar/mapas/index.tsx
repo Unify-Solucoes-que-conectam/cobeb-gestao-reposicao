@@ -39,9 +39,12 @@ export default function AdminUsuarios() {
   }, []);
 
   useEffect(() => {
-    fetchMapas()
     fetchFiliais()
   }, []);
+
+  useEffect(() => {
+    fetchMapas()
+  }, [filters]);
 
   // =============== HANDLERS ===============
   /**
@@ -49,7 +52,7 @@ export default function AdminUsuarios() {
    */
   const fetchMapas = async ({ signal }: { signal?: AbortSignal } = {}) => {
     setSpinners((prev) => ({ ...prev, geral: true }));
-    const response = await mapaService.read({}, signal);
+    const response = await mapaService.read({ search: filters.busca, filial: filters.filial === 'todas' ? undefined : filters.filial }, signal);
 
     if (response.success) {
       setMaps(response.data);
