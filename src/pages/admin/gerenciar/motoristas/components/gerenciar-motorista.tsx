@@ -11,9 +11,10 @@ import {
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import { Tooltip } from "@/components/ui/tooltip";
+import { useTheme } from "@/hooks/use-theme";
 import axios from "@/lib/axios";
+import dayjs from "@/lib/dayjs";
 import { ApiResponse } from "@/types/api-response";
 import { Cluster, Filial, Motorista } from "@/types/consults";
 import { formatCPF, formatPhoneDisplay, unformatPhone } from "@/utils/formatters";
@@ -23,7 +24,6 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { defaultValues, schema, Schema } from "../schemas";
-import { useTheme } from "@/hooks/use-theme";
 
 interface GerenciarMotoristaProps {
   driver?: Motorista
@@ -48,7 +48,7 @@ export default function GerenciarMotorista({ driver, onSubmit }: GerenciarMotori
   const form = useForm<Schema>({
     resolver: zodResolver(schema),
     defaultValues: defaultValues(driver),
-    mode: 'onSubmit',
+    mode: 'onChange',
   })
 
   // ============== HANDLERS ==============
@@ -189,18 +189,18 @@ export default function GerenciarMotorista({ driver, onSubmit }: GerenciarMotori
               Novo Motorista
             </Button>
           ) : (
-            <Tooltip content="Clique para editar" color="warning" variant={ theme === 'dark' ? 'outline' : 'solid'}>
-              <Button color='warning' size="icon" variant={ theme === 'dark' ? 'outline' : 'solid'}>
+            <Tooltip content="Clique para editar" color="warning" variant={theme === 'dark' ? 'outline' : 'solid'}>
+              <Button color='warning' size="icon" variant={theme === 'dark' ? 'outline' : 'solid'}>
                 <Edit2Icon />
               </Button>
             </Tooltip>
           )
         }
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent onInteractOutside={(e) => e.preventDefault()}>
         <DialogHeader><DialogTitle>{driver ? 'Editar' : 'Cadastrar'} Motorista</DialogTitle></DialogHeader>
         <Form {...form}>
-          <form className="space-y-4" onSubmit={form.handleSubmit(handleSubmit)}>
+          <form className="space-y-3 grid grid-cols-2 gap-2 items-start" onSubmit={form.handleSubmit(handleSubmit)}>
 
             <FormField
               control={form.control}
@@ -278,13 +278,22 @@ export default function GerenciarMotorista({ driver, onSubmit }: GerenciarMotori
                   <FormLabel required>Status</FormLabel>
 
                   <FormControl>
-                    <div className='flex items-center justify-between gap-2 border border-input rounded-md h-12 px-3'>
-                      <span className='text-sm text-muted-foreground'>{field.value === 'ativo' ? 'Ativo' : 'Inativo'}</span>
-                      <Switch
-                        checked={field.value === 'ativo'}
-                        onCheckedChange={(checked) => field.onChange(checked ? 'ativo' : 'inativo')}
-                      />
-                    </div>
+                    <Select
+                      defaultValue={field.value ? String(field.value) : ""}
+                      onValueChange={(v) => field.onChange(v)}
+                    >
+                      <SelectTrigger
+                        loadingMessage="Carregando Status"
+                        className="w-full truncate h-12!"
+                      >
+                        <SelectValue placeholder="Selecione um status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="ativo">Ativo</SelectItem>
+                        <SelectItem value="inativo">Inativo</SelectItem>
+                        <SelectItem value="bloqueado">Bloqueado</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </FormControl>
 
                   <FormMessage />
@@ -329,7 +338,7 @@ export default function GerenciarMotorista({ driver, onSubmit }: GerenciarMotori
                       className="h-12 w-full"
                       placeholder="Selecione a data de admissão"
                       date={field.value ? new Date(field.value) : undefined}
-                      onSelect={(date) => field.onChange(date?.toISOString().split('T')[0])}
+                      onSelect={(date) => field.onChange(dayjs(date).toISOString())}
                     />
                   </FormControl>
                   <FormDescription />
@@ -354,7 +363,7 @@ export default function GerenciarMotorista({ driver, onSubmit }: GerenciarMotori
                         loadingMessage="Carregando Filiais"
                         className="w-full truncate h-12!"
                       >
-                        {loading.filiais && <Loader className="mx-0 flex-row gap-3" showMessage message="Carregando filiais"/>}
+                        {loading.filiais && <Loader className="mx-0 flex-row gap-3" showMessage message="Carregando filiais" />}
                         <SelectValue placeholder="Selecione uma filial" />
                       </SelectTrigger>
                       <SelectContent>
@@ -390,7 +399,7 @@ export default function GerenciarMotorista({ driver, onSubmit }: GerenciarMotori
                         loadingMessage="Carregando Clusters"
                         className="w-full truncate h-12!"
                       >
-                        {loading.clusters && <Loader className="mx-0 flex-row gap-3" showMessage message="Carregando clusters"/>}
+                        {loading.clusters && <Loader className="mx-0 flex-row gap-3" showMessage message="Carregando clusters" />}
                         <SelectValue placeholder="Selecione um cluster" />
                       </SelectTrigger>
                       <SelectContent>
@@ -412,7 +421,7 @@ export default function GerenciarMotorista({ driver, onSubmit }: GerenciarMotori
               )}
             />
 
-            <Button className="w-full" loading={loading.geral} disabled={loading.geral || !form.formState.isValid || !form.formState.isDirty} type="submit">
+            <Button className="w-full col-span-2" loading={loading.geral} disabled={loading.geral || !form.formState.isValid || !form.formState.isDirty} type="submit">
               Salvar
             </Button>
           </form>

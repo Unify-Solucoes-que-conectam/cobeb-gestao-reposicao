@@ -10,7 +10,7 @@ export const schema = z.object({
       message: 'CPF deve conter exatamente 11 dígitos numéricos',
     }
   ),
-  status: z.enum(['ativo', 'inativo'], {
+  status: z.enum(['ativo', 'inativo', 'bloqueado'], {
     message: 'O status é obrigatório',
   }),
   celular_corporativo: z.string().min(1, 'O celular corporativo é obrigatório').refine(

@@ -63,7 +63,7 @@ export type Motorista = Base & {
   codigo: string
   nome: string
   cpf: string
-  status: "ativo" | "inativo"
+  status: "ativo" | "inativo" | "bloqueado"
   celular_corporativo: string
   data_admissao: string
   filial: Filial

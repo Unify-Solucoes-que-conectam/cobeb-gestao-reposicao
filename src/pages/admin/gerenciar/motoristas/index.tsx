@@ -135,7 +135,8 @@ export default function AdminMotoristas() {
         filters={[
           { label: "Todos os status", value: "todos" },
           { label: "Ativos", value: "ativo" },
-          { label: "Inativos", value: "inativo" }
+          { label: "Inativos", value: "inativo" },
+          { label: "Bloqueados", value: "bloqueado" },
         ]}
         onFilterChange={(newFilters) => setFilters({ ...filters, status: newFilters[0].value })}
         fetchData={fetchDrivers}
