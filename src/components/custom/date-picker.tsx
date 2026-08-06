@@ -37,7 +37,7 @@ export function DatePicker({ className, placeholder, minDate, maxDate, date, onS
         >
           <div className="flex gap-3 items-center">
             <CalendarIcon />
-            {selectedDate ? dayjs(selectedDate).format("DD/MM/YYYY") : <span>{placeholder || "Pick a date"}</span>}
+            {selectedDate ? dayjs(selectedDate).format("DD/MM/YYYY") : <span className="max-w-32 text-ellipsis overflow-hidden">{placeholder || "Pick a date"}</span>}
           </div>
           <ChevronDownIcon />
         </Button>
