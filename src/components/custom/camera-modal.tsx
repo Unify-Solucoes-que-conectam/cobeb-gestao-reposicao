@@ -1,0 +1,148 @@
+import { Button } from "@/components/ui/button";
+import { CameraIcon, SwitchCameraIcon, XIcon } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+
+interface CameraModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onCapture: (base64Image: string) => void;
+}
+
+export function CameraModal({ isOpen, onClose, onCapture }: CameraModalProps) {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const [stream, setStream] = useState<MediaStream | null>(null);
+  const [facingMode, setFacingMode] = useState<"environment" | "user">("environment");
+  const [error, setError] = useState<string | null>(null);
+
+  // Parar todas as faixas do fluxo de mídia para liberar a memória e o hardware da câmera
+  const stopStream = useCallback(() => {
+    if (stream) {
+      stream.getTracks().forEach((track) => track.stop());
+      setStream(null);
+    }
+  }, [stream]);
+
+  // Iniciar transmissão de vídeo com restrições otimizadas para memória
+  const startCamera = useCallback(async () => {
+    stopStream();
+    setError(null);
+
+    try {
+      const newStream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: { ideal: facingMode },
+          width: { ideal: 1280 }, // Resolução leve para evitar travamentos
+          height: { ideal: 720 },
+        },
+        audio: false,
+      });
+
+      setStream(newStream);
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = newStream;
+      }
+    } catch (err) {
+      console.error("Erro ao acessar a câmera:", err);
+      setError("Não foi possível acessar a câmera. Verifique as permissões no navegador.");
+    }
+  }, [facingMode, stopStream]);
+
+  useEffect(() => {
+    if (isOpen) {
+      startCamera();
+    } else {
+      stopStream();
+    }
+
+    return () => {
+      stopStream();
+    };
+  }, [isOpen, startCamera, stopStream]);
+
+  // Capturar o frame do vídeo e converter em Canvas / Base64 comprimido
+  const handleCapture = () => {
+    if (!videoRef.current) return;
+
+    const video = videoRef.current;
+    const canvas = document.createElement("canvas");
+
+    canvas.width = video.videoWidth || 1280;
+    canvas.height = video.videoHeight || 720;
+
+    const context = canvas.getContext("2d");
+    if (context) {
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      // Comprime a foto diretamente na renderização do canvas em JPEG qualidade 0.7 (~200KB-400KB)
+      const base64Image = canvas.toDataURL("image/jpeg", 0.7);
+      onCapture(base64Image);
+    }
+  };
+
+  // Alternar entre câmera traseira e frontal
+  const toggleFacingMode = () => {
+    setFacingMode((prev) => (prev === "environment" ? "user" : "environment"));
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-100 bg-black flex flex-col items-center justify-between p-4">
+      {/* Top Bar */}
+      <div className="w-full flex justify-between items-center text-white z-10 pt-2">
+        <span className="font-semibold text-sm">Posicione a avaria no quadro</span>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={onClose}
+          className="text-white hover:bg-white/20 rounded-full"
+        >
+          <XIcon size={24} />
+        </Button>
+      </div>
+
+      {/* ÁREA DE VISUALIZAÇÃO DA CÂMERA */}
+      <div className="relative w-full flex-1 flex items-center justify-center overflow-hidden my-4 rounded-xl bg-neutral-900">
+        {error ? (
+          <div className="text-red-400 text-center p-4 text-sm">{error}</div>
+        ) : (
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline // Fundamental para rodar inline em navegadores móveis (Safari/Chrome Android)
+            muted
+            className="w-full h-full object-cover"
+          />
+        )}
+      </div>
+
+      {/* CONTROLES DE CAPTURA */}
+      <div className="w-full flex justify-around items-center pb-6 z-10">
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          onClick={toggleFacingMode}
+          className="rounded-full bg-white/10 text-white border-none hover:bg-white/20 h-12 w-12"
+        >
+          <SwitchCameraIcon size={24} />
+        </Button>
+
+        {/* Botão do Obturador */}
+        <Button
+          type="button"
+          onClick={handleCapture}
+          className="w-20 h-20 rounded-full bg-white text-black hover:bg-gray-200 flex items-center justify-center p-0 border-4 border-gray-400 shadow-lg active:scale-95 transition-transform"
+        >
+          <div className="w-16 h-16 rounded-full bg-white border-2 border-black flex items-center justify-center">
+            <CameraIcon className="size-8 text-slate-800" />
+          </div>
+        </Button>
+
+        <div className="w-12" /> {/* Espaçador para centralizar o botão principal */}
+      </div>
+    </div>
+  );
+}

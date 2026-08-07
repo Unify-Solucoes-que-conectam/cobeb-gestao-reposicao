@@ -1,3 +1,4 @@
+import { CameraModal } from "@/components/custom/camera-modal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,7 +14,6 @@ import axios from "@/lib/axios";
 import { avariaService, clienteService, tiposAvariaService } from "@/services/api.service";
 import { ApiResponse } from "@/types/api-response";
 import { Avaria, Cliente, NotaFiscal, TiposAvaria } from "@/types/consults";
-import { compressImage } from "@/utils/conversors";
 import { formatCurrency } from "@/utils/formatters";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertTriangleIcon, CameraIcon, CheckIcon, FileTextIcon, ImageIcon, MinusIcon, NotepadTextIcon, PackageIcon, PackageXIcon, PlusIcon, SendIcon, TriangleAlertIcon, XIcon } from "lucide-react";
@@ -46,11 +46,13 @@ export default function ClientRegistrarAvarias() {
   const [anexos, setAnexos] = useState<{ id: string; name: string; base64: string }[]>([]);
   const [avariasPendentes, setAvariasPendentes] = useState<Avaria[]>([]);
 
+
   // =============================== States de controle =============================
   const [progress, setProgress] = useState<string[]>([]);
   const [spinners, setSpinners] = useState({
     enviando: false,
   });
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
 
   // =============================== States de passos ===============================
   const [notaFiscalData, setNotaFiscalData] = useState<NotaFiscal | null>(null);
@@ -621,16 +623,34 @@ export default function ClientRegistrarAvarias() {
             name='anexos'
             render={({ field }) => {
 
-              // Função para remover a imagem e sincronizar os estados
               const handleRemoverAnexo = (idParaRemover: string) => {
-                // Filtra tirando o anexo que tem o id clicado
                 const anexosAtualizados = anexos.filter(anexo => anexo.id !== idParaRemover);
-
-                // Atualiza o estado visual
                 setAnexos(anexosAtualizados);
+                field.onChange(anexosAtualizados.map(item => ({
+                  nome: item.name,
+                  base64: item.base64
+                })));
+              };
 
-                // Atualiza o envio do formulário apenas com os base64 que sobraram
-                field.onChange(anexosAtualizados.map(item => item.base64));
+              // Função disparada quando a foto é tirada dentro do HTML5 Camera Modal
+              const handleCapturePhoto = (base64Image: string) => {
+                const timestamp = Date.now();
+                const novoAnexo = {
+                  id: `${timestamp}`,
+                  name: `Avaria_${anexos.length + 1}.jpg`,
+                  base64: base64Image
+                };
+
+                const estadoAtualizado = [...anexos, novoAnexo];
+
+                setAnexos(estadoAtualizado);
+                field.onChange(estadoAtualizado.map(item => ({
+                  nome: item.name,
+                  base64: item.base64
+                })));
+
+                setIsCameraOpen(false); // Fecha a câmera após tirar a foto
+                toast.success("Foto capturada com sucesso!");
               };
 
               return (
@@ -645,10 +665,9 @@ export default function ClientRegistrarAvarias() {
                     </CardHeader>
                     <CardContent className="p-2">
                       <FormControl>
-                        {/* Substituímos o Label geral por uma div para não bugar o botão de apagar */}
                         <div className='flex flex-col gap-3'>
 
-                          {/* 1. LISTA DE ANEXOS (Com botão de apagar) */}
+                          {/* LISTA DE ANEXOS */}
                           {anexos.map((anexo, index) => (
                             <Card key={anexo.id} className="flex items-center p-3 gap-3 relative">
                               <div className="flex items-center justify-center p-3 border rounded-md">
@@ -656,7 +675,6 @@ export default function ClientRegistrarAvarias() {
                               </div>
                               <CardHeader className="p-0 flex-1 overflow-hidden">
                                 <CardTitle className="font-bold text-xl m-0 text-emerald-700">
-                                  {/* Como usamos o 'index' do map, a numeração se reordena sozinha! */}
                                   Anexo {index + 1}
                                 </CardTitle>
                                 <CardDescription className="font-thin text-gray-400 truncate">
@@ -664,75 +682,39 @@ export default function ClientRegistrarAvarias() {
                                 </CardDescription>
                               </CardHeader>
 
-                              {/* Botão de Excluir */}
                               <Button
                                 type="button"
                                 onClick={() => handleRemoverAnexo(anexo.id)}
                                 size='icon'
                                 className="text-red-500 bg-red-50 hover:bg-red-100 transition-colors shrink-0"
                               >
-                                <XIcon className="size-5" /> {/* Se não tiver esse ícone, pode usar X ou Trash2 */}
+                                <XIcon className="size-5" />
                               </Button>
                             </Card>
                           ))}
 
-                          {/* 2. BOTÃO DE ADICIONAR (Este sim fica dentro do Label para abrir a câmera) */}
-                          <Label htmlFor="anexos" className="flex flex-col w-full">
-                            <input
-                              id="anexos"
-                              type="file"
-                              accept="image/*"
-                              multiple
-                              className="hidden"
-                              capture="environment"
-                              onChange={async (e) => {
-                                const files = e.target.files;
-                                if (!files || files.length === 0) return;
+                          {/* BOTÃO PARA ABRIR A CÂMERA HTML5 */}
+                          <Card
+                            onClick={() => setIsCameraOpen(true)}
+                            className="flex flex-col items-center p-3 border-dotted border-2 bg-gray-50 cursor-pointer hover:bg-gray-100 transition"
+                          >
+                            <CardHeader className="p-0 items-center">
+                              <CardTitle className="flex flex-col items-center font-bold text-xl m-0 text-center gap-2">
+                                <CameraIcon className="text-gray-500 size-7" />
+                                Tire uma foto
+                              </CardTitle>
+                              <CardDescription className="font-thin text-gray-400 text-center">
+                                Toque para abrir a câmera e fotografar o produto
+                              </CardDescription>
+                            </CardHeader>
+                          </Card>
 
-                                const fileArray = Array.from(files);
-                                const timestamp = Date.now();
-                                const novosAnexos = [];
-
-                                // Processa uma imagem por vez para não estourar a RAM
-                                for (let index = 0; index < fileArray.length; index++) {
-                                  const arquivoOriginal = fileArray[index];
-                                  try {
-                                    // Reduz uma foto de 15MB para ~300KB
-                                    const base64Comprimido = await compressImage(arquivoOriginal);
-
-                                    novosAnexos.push({
-                                      id: `${timestamp}-${index}`,
-                                      name: arquivoOriginal.name || `Imagem_${index + 1}.jpg`,
-                                      base64: base64Comprimido
-                                    });
-                                  } catch (error) {
-                                    console.error('Erro ao processar imagem:', error);
-                                  }
-                                }
-
-                                const estadoAtualizado = [...anexos, ...novosAnexos];
-
-                                setAnexos(estadoAtualizado);
-                                field.onChange(estadoAtualizado.map(item => ({
-                                  nome: item.name,
-                                  base64: item.base64
-                                })));
-
-                                e.target.value = '';
-                              }}
-                            />
-                            <Card className="flex flex-col items-center p-3 border-dotted border-2 bg-gray-50 cursor-pointer hover:bg-gray-100 transition">
-                              <CardHeader className="p-0 items-center">
-                                <CardTitle className="flex flex-col items-center font-bold text-xl m-0 text-center gap-2">
-                                  <CameraIcon className="text-gray-500 size-7" />
-                                  Tire uma foto
-                                </CardTitle>
-                                <CardDescription className="font-thin text-gray-400 text-center">
-                                  Toque para tirar a foto do(s) produto(s) avariado(s)
-                                </CardDescription>
-                              </CardHeader>
-                            </Card>
-                          </Label>
+                          {/* MODAL DA CÂMERA HTML5 */}
+                          <CameraModal
+                            isOpen={isCameraOpen}
+                            onClose={() => setIsCameraOpen(false)}
+                            onCapture={handleCapturePhoto}
+                          />
 
                         </div>
                       </FormControl>
