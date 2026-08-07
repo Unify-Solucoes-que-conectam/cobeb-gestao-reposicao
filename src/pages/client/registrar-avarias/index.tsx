@@ -13,7 +13,7 @@ import axios from "@/lib/axios";
 import { avariaService, clienteService, tiposAvariaService } from "@/services/api.service";
 import { ApiResponse } from "@/types/api-response";
 import { Avaria, Cliente, NotaFiscal, TiposAvaria } from "@/types/consults";
-import { convertFileToBase64 } from "@/utils/conversors";
+import { compressImage } from "@/utils/conversors";
 import { formatCurrency } from "@/utils/formatters";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertTriangleIcon, CameraIcon, CheckIcon, FileTextIcon, ImageIcon, MinusIcon, NotepadTextIcon, PackageIcon, PackageXIcon, PlusIcon, SendIcon, TriangleAlertIcon, XIcon } from "lucide-react";
@@ -158,7 +158,7 @@ export default function ClientRegistrarAvarias() {
         setProgress(prev => [...prev, avaria.id]);
       }
     }
-    
+
     toast.success('Todas as avarias foram enviadas com sucesso!');
     setProgress([]);
     setSpinners(prev => ({ ...prev, enviando: false }));
@@ -690,21 +690,25 @@ export default function ClientRegistrarAvarias() {
                                 if (!files || files.length === 0) return;
 
                                 const fileArray = Array.from(files);
-
-                                const base64Results = await Promise.all(
-                                  fileArray.map(file => convertFileToBase64(file))
-                                );
-
-                                // Usar Date.now() previne que IDs se repitam ao apagar e adicionar fotos
                                 const timestamp = Date.now();
-                                const novosAnexos = base64Results.map(({ base64 }, index) => {
+                                const novosAnexos = [];
+
+                                // Processa uma imagem por vez para não estourar a RAM
+                                for (let index = 0; index < fileArray.length; index++) {
                                   const arquivoOriginal = fileArray[index];
-                                  return {
-                                    id: `${timestamp}-${index}`,
-                                    name: arquivoOriginal.name || `Imagem_${index + 1}.jpg`,
-                                    base64: base64
-                                  };
-                                });
+                                  try {
+                                    // Reduz uma foto de 15MB para ~300KB
+                                    const base64Comprimido = await compressImage(arquivoOriginal);
+
+                                    novosAnexos.push({
+                                      id: `${timestamp}-${index}`,
+                                      name: arquivoOriginal.name || `Imagem_${index + 1}.jpg`,
+                                      base64: base64Comprimido
+                                    });
+                                  } catch (error) {
+                                    console.error('Erro ao processar imagem:', error);
+                                  }
+                                }
 
                                 const estadoAtualizado = [...anexos, ...novosAnexos];
 
@@ -714,7 +718,6 @@ export default function ClientRegistrarAvarias() {
                                   base64: item.base64
                                 })));
 
-                                // Limpa o input para caso o usuário apague uma foto e tente enviar a exata mesma foto logo em seguida
                                 e.target.value = '';
                               }}
                             />
