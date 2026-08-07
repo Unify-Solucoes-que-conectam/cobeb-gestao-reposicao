@@ -16,7 +16,7 @@ import { ApiResponse } from "@/types/api-response";
 import { Avaria, Cliente, NotaFiscal, TiposAvaria } from "@/types/consults";
 import { formatCurrency } from "@/utils/formatters";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AlertTriangleIcon, CameraIcon, CheckIcon, FileTextIcon, ImageIcon, MinusIcon, NotepadTextIcon, PackageIcon, PackageXIcon, PlusIcon, SendIcon, TriangleAlertIcon, XIcon } from "lucide-react";
+import { AlertTriangleIcon, CameraIcon, CheckIcon, FileTextIcon, MinusIcon, NotepadTextIcon, PackageIcon, PackageXIcon, PlusIcon, SendIcon, TriangleAlertIcon, XIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useLocation } from "react-router";
@@ -53,6 +53,7 @@ export default function ClientRegistrarAvarias() {
     enviando: false,
   });
   const [isCameraOpen, setIsCameraOpen] = useState(false);
+  const [viewingImage, setViewingImage] = useState<{ id: string; name: string; base64: string } | null>(null);
 
   // =============================== States de passos ===============================
   const [notaFiscalData, setNotaFiscalData] = useState<NotaFiscal | null>(null);
@@ -670,10 +671,21 @@ export default function ClientRegistrarAvarias() {
                           {/* LISTA DE ANEXOS */}
                           {anexos.map((anexo, index) => (
                             <Card key={anexo.id} className="flex items-center p-3 gap-3 relative">
-                              <div className="flex items-center justify-center p-3 border rounded-md">
-                                <ImageIcon className="text-emerald-700 size-7" />
+                              {/* Thumbnail clicável da imagem */}
+                              <div
+                                className="flex items-center justify-center border rounded-md overflow-hidden cursor-pointer hover:opacity-80 transition-opacity shrink-0"
+                                onClick={() => setViewingImage(anexo)}
+                              >
+                                <img
+                                  src={anexo.base64}
+                                  alt={`Anexo ${index + 1}`}
+                                  className="w-16 h-16 object-cover"
+                                />
                               </div>
-                              <CardHeader className="p-0 flex-1 overflow-hidden">
+                              <CardHeader
+                                className="p-0 flex-1 overflow-hidden cursor-pointer"
+                                onClick={() => setViewingImage(anexo)}
+                              >
                                 <CardTitle className="font-bold text-xl m-0 text-emerald-700">
                                   Anexo {index + 1}
                                 </CardTitle>
@@ -684,7 +696,10 @@ export default function ClientRegistrarAvarias() {
 
                               <Button
                                 type="button"
-                                onClick={() => handleRemoverAnexo(anexo.id)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleRemoverAnexo(anexo.id);
+                                }}
                                 size='icon'
                                 className="text-red-500 bg-red-50 hover:bg-red-100 transition-colors shrink-0"
                               >
@@ -715,6 +730,39 @@ export default function ClientRegistrarAvarias() {
                             onClose={() => setIsCameraOpen(false)}
                             onCapture={handleCapturePhoto}
                           />
+
+                          {/* MODAL DE VISUALIZAÇÃO DE IMAGEM */}
+                          {viewingImage && (
+                            <div
+                              className="fixed inset-0 z-200 bg-black/95 flex flex-col items-center justify-center p-4"
+                              onClick={() => setViewingImage(null)}
+                            >
+                              <div className="w-full flex justify-between items-center text-white mb-4">
+                                <div className="flex flex-col">
+                                  <span className="font-semibold text-lg">Visualização da imagem</span>
+                                  <span className="text-sm text-gray-400">{viewingImage.name}</span>
+                                </div>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => setViewingImage(null)}
+                                  className="text-white hover:bg-white/20 rounded-full"
+                                >
+                                  <XIcon size={24} />
+                                </Button>
+                              </div>
+                              <div className="w-full h-full flex items-center justify-center">
+                                <img
+                                  src={viewingImage.base64}
+                                  alt="Visualização em tela cheia"
+                                  className="max-w-full max-h-full object-contain rounded-lg"
+                                  onClick={(e) => e.stopPropagation()}
+                                />
+                              </div>
+                              <p className="text-white text-sm mt-4 opacity-70">Toque fora da imagem para fechar</p>
+                            </div>
+                          )}
 
                         </div>
                       </FormControl>
