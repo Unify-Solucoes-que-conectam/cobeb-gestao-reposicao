@@ -291,6 +291,10 @@ export default function ClientRegistrarAvarias() {
     if (notaFiscalData) {
       produtoDebounced();
     }
+
+    if (produtoEncontrado && produtoEncontrado.quantidade === 0) {
+      toast.warning('Não há unidades disponíveis deste produto na nota fiscal. Verifique se o produto já foi registrado como avariado anteriormente.');
+    }
   }, [produtoWatcher, notaFiscalData]);
 
   /**
@@ -522,7 +526,7 @@ export default function ClientRegistrarAvarias() {
                     <FormMessage />
                   </CardContent>
 
-                  <StepOverlay disabled={!produtoEncontrado} />
+                  <StepOverlay disabled={!produtoEncontrado || produtoEncontrado.quantidade === 0} />
                 </Card>
               </FormItem>
             )}
