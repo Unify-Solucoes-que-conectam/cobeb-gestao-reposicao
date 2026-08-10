@@ -363,6 +363,7 @@ export default function ClientRegistrarAvarias() {
                       <InputGroup className="h-10">
                         <InputGroupInput
                           {...field}
+                          inputMode="numeric"
                           placeholder="Ex: 972909"
                         />
                         <InputGroupAddon>
@@ -429,6 +430,7 @@ export default function ClientRegistrarAvarias() {
                       <InputGroup className="h-10">
                         <InputGroupInput
                           {...field}
+                          inputMode="numeric"
                           disabled={notaFiscalData === null}
                           placeholder="Ex: 7001"
                         />
@@ -562,6 +564,7 @@ export default function ClientRegistrarAvarias() {
                             placeholder="0"
                             min={0}
                             max={produtoEncontrado?.quantidade ?? 999}
+                            inputMode="numeric"
                             onChange={(e) => {
                               const raw = e.target.value;
 
