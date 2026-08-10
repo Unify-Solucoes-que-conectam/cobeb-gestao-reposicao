@@ -269,6 +269,7 @@ export const clienteService: ClienteService = {
 interface MapaService {
   clientes: (params: {
     id: string
+    [key: string]: string | undefined
   }, signal?: AbortSignal) => Promise<ApiResponse<Cliente[]>>
 
   avarias: (params: {
@@ -286,9 +287,9 @@ interface MapaService {
   }, signal?: AbortSignal) => Promise<ApiResponse>
 }
 export const mapaService: MapaService = {
-  clientes: async ({ id }, signal) => {
+  clientes: async ({ id, ...params }, signal) => {
     try {
-      const response = await axios.get<ApiResponse<Cliente[]>>(`/mapas/${id}/clientes`, { signal });
+      const response = await axios.get<ApiResponse<Cliente[]>>(`/mapas/${id}/clientes`, { signal, params });
 
       return response.data;
     } catch (error) {

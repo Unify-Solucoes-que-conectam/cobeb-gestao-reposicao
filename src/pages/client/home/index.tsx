@@ -33,7 +33,7 @@ export default function ClientHome() {
 
   // ============ FILTERS ===========
   const [filters, setFilters] = useState({
-    busca: '',
+    search: '',
   })
 
   // ============ DATA ===========
@@ -60,7 +60,7 @@ export default function ClientHome() {
     }
 
     setSpinners({ ...spinners, geral: true })
-    const response = await mapaService.clientes({ id: user?.motorista.mapa.id || '' }, signal);
+    const response = await mapaService.clientes({ id: user?.motorista.mapa.id || '', ...filters }, signal);
 
     if (response.success) {
       setClients(response.data);
@@ -97,8 +97,8 @@ export default function ClientHome() {
       <SearchPanel
         total={clientes.length}
         placeholder='Pesquise clientes pelo nome ou código'
-        search={filters.busca}
-        onSearchChange={(search) => setFilters({ ...filters, busca: search })}
+        search={filters.search}
+        onSearchChange={(search) => setFilters({ ...filters, search })}
         fetchData={fetchClients}
       />
 
