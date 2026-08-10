@@ -54,7 +54,7 @@ export default function ClientHome() {
 
     
     // validar se os dados necessários estão disponíveis
-    if (!user?.motorista.mapa.id) {
+    if (!user?.motorista?.mapa.id) {
       checkSession()
       return
     }
@@ -123,7 +123,7 @@ export default function ClientHome() {
             </div>
             <div className='text-center space-y-1'>
               <p className='font-semibold text-sm text-slate-900'>Nenhum registro encontrado</p>
-              <p className='text-xs text-slate-500'>Nenhum cliente designado no mapa</p>
+              <p className='text-xs text-slate-500'>Nenhum mapa designado até o momento</p>
             </div>
           </div>
         ) : (
