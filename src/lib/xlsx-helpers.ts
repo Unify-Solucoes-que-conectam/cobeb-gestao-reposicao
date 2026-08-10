@@ -72,7 +72,7 @@ export const IMPORTER_CONFIGS: ImporterConfig[] = [
   },
   {
     key: "mapas",
-    label: "Mapas",
+    label: "Mapas - Rotina [03.01.49]",
     tableName: "mapas",
     columns: [
       { header: "Nro do Mapa", key: "nro_mapa", example: "Número do mapa" },
@@ -85,7 +85,7 @@ export const IMPORTER_CONFIGS: ImporterConfig[] = [
   },
   {
     key: "vendas_trocas",
-    label: "Vendas e Trocas",
+    label: "Vendas e Trocas - Rotina [03.02.37]",
     tableName: "vendas_trocas",
     columns: [
       { header: "Nota Fiscal", key: "nota_fiscal", example: "Número da nota fiscal" },
