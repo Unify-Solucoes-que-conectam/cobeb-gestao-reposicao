@@ -683,10 +683,10 @@ export default function ClientRegistrarAvarias() {
                                 />
                               </div>
                               <CardHeader
-                                className="p-0 flex-1 overflow-hidden cursor-pointer"
+                                className="p-0 flex-1 overflow-hidden cursor-pointer w-32"
                                 onClick={() => setViewingImage(anexo)}
                               >
-                                <CardTitle className="font-bold text-xl m-0 text-emerald-700">
+                                <CardTitle className="font-bold text-xl m-0 text-emerald-700 truncate">
                                   Anexo {index + 1}
                                 </CardTitle>
                                 <CardDescription className="font-thin text-gray-400 truncate">
