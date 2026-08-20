@@ -139,6 +139,7 @@ export default function AuthPage() {
                               const onlyNumbers = e.target.value.replace(/\D/g, '')
                               field.onChange(onlyNumbers)
                             }}
+                            inputMode="numeric"
                           />
                         </FormControl>
 

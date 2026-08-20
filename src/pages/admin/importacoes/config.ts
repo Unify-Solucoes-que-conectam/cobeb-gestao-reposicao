@@ -1,4 +1,9 @@
+import { ColumnDef } from "@/components/custom/data-grid";
+import { motoristaColumns } from "@/pages/admin/importacoes/columns/motorista";
+import { clusterService, filialService } from "@/services/api.service";
+import { snakeCase } from "change-case";
 import * as XLSX from "xlsx";
+import { vendaTrocasColumns } from "./columns/venda_troca";
 
 export function excelDateToISO(value: string | number | null | undefined): string | null {
   if (value === null || value === undefined || value === "") return null;
@@ -14,11 +19,24 @@ export function excelDateToISO(value: string | number | null | undefined): strin
   return str;
 }
 
-export interface ImporterConfig {
-  key: string;
+export type ImportTypes = "clientes" | "produtos" | "motoristas" | "mapas" | "vendas_trocas";
+
+export interface SelectOption<TId = string> {
+  id: TId;
+  label: string;
+}
+
+export type AsyncOptionLoader<TId = string> = () => Promise<SelectOption<TId>[]>;
+
+export type DepsConfig = Record<string, AsyncOptionLoader>;
+
+export type ImporterConfig = {
+  key: ImportTypes;
   label: string;
   columns: { header: string; key: string; example?: string }[];
   tableName: string;
+  columnsDef: (depsOptions: Record<string, SelectOption<string>[]>) => ColumnDef<any>[];
+  deps?: DepsConfig;
 }
 
 export const IMPORTER_CONFIGS: ImporterConfig[] = [
@@ -43,6 +61,7 @@ export const IMPORTER_CONFIGS: ImporterConfig[] = [
       { header: "Status do PDV", key: "status", example: "Status do PDV" },
       { header: "Telefone(s)", key: "telefones", example: "Telefone(s) do cliente (separados por | )" },
     ],
+    columnsDef: motoristaColumns
   },
   {
     key: "produtos",
@@ -55,6 +74,7 @@ export const IMPORTER_CONFIGS: ImporterConfig[] = [
       { header: "Tipo Marca", key: "tipo_marca", example: "Tipo de Marca" },
       { header: "Embalagem", key: "embalagem", example: "Embalagem do produto" },
     ],
+    columnsDef: motoristaColumns
   },
   {
     key: "motoristas",
@@ -69,10 +89,17 @@ export const IMPORTER_CONFIGS: ImporterConfig[] = [
       { header: "Data Admissão", key: "data_admissao", example: "Data de admissão do motorista" },
       { header: "Data Inativação", key: "data_inativacao", example: "Data de inativação do motorista" },
     ],
+    columnsDef: motoristaColumns,
+    deps: {
+      cluster: (): Promise<SelectOption<string>[]> =>
+        clusterService.read({}).then(res => (res.data.map(c => ({ id: c.codigo, label: c.descricao })))),
+      filial: (): Promise<SelectOption<string>[]> =>
+        filialService.read({}).then(res => (res.data.map(f => ({ id: f.codigo, label: f.descricao })))),
+    }
   },
   {
     key: "mapas",
-    label: "Mapas",
+    label: "Mapas - Rotina [03.01.49]",
     tableName: "mapas",
     columns: [
       { header: "Nro do Mapa", key: "nro_mapa", example: "Número do mapa" },
@@ -82,10 +109,11 @@ export const IMPORTER_CONFIGS: ImporterConfig[] = [
       { header: "Placa do Veículo", key: "placa_veiculo", example: "Placa do veículo" },
       { header: "Clientes", key: "clientes", example: "Códigos dos clientes (separados por /)" },
     ],
+    columnsDef: motoristaColumns
   },
   {
     key: "vendas_trocas",
-    label: "Vendas e Trocas",
+    label: "Vendas e Trocas - Rotina [03.02.37]",
     tableName: "vendas_trocas",
     columns: [
       { header: "Nota Fiscal", key: "nota_fiscal", example: "Número da nota fiscal" },
@@ -100,6 +128,7 @@ export const IMPORTER_CONFIGS: ImporterConfig[] = [
       { header: "Adic. Fina", key: "adic_fina", example: "Adicional financeiro aplicado ao produto" },
       { header: "Total", key: "total", example: "Total do produto" },
     ],
+    columnsDef: vendaTrocasColumns
   },
 ];
 
@@ -127,6 +156,52 @@ export function parseXlsx(file: File): Promise<Record<string, string>[]> {
         const ws = wb.Sheets[wb.SheetNames[0]];
         const rows = XLSX.utils.sheet_to_json<Record<string, string>>(ws, { defval: "" });
         resolve(rows);
+      } catch (err) {
+        reject(err);
+      }
+    };
+    reader.onerror = reject;
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+// Parses xlsx and remaps Excel headers to ImporterConfig keys
+// CPF must be 11 digits — Excel silently strips leading zeros
+function normalizeCPF(value: string): string {
+  const digits = value.replace(/\D/g, "");
+  if (digits.length === 0 || digits.length > 11) return value;
+  return digits.padStart(11, "0");
+}
+
+const CPF_KEYS = new Set(["cpf"]);
+
+export function parseXlsxMapped(file: File, config: ImporterConfig): Promise<Record<string, string>[]> {
+  // Cria mapeamento normalizando ambos os lados
+  const headerToKey: Record<string, string> = Object.fromEntries(
+    config.columns.map((c) => [snakeCase(c.header), c.key])
+  );
+
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = new Uint8Array(e.target?.result as ArrayBuffer);
+        const wb = XLSX.read(data, { type: "array", cellDates: true });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(ws, { defval: "" });
+
+        const mapped = rows.map((row) => {
+          const out: Record<string, string> = {};
+          for (const [excelHeader, value] of Object.entries(row)) {
+            const normalizedHeader = snakeCase(excelHeader);
+            const key = headerToKey[normalizedHeader] ?? normalizedHeader;
+            const raw = String(value ?? "");
+            out[key] = CPF_KEYS.has(key) ? normalizeCPF(raw) : raw;
+          }
+          return out;
+        });
+
+        resolve(mapped);
       } catch (err) {
         reject(err);
       }

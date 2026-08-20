@@ -33,7 +33,7 @@ export default function ClientHome() {
 
   // ============ FILTERS ===========
   const [filters, setFilters] = useState({
-    busca: '',
+    search: '',
   })
 
   // ============ DATA ===========
@@ -54,13 +54,13 @@ export default function ClientHome() {
 
     
     // validar se os dados necessários estão disponíveis
-    if (!user?.motorista.mapa.id) {
+    if (!user?.motorista?.mapa.id) {
       checkSession()
       return
     }
 
     setSpinners({ ...spinners, geral: true })
-    const response = await mapaService.clientes({ id: user?.motorista.mapa.id || '' }, signal);
+    const response = await mapaService.clientes({ id: user?.motorista.mapa.id || '', ...filters }, signal);
 
     if (response.success) {
       setClients(response.data);
@@ -97,8 +97,8 @@ export default function ClientHome() {
       <SearchPanel
         total={clientes.length}
         placeholder='Pesquise clientes pelo nome ou código'
-        search={filters.busca}
-        onSearchChange={(search) => setFilters({ ...filters, busca: search })}
+        search={filters.search}
+        onSearchChange={(search) => setFilters({ ...filters, search })}
         fetchData={fetchClients}
       />
 
@@ -123,7 +123,7 @@ export default function ClientHome() {
             </div>
             <div className='text-center space-y-1'>
               <p className='font-semibold text-sm text-slate-900'>Nenhum registro encontrado</p>
-              <p className='text-xs text-slate-500'>Nenhum cliente designado no mapa</p>
+              <p className='text-xs text-slate-500'>Nenhum mapa designado até o momento</p>
             </div>
           </div>
         ) : (

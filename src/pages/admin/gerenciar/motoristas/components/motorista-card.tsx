@@ -59,15 +59,13 @@ export default function DriverCard({ driver, fetchMotoristas }: DriverCardProps)
               })} />
             </div>
             <div className="flex flex-col">
-              <p className="text-[10px] text-slate-600 uppercase font-bold tracking-tight">
-                {driver.cluster.descricao}
-              </p>
               <p className="text-sm font-medium truncate">
                 <span className="text-slate-400 font-normal mr-1">[{driver.codigo}]</span>
                 {driver.nome}
               </p>
               <p className="text-xs text-slate-500 truncate">
-                Mapa: <span className="font-semibold">{546184}</span> • {driver.filial.descricao}
+                Filial: <span className="font-semibold">{driver.filial.descricao}</span> •
+                Cluster: <span className="font-semibold">{driver.cluster.descricao}</span>
               </p>
             </div>
           </div>

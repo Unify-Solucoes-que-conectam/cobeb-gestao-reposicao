@@ -291,6 +291,10 @@ export default function ClientRegistrarAvarias() {
     if (notaFiscalData) {
       produtoDebounced();
     }
+
+    if (produtoEncontrado && produtoEncontrado.quantidade === 0) {
+      toast.warning('Não há unidades disponíveis deste produto na nota fiscal. Verifique se o produto já foi registrado como avariado anteriormente.');
+    }
   }, [produtoWatcher, notaFiscalData]);
 
   /**
@@ -359,6 +363,7 @@ export default function ClientRegistrarAvarias() {
                       <InputGroup className="h-10">
                         <InputGroupInput
                           {...field}
+                          inputMode="numeric"
                           placeholder="Ex: 972909"
                         />
                         <InputGroupAddon>
@@ -425,6 +430,7 @@ export default function ClientRegistrarAvarias() {
                       <InputGroup className="h-10">
                         <InputGroupInput
                           {...field}
+                          inputMode="numeric"
                           disabled={notaFiscalData === null}
                           placeholder="Ex: 7001"
                         />
@@ -522,7 +528,7 @@ export default function ClientRegistrarAvarias() {
                     <FormMessage />
                   </CardContent>
 
-                  <StepOverlay disabled={!produtoEncontrado} />
+                  <StepOverlay disabled={!produtoEncontrado || produtoEncontrado.quantidade === 0} />
                 </Card>
               </FormItem>
             )}
@@ -558,6 +564,7 @@ export default function ClientRegistrarAvarias() {
                             placeholder="0"
                             min={0}
                             max={produtoEncontrado?.quantidade ?? 999}
+                            inputMode="numeric"
                             onChange={(e) => {
                               const raw = e.target.value;
 
@@ -683,10 +690,10 @@ export default function ClientRegistrarAvarias() {
                                 />
                               </div>
                               <CardHeader
-                                className="p-0 flex-1 overflow-hidden cursor-pointer"
+                                className="p-0 flex-1 overflow-hidden cursor-pointer w-32"
                                 onClick={() => setViewingImage(anexo)}
                               >
-                                <CardTitle className="font-bold text-xl m-0 text-emerald-700">
+                                <CardTitle className="font-bold text-xl m-0 text-emerald-700 truncate">
                                   Anexo {index + 1}
                                 </CardTitle>
                                 <CardDescription className="font-thin text-gray-400 truncate">

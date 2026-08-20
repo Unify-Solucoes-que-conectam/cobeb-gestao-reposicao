@@ -38,7 +38,6 @@ export function ImportProgressPanel({ batchId, initialBatch, onUpdate }: ImportP
   }, [initialBatch]);
 
   useEffect(() => {
-    console.log('Received messages:', messages);
     if (!messages.length) return;
     const latest = messages[messages.length - 1] as unknown as ImportBatch;
     setBatch(latest);
@@ -80,13 +79,13 @@ export function ImportProgressPanel({ batchId, initialBatch, onUpdate }: ImportP
       {(isActive || batch.percentage > 0) && (
         <Progress value={batch.percentage} className="h-1.5" />
       )}
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center gap-3">
         {batch.last_log && (
-          <p className="text-muted-foreground truncate">{batch.last_log}</p>
+          <p className="text-muted-foreground truncate" title={batch.last_log}>{batch.last_log}</p>
         )}
         {
           batch.updated_at && (
-            <p className="text-muted-foreground text-xs">
+            <p className="text-muted-foreground text-xs truncate" title={`Última importação: ${dayjs(batch.updated_at).format('DD/MM/YYYY HH:mm:ss')}`}>
               Última importação: {dayjs(batch.updated_at).format('DD/MM/YYYY HH:mm:ss')}
             </p>
           )
