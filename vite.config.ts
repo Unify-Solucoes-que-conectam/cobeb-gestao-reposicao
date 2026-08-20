@@ -50,6 +50,9 @@ export default defineConfig({
         ]
       },
       workbox: {
+        // atualizar tamanho máximo de arquivo em cache
+        maximumFileSizeToCacheInBytes: 10 * 1024 * 1024, // 10 MB
+        
         // Cachear arquivos estáticos para abrir offline
         globPatterns: ['**/*.{js,css,html,png,svg,woff2}'],
 
