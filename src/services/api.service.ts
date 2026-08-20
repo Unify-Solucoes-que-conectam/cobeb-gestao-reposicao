@@ -1,6 +1,6 @@
 import axios from "@/lib/axios";
 import { ApiResponse } from "@/types/api-response";
-import { Avaria, Cliente, Filial, ItemAvaria, Mapa, Motorista, NotaFiscal, Produto, TiposAvaria } from "@/types/consults";
+import { Avaria, Cliente, Cluster, Filial, ItemAvaria, Mapa, Motorista, NotaFiscal, Produto, TiposAvaria } from "@/types/consults";
 
 /**
  * TiposAvaria service
@@ -386,6 +386,26 @@ export const filialService = {
   }, signal?: AbortSignal) => {
     try {
       const response = await axios.get<ApiResponse<Filial[]>>(`/filiais`, {
+        params,
+        signal
+      });
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
+}
+
+/**
+ * Cluster service
+ */
+export const clusterService = {
+  read: async (params: {
+    [key: string]: string | undefined
+  }, signal?: AbortSignal) => {
+    try {
+      const response = await axios.get<ApiResponse<Cluster[]>>(`/clusters`, {
         params,
         signal
       });
