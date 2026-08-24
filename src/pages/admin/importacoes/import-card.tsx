@@ -1,6 +1,15 @@
 import { ImportBatch, ImportProgressPanel } from "@/components/custom/progress-panel";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useAuth } from "@/hooks/use-auth";
 import axios from "@/lib/axios";
 import { UploadIcon } from "lucide-react";
@@ -22,6 +31,11 @@ export function ImporterCard({
   const [batch, setBatch] = useState<ImportBatch | null>(initialBatch ?? null);
   const [previewRows, setPreviewRows] = useState<Record<string, string>[]>([]);
   const [previewOpen, setPreviewOpen] = useState(false);
+
+  // Novos estados para o AlertDialog de erro
+  const [wrongFileOpen, setWrongFileOpen] = useState(false);
+  const [missingCols, setMissingCols] = useState<string>("");
+
   const fileRef = useRef<HTMLInputElement>(null);
   const apiUrl = import.meta.env.VITE_API_URL as string | undefined;
   const { token } = useAuth();
@@ -48,8 +62,10 @@ export function ImporterCard({
     [config.key, onBatchChange],
   );
 
-  // Step 1: Read file and open preview dialog
+  // Step 1: Read file and open preview dialog ou mostrar erro
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+
+    setImporting(true);
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -65,12 +81,26 @@ export function ImporterCard({
         return;
       }
 
+      // Obtém as chaves encontradas na primeira linha do arquivo
+      const rowKeys = new Set(Object.keys(nonEmpty[0]));
+
+      // Identifica se falta alguma coluna obrigatória
+      const missingColumns = config.columns.filter((col) => !rowKeys.has(col.key));
+
+      if (missingColumns.length > 0) {
+        const missingNames = missingColumns.map((c) => c.header).join(", ");
+        setMissingCols(missingNames);
+        setWrongFileOpen(true); // Abre o AlertDialog ao invés do Toast
+        return;
+      }
+
       setPreviewRows(nonEmpty);
       setPreviewOpen(true);
     } catch {
       toast.error("Erro ao ler o arquivo. Verifique se o formato está correto.");
     } finally {
       if (fileRef.current) fileRef.current.value = "";
+      setImporting(false);
     }
   };
 
@@ -177,6 +207,23 @@ export function ImporterCard({
         onImport={handleImport}
         importing={importing}
       />
+
+      {/* Novo AlertDialog de Validação de Arquivo */}
+      <AlertDialog open={wrongFileOpen} onOpenChange={setWrongFileOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Arquivo Incorreto</AlertDialogTitle>
+            <AlertDialogDescription>
+              O arquivo selecionado não é válido para a importação de <strong>{config.label}</strong>.
+              <br /><br />
+              <strong>Colunas ausentes ou não identificadas:</strong> {missingCols}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setWrongFileOpen(false)}>OK</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
