@@ -1,10 +1,11 @@
-export function formatCPF(value: string) {
-  return value
+export function formatCPF(value: string | null | undefined) {
+  if (value == null || value === "") return "-";
+  return String(value)
     .replace(/\D/g, '') // remove tudo que não for número
     .replace(/(\d{3})(\d)/, '$1.$2')
     .replace(/(\d{3})(\d)/, '$1.$2')
     .replace(/(\d{3})(\d{1,2})$/, '$1-$2')
-    .slice(0, 14)
+    .slice(0, 14);
 }
 
 export function capitalizeName(nome: string) {
