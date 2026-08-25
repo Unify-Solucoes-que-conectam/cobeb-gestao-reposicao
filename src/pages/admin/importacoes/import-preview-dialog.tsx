@@ -67,7 +67,19 @@ export function ImportPreviewDialog({
   );
 
   const handleConfirm = () => {
-    onImport(rows.filter((_, i) => selectedRows.has(i)));
+
+    // retorna apenas as colunas esperadas.
+    const filteredRows = rows.filter((_, i) => selectedRows.has(i)).map((row) => {
+      const filteredRow: Record<string, string> = {};
+
+      for (const col of config.columns) {
+        filteredRow[col.key] = row[col.key] ?? "";
+      }
+
+      return filteredRow;
+    });
+
+    onImport(filteredRows);
     setConfirmOpen(false);
   };
 
