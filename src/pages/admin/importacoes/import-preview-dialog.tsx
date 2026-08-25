@@ -136,7 +136,7 @@ export function ImportPreviewDialog({
             )
           }
 
-          <div className="flex-1 min-h-0">
+          <div className="flex-1">
             {loadingDeps ? (
               <div className="flex h-full items-center justify-center">
                 <div className="flex flex-col items-center gap-2">
@@ -154,6 +154,7 @@ export function ImportPreviewDialog({
                 onSelectionChange={setSelectedRows}
                 height="100%"
                 enableStripedRows={false}
+                className="max-h-110 overflow-auto"
               />
             )}
           </div>
