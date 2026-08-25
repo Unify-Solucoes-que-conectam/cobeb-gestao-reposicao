@@ -118,9 +118,13 @@ export default function MapaCard(props: MapaCardProps) {
       </CardContent>
 
       {/* Footer / Ações */}
-      <CardFooter className="px-4 py-3 flex items-center justify-end gap-2">
-        <DesignarMotorista mapa={props.data} reload={props.reload}/>
-      </CardFooter>
+      {
+        dayjs().isBefore(dayjs(props.data.data_entrega), 'day') && (
+          <CardFooter className="flex justify-end gap-2">
+            <DesignarMotorista mapa={props.data} reload={props.reload} />
+          </CardFooter>
+        )
+      }
     </Card>
   );
 }
