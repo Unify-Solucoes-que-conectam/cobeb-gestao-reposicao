@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useHeader } from "@/hooks/use-header";
 import axios from "@/lib/axios";
 import { useCallback, useEffect, useState } from "react";
-import { ImporterCard } from "./import-card";
+import { ImporterCard } from "./components/import-card";
 import { IMPORTER_CONFIGS } from "./config";
 
 export default function AdminImportacoes() {

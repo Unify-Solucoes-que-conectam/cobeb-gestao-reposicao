@@ -416,3 +416,17 @@ export const clusterService = {
     }
   }
 }
+
+export const importerModelService = {
+  downloadModel: async (type: string) => {
+    try {
+      const response = await axios.get<Blob>(`/exportar/modelo/${type}`, {
+        responseType: 'blob',
+      });
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
+}

@@ -1,6 +1,5 @@
+import { DataImporter } from "@/components/custom/data-importer";
 import { ImportBatch, ImportProgressPanel } from "@/components/custom/progress-panel";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -10,13 +9,17 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/use-auth";
 import axios from "@/lib/axios";
-import { UploadIcon } from "lucide-react";
+import { downloadBlob } from "@/lib/utils";
+import { importerModelService } from "@/services/api.service";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { ImporterConfig, parseXlsxMapped } from "../config";
 import { ImportPreviewDialog } from "./import-preview-dialog";
-import { ImporterConfig, parseXlsxMapped } from "./config";
+import { UploadIcon } from "lucide-react";
 
 export function ImporterCard({
   config,
@@ -63,14 +66,14 @@ export function ImporterCard({
   );
 
   // Step 1: Read file and open preview dialog ou mostrar erro
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (file: File[]) => {
 
     setImporting(true);
-    const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file || file.length === 0) return;
+    const selectedFile = file[0]; 
 
     try {
-      const allRows = await parseXlsxMapped(file, config);
+      const allRows = await parseXlsxMapped(selectedFile, config);
 
       const nonEmpty = allRows.filter((row) =>
         Object.values(row).some((v) => v !== null && String(v).trim() !== ""),
@@ -159,6 +162,18 @@ export function ImporterCard({
     }
   };
 
+  const handleDownloadModel = useCallback(async () => {
+    try {
+      const res = await importerModelService.downloadModel(config.key);
+
+      downloadBlob(res, 'modelo_importacao_' + config.key + '.xlsx');
+    } catch {
+      toast.error('Ocorreu um erro ao tentar baixar o modelo de importação.', {
+        description: 'Se o problema persistir, entre em contato com o suporte.',
+      })
+    }
+  }, [])
+
   return (
     <>
       <Card>
@@ -171,25 +186,25 @@ export function ImporterCard({
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="flex-1">
-            <Button
-              size="sm"
-              className="w-full"
-              disabled={importing}
-              type="button"
-              onClick={() => fileRef.current?.click()}
-              loading={importing}
+            <DataImporter
+              acceptedFiles={['xlsx', 'xls', 'csv']}
+              multiple={false}
+              mode='async'
+              onSave={handleFileChange}
+              onDownloadModel={handleDownloadModel}
             >
-              {!importing && <UploadIcon className="mr-1 h-4 w-4" />}
-              {importing ? "Importando..." : "Importar"}
-            </Button>
-            <input
-              ref={fileRef}
-              type="file"
-              accept=".xlsx,.xls,.csv"
-              className="hidden"
-              onChange={handleFileChange}
-              disabled={importing}
-            />
+              <Button
+                size="sm"
+                className="w-full"
+                disabled={importing}
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                loading={importing}
+              >
+                {!importing && <UploadIcon className="mr-1 h-4 w-4" />}
+                {importing ? "Importando..." : "Importar"}
+              </Button>
+            </DataImporter>
           </div>
           <ImportProgressPanel
             batchId={batch?.id}

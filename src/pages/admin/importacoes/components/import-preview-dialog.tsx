@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/dialog";
 import { UploadIcon } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { ImporterConfig } from "./config";
+import { ImporterConfig } from "../config";
 
 interface ImportPreviewDialogProps {
   config: ImporterConfig;

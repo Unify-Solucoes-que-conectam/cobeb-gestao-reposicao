@@ -28,13 +28,23 @@ export const clienteColumns = (depsOptions?: Record<string, SelectOption<string>
     columnsMap.set(col.key, {
       id: col.key,
       header: col.header,
+      width: 250,
       renderCell: (value) => renderValue(value, col),
     });
+  });
+
+  columnsMap.set("cod_pdv", {
+    id: "cod_pdv",
+    header: "Código",
+    width: 80,
+    renderCell: (value) =>
+      renderValue(value, { key: "cod_pdv", required: true }, (val) => val.toUpperCase()),
   });
 
   columnsMap.set("documento", {
     id: "documento",
     header: "Documento",
+    width: 150,
     renderCell: (value) =>
       renderValue(value, { key: "documento", required: true }, (val) => {
         const digits = val.replace(/\D/g, "");
