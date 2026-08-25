@@ -115,16 +115,16 @@ export function ImportPreviewDialog({
     loadDeps();
   }, [open, config.deps]);
 
-  const hasEmptyFields = useMemo(() => {
+  const hasRequiredFields = useMemo(() => {
     if (selectedRows.size === 0) return false;
 
-    const expectedKeys = config.columns.map((col) => col.key);
+    const requiredKeys = config.columns.filter((col) => col.required).map((col) => col.key);
 
     return Array.from(selectedRows).some((rowIndex) => {
       const row = rows[rowIndex as number];
       if (!row) return true;
 
-      return expectedKeys.some((key) => {
+      return requiredKeys.some((key) => {
         const val = row[key];
         return val === undefined || val === null || String(val).trim() === "";
       });
@@ -143,7 +143,7 @@ export function ImportPreviewDialog({
           </DialogHeader>
 
           {
-            hasEmptyFields && (
+            hasRequiredFields && (
               <p className="text-sm text-red-500">Existem campos obrigatórios não preenchidos.</p>
             )
           }
@@ -187,7 +187,7 @@ export function ImportPreviewDialog({
               Cancelar
             </Button>
             <Button
-              disabled={selectedRows.size === 0 || importing || hasEmptyFields}
+              disabled={selectedRows.size === 0 || importing || hasRequiredFields}
               onClick={() => setConfirmOpen(true)}
             >
               <UploadIcon className="mr-1 h-4 w-4" />

@@ -20,7 +20,7 @@ const renderValue = (value: unknown, col: { key: string; required?: boolean }, f
   return formatter ? formatter(strValue) : strValue === '' ? '-' : strValue;
 };
 
-export const clienteColumns = (depsOptions: Record<string, SelectOption<string>[]>): ColumnDef<ClienteRow>[] => {
+export const clienteColumns = (depsOptions?: Record<string, SelectOption<string>[]>): ColumnDef<ClienteRow>[] => {
   const columns = IMPORTER_CONFIGS.find((c) => c.key === "clientes")?.columns ?? [];
   const columnsMap = new Map<string, ColumnDef<ClienteRow>>();
 
@@ -58,7 +58,7 @@ export const clienteColumns = (depsOptions: Record<string, SelectOption<string>[
     id: "filial",
     header: "Filial",
       renderCell: (value) =>
-        renderValue(value, { key: "filial", required: true }, (val) => depsOptions.filial?.find((opt) => opt.id === val)?.label ?? val),
+        renderValue(value, { key: "filial", required: true }, (val) => depsOptions?.filial?.find((opt) => opt.id === val)?.label ?? val),
   });
 
   return Array.from(columnsMap.values());

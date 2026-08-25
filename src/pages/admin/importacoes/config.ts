@@ -1,6 +1,6 @@
 import { ColumnDef } from "@/components/custom/data-grid";
 import { motoristaColumns } from "@/pages/admin/importacoes/columns/motorista";
-import { clusterService, filialService } from "@/services/api.service";
+import { clienteService, clusterService, filialService } from "@/services/api.service";
 import * as XLSX from "xlsx";
 import { clienteColumns } from "./columns/cliente";
 import { mapaColumns } from "./columns/mapa";
@@ -64,6 +64,10 @@ export const IMPORTER_CONFIGS: ImporterConfig[] = [
       { header: "Telefone(s)", key: "telefones", example: "Telefone(s) do cliente (separados por | )", required: true },
     ],
     columnsDef: clienteColumns,
+    deps: {
+      filial: (): Promise<SelectOption<string>[]> =>
+        filialService.read({}).then(res => (res.data.map(f => ({ id: f.codigo, label: f.descricao })))),
+    }
   },
   {
     key: "produtos",
@@ -104,14 +108,18 @@ export const IMPORTER_CONFIGS: ImporterConfig[] = [
     label: "Mapas - Rotina [03.01.49]",
     tableName: "mapas",
     columns: [
-      { header: "Nro do Mapa", key: "nro_mapa", example: "Número do mapa", required: true },
+      { header: "Nro do Mapa", key: "nro_do_mapa", example: "Número do mapa", required: true },
       { header: "Motorista", key: "motorista", example: "Código do motorista", required: true },
       { header: "UNB", key: "unb", example: "Código da Filial", required: true },
       { header: "Data Entrega", key: "data_entrega", example: "Data de entrega do mapa", required: true },
-      { header: "Placa", key: "placa_veiculo", example: "Placa do veículo", required: true },
+      { header: "Placa", key: "placa", example: "Placa do veículo", required: true },
       { header: "Clientes", key: "clientes", example: "Códigos dos clientes (separados por /)", required: true },
     ],
-    columnsDef: mapaColumns
+    columnsDef: mapaColumns,
+    deps: {
+      clientes: (): Promise<SelectOption<string>[]> =>
+        clienteService.read({}).then(res => (res.data.map(c => ({ id: c.codigo, label: c.razao_social })))),
+    }
   },
   {
     key: "vendas_trocas",
