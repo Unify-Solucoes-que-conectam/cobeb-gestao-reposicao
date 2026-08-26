@@ -2,8 +2,8 @@ import { ColumnDef } from "@/components/custom/data-grid";
 import dayjs from "@/lib/dayjs";
 import { AlertCircle } from "lucide-react";
 import { IMPORTER_CONFIGS, SelectOption } from "../config";
-
-export type MapaRow = Record<string, unknown>;
+import VisualizarClientes from "../components/visualizar-clientes";
+import { Mapa } from "@/types/consults";
 
 const renderValue = (value: unknown, col: { key: string; required?: boolean }, formatter?: (val: string) => React.ReactNode) => {
   const strValue = String(value ?? "").trim();
@@ -20,9 +20,9 @@ const renderValue = (value: unknown, col: { key: string; required?: boolean }, f
   return formatter ? formatter(strValue) : strValue === '' ? '-' : strValue;
 };
 
-export const mapaColumns = (depsOptions: Record<string, SelectOption<string>[]>): ColumnDef<MapaRow>[] => {
+export const mapaColumns = (depsOptions: Record<string, SelectOption<string>[]>): ColumnDef<Mapa>[] => {
   const columns = IMPORTER_CONFIGS.find((c) => c.key === "mapas")?.columns ?? [];
-  const columnsMap = new Map<string, ColumnDef<MapaRow>>();
+  const columnsMap = new Map<string, ColumnDef<Mapa>>();
 
   columns.forEach((col) => {
     columnsMap.set(col.key, {
@@ -49,11 +49,28 @@ export const mapaColumns = (depsOptions: Record<string, SelectOption<string>[]>)
       }),
   });
 
-  columnsMap.set("placa_veiculo", {
-    id: "placa_veiculo",
+  columnsMap.set("placa", {
+    id: "placa",
     header: "Placa do Veículo",
-    renderCell: (value) => renderValue(value, { key: "placa_veiculo", required: true }, (val) => val.toUpperCase()),
+    renderCell: (value) => renderValue(value, { key: "placa", required: true }, (val) => val.toUpperCase()),
   });
+
+  columnsMap.set("clientes", {
+    id: "clientes",
+    header: "Clientes",
+    renderCell: (_value, row) => {
+
+      // códigos dos clientes
+      const codigos_cliente = (row.clientes as unknown as string).split('/');
+      
+      // clientes filtrados por
+      const clientes = depsOptions.clientes?.filter((opt) => codigos_cliente.includes(opt.id)).map((opt) => (
+        { codigo: opt.id, razao_social: opt.label }
+      )) ?? [];
+
+      return <VisualizarClientes clientes={clientes} />
+    }
+  })
 
   return Array.from(columnsMap.values());
 };

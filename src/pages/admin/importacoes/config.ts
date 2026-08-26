@@ -1,6 +1,6 @@
 import { ColumnDef } from "@/components/custom/data-grid";
 import { motoristaColumns } from "@/pages/admin/importacoes/columns/motorista";
-import { clusterService, filialService } from "@/services/api.service";
+import { clienteService, clusterService, filialService } from "@/services/api.service";
 import * as XLSX from "xlsx";
 import { clienteColumns } from "./columns/cliente";
 import { mapaColumns } from "./columns/mapa";
@@ -64,6 +64,10 @@ export const IMPORTER_CONFIGS: ImporterConfig[] = [
       { header: "Telefone(s)", key: "telefones", example: "Telefone(s) do cliente (separados por | )", required: true },
     ],
     columnsDef: clienteColumns,
+    deps: {
+      filial: (): Promise<SelectOption<string>[]> =>
+        filialService.read({}).then(res => (res.data.map(f => ({ id: f.codigo, label: f.descricao })))),
+    }
   },
   {
     key: "produtos",
@@ -71,7 +75,7 @@ export const IMPORTER_CONFIGS: ImporterConfig[] = [
     tableName: "produtos",
     columns: [
       { header: "Código", key: "codigo", example: "Código do produto", required: true },
-      { header: "EAN", key: "ean", example: "Código EAN do produto", required: true },
+      { header: "EAN", key: "ean", example: "Código EAN do produto" },
       { header: "Descrição", key: "descricao", example: "Descrição do produto", required: true },
       { header: "Tipo Marca", key: "tipo_marca", example: "Tipo de Marca", required: true },
       { header: "Embalagem", key: "embalagem", example: "Embalagem do produto", required: true },
@@ -87,9 +91,11 @@ export const IMPORTER_CONFIGS: ImporterConfig[] = [
       { header: "Cód.Motorista", key: "codmotorista", example: "Código do motorista", required: true },
       { header: "Nome Motorista", key: "nome_motorista", example: "Nome do motorista", required: true },
       { header: "Cód.Cluster", key: "codcluster", example: "Código do cluster", required: true },
+      { header: "Cluster", key: "cluster", example: "Descrição do cluster", required: true },
       { header: "Cód.Filial", key: "codfilial", example: "Código da filial", required: true },
       { header: "Data Admissão", key: "data_admissao", example: "Data de admissão do motorista", required: true },
       { header: "Data Inativação", key: "data_inativacao", example: "Data de inativação do motorista" },
+      { header: "Status", key: "status", example: "Status do motorista" },
     ],
     columnsDef: motoristaColumns,
     deps: {
@@ -104,14 +110,18 @@ export const IMPORTER_CONFIGS: ImporterConfig[] = [
     label: "Mapas - Rotina [03.01.49]",
     tableName: "mapas",
     columns: [
-      { header: "Nro do Mapa", key: "nro_mapa", example: "Número do mapa", required: true },
+      { header: "Nro do Mapa", key: "nro_do_mapa", example: "Número do mapa", required: true },
       { header: "Motorista", key: "motorista", example: "Código do motorista", required: true },
       { header: "UNB", key: "unb", example: "Código da Filial", required: true },
       { header: "Data Entrega", key: "data_entrega", example: "Data de entrega do mapa", required: true },
-      { header: "Placa", key: "placa_veiculo", example: "Placa do veículo", required: true },
+      { header: "Placa", key: "placa", example: "Placa do veículo", required: true },
       { header: "Clientes", key: "clientes", example: "Códigos dos clientes (separados por /)", required: true },
     ],
-    columnsDef: mapaColumns
+    columnsDef: mapaColumns,
+    deps: {
+      clientes: (): Promise<SelectOption<string>[]> =>
+        clienteService.read({}).then(res => (res.data.map(c => ({ id: c.codigo, label: c.razao_social })))),
+    }
   },
   {
     key: "vendas_trocas",

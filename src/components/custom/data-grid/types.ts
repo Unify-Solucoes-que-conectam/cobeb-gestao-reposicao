@@ -317,6 +317,12 @@ export interface DataGridProps<TData> {
    */
   emptyValuePlaceholder?: EmptyValuePlaceholder
 
+  /**
+   * Classes CSS adicionais aplicadas a cada linha do corpo.
+   * Recebe a linha e o índice como parâmetros.
+   */
+  rowClassName?: (row: TData, rowIndex: number) => string
+
   // ==================== Reordenação de Colunas ====================
 
   /**
@@ -387,6 +393,7 @@ export interface GridBodyProps<TData> {
   enableRowHover?: boolean
   enableStripedRows?: boolean
   emptyValuePlaceholder?: EmptyValuePlaceholder
+  rowClassName?: (row: TData, rowIndex: number) => string
 }
 
 /**
@@ -408,4 +415,5 @@ export interface GridRowProps<TData> {
   enableRowHover?: boolean
   isStriped?: boolean
   emptyValuePlaceholder?: EmptyValuePlaceholder
+  className?: string
 }

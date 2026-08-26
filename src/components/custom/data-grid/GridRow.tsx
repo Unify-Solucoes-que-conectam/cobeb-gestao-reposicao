@@ -157,6 +157,7 @@ function GridRowInner<TData>({
   enableRowHover,
   isStriped,
   emptyValuePlaceholder,
+  className
 }: GridRowProps<TData>) {
   /**
    * Manipula mudança no checkbox de seleção
@@ -200,7 +201,9 @@ function GridRowInner<TData>({
         // Seleção
         isSelected && 'bg-primary/10',
         // Cursor clicável
-        onClick && 'cursor-pointer'
+        onClick && 'cursor-pointer',
+        // Estilizações customizáveis via className
+        className
       )}
       style={{ gridTemplateColumns }}
       onClick={handleRowClick}

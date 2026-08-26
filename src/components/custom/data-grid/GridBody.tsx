@@ -29,6 +29,7 @@ function GridBodyInner<TData>({
   enableRowHover,
   enableStripedRows,
   emptyValuePlaceholder,
+  rowClassName,
 }: GridBodyProps<TData>) {
   /**
    * Cria callback de seleção para uma linha específica
@@ -83,6 +84,7 @@ function GridBodyInner<TData>({
             enableRowHover={enableRowHover}
             isStriped={isStriped}
             emptyValuePlaceholder={emptyValuePlaceholder}
+            className={rowClassName?.(row, rowIndex)}
           />
         )
       })}

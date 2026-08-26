@@ -126,11 +126,20 @@ export default function GerenciarUsuario({ user, onSubmit }: GerenciarUsuarioPro
 
   // ============== VALIDAÇÕES =============
   const userExists = form.watch('cpf');
+  const roleWatcher = form.watch('role');
+  const cpfWatcher = form.watch('cpf');
 
   useEffect(() => {
     if (!open) return;
     if (form.getValues('cpf').length === 11) findUser();
   }, [userExists])
+
+  useEffect(() => {
+    if (roleWatcher === 'motorista' && cpfWatcher.length === 11) {
+      form.setValue('senha', cpfWatcher);
+      form.setValue('confirmar_senha', cpfWatcher);
+    }
+  }, [roleWatcher, cpfWatcher]);
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -183,6 +192,27 @@ export default function GerenciarUsuario({ user, onSubmit }: GerenciarUsuarioPro
 
             <FormField
               control={form.control}
+              name='nome'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel required>Nome</FormLabel>
+
+                  <FormControl>
+                    <Input
+                      value={field.value || ''}
+                      onChange={(e) => field.onChange(e.target.value)}
+                      placeholder='Digite o nome do usuário'
+                      className='h-12'
+                    />
+                  </FormControl>
+
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
               name='cpf'
               render={({ field }) => (
                 <FormItem>
@@ -207,29 +237,8 @@ export default function GerenciarUsuario({ user, onSubmit }: GerenciarUsuarioPro
               )}
             />
 
-            <FormField
-              control={form.control}
-              name='nome'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel required>Nome</FormLabel>
-
-                  <FormControl>
-                    <Input
-                      value={field.value || ''}
-                      onChange={(e) => field.onChange(e.target.value)}
-                      placeholder='Digite seu nome'
-                      className='h-12'
-                    />
-                  </FormControl>
-
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
             {
-              !user && (
+              !user && form.watch('role') === 'monitoramento' && (
                 <FormField
                   control={form.control}
                   name='senha'
@@ -238,7 +247,11 @@ export default function GerenciarUsuario({ user, onSubmit }: GerenciarUsuarioPro
                       <FormLabel required>Senha</FormLabel>
 
                       <FormControl>
-                        <PasswordInput {...field} placeholder='Digite sua senha' className='h-12' />
+                        <PasswordInput
+                          {...field}
+                          placeholder='Digite sua senha'
+                          className='h-12'
+                        />
                       </FormControl>
 
                       <FormMessage />
@@ -249,7 +262,7 @@ export default function GerenciarUsuario({ user, onSubmit }: GerenciarUsuarioPro
             }
 
             {
-              !user && (
+              !user && roleWatcher === 'monitoramento' && (
                 <FormField
                   control={form.control}
                   name='confirmar_senha'
@@ -258,7 +271,11 @@ export default function GerenciarUsuario({ user, onSubmit }: GerenciarUsuarioPro
                       <FormLabel required>Confirmar Senha</FormLabel>
 
                       <FormControl>
-                        <PasswordInput {...field} placeholder='Digite sua senha' className='h-12' />
+                        <PasswordInput
+                          {...field}
+                          placeholder='Digite sua senha'
+                          className='h-12'
+                        />
                       </FormControl>
 
                       <FormMessage />
@@ -270,7 +287,7 @@ export default function GerenciarUsuario({ user, onSubmit }: GerenciarUsuarioPro
 
             {/* info de preenchimento de senha */}
             {
-              !user && (
+              !user && roleWatcher === 'monitoramento' && (
                 <Card className='p-3 gap-3'>
                   <CardHeader className='p-0'>
                     <CardTitle className="text-md pb-3">Sua nova senha precisa:</CardTitle>

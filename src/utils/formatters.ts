@@ -1,5 +1,5 @@
 export function formatCPF(value: string | null | undefined) {
-  if (value == null || value === "") return "-";
+  if (value == null || value === "") return "";
   return String(value)
     .replace(/\D/g, '') // remove tudo que não for número
     .replace(/(\d{3})(\d)/, '$1.$2')
