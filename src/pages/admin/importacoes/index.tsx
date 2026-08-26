@@ -6,6 +6,7 @@ import axios from "@/lib/axios";
 import { useCallback, useEffect, useState } from "react";
 import { ImporterCard } from "./components/import-card";
 import { IMPORTER_CONFIGS } from "./config";
+import { AlertTriangleIcon } from "lucide-react";
 
 export default function AdminImportacoes() {
 	const apiUrl = import.meta.env.VITE_API_URL as string | undefined;
@@ -65,9 +66,10 @@ export default function AdminImportacoes() {
 	return (
 		<div className="space-y-4">
 			<h1 className="text-2xl font-bold">Importar Dados</h1>
-			<p className="text-sm text-muted-foreground">
-				Cadastros auxiliares devem ser importados antes de clientes, produtos e notas fiscais.
-			</p>
+			<div className="text-sm text-muted-foreground">
+				<p>Cadastros auxiliares devem ser importados antes de clientes, produtos e notas fiscais.</p>
+				<p className="flex items-center gap-1 text-amber-700"><AlertTriangleIcon className="size-4" />Limite máximo de 15.000 registros por importação.</p>
+			</div>
 
 			<Tabs defaultValue="cadastros" className="w-full">
 				<TabsList className="w-full grid grid-cols-3">

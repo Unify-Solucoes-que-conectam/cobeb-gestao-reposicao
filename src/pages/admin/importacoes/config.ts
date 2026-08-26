@@ -75,7 +75,7 @@ export const IMPORTER_CONFIGS: ImporterConfig[] = [
     tableName: "produtos",
     columns: [
       { header: "Código", key: "codigo", example: "Código do produto", required: true },
-      { header: "EAN", key: "ean", example: "Código EAN do produto", required: true },
+      { header: "EAN", key: "ean", example: "Código EAN do produto" },
       { header: "Descrição", key: "descricao", example: "Descrição do produto", required: true },
       { header: "Tipo Marca", key: "tipo_marca", example: "Tipo de Marca", required: true },
       { header: "Embalagem", key: "embalagem", example: "Embalagem do produto", required: true },
