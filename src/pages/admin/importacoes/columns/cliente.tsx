@@ -44,7 +44,7 @@ export const clienteColumns = (depsOptions?: Record<string, SelectOption<string>
   columnsMap.set("documento", {
     id: "documento",
     header: "Documento",
-    width: 150,
+    width: 180,
     renderCell: (value) =>
       renderValue(value, { key: "documento", required: true }, (val) => {
         const digits = val.replace(/\D/g, "");
