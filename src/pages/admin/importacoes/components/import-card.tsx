@@ -151,7 +151,7 @@ export function ImporterCard({
           toast.error(created.last_log || "Importação falhou.");
           setImporting(false);
         } else {
-          toast.success("Importação enfileirada. Acompanhe o progresso abaixo.");
+          toast.success("Importação enfileirada. Acompanhe o progresso.");
         }
       } else {
         toast.warning("Importação iniciada, mas sem retorno de lote.");
