@@ -91,9 +91,11 @@ export const IMPORTER_CONFIGS: ImporterConfig[] = [
       { header: "Cód.Motorista", key: "codmotorista", example: "Código do motorista", required: true },
       { header: "Nome Motorista", key: "nome_motorista", example: "Nome do motorista", required: true },
       { header: "Cód.Cluster", key: "codcluster", example: "Código do cluster", required: true },
+      { header: "Cluster", key: "cluster", example: "Descrição do cluster", required: true },
       { header: "Cód.Filial", key: "codfilial", example: "Código da filial", required: true },
       { header: "Data Admissão", key: "data_admissao", example: "Data de admissão do motorista", required: true },
       { header: "Data Inativação", key: "data_inativacao", example: "Data de inativação do motorista" },
+      { header: "Status", key: "status", example: "Status do motorista" },
     ],
     columnsDef: motoristaColumns,
     deps: {

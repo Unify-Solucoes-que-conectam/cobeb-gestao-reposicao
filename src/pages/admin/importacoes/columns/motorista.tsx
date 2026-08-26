@@ -50,7 +50,7 @@ export const motoristaColumns = (depsOptions: Record<string, SelectOption<string
 
   columnsMap.set("codcluster", {
     id: "codcluster",
-    header: "Cluster",
+    header: "Cód.Cluster",
     renderCell: (value) =>
       renderValue(value, { key: "codcluster", required: true }, (val) => depsOptions.cluster?.find((opt) => opt.id === val)?.label ?? val),
   });
