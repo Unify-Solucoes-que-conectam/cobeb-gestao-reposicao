@@ -110,6 +110,7 @@ export function DataGrid<TData>({
   enableColumnReorder = false,
   columnOrder: externalColumnOrder,
   onColumnOrderChange,
+  rowClassName,
 }: DataGridProps<TData>) {
   /**
    * Estado interno para ordem das colunas (usado se não for controlado externamente)
@@ -362,6 +363,7 @@ export function DataGrid<TData>({
             enableRowHover={enableRowHover}
             enableStripedRows={enableStripedRows}
             emptyValuePlaceholder={emptyValuePlaceholder}
+            rowClassName={rowClassName}
           />
         )}
 
