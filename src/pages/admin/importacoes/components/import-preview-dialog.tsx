@@ -22,6 +22,7 @@ import {
 import { UploadIcon } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { ImporterConfig } from "../config";
+import { Badge } from "@/components/ui/badge";
 
 interface ImportPreviewDialogProps {
   config: ImporterConfig;
@@ -131,6 +132,35 @@ export function ImportPreviewDialog({
     });
   }, [selectedRows, rows, config.columns]);
 
+  /**
+   * Função para retornar linhas com erros de preenchimento de dados
+   */
+  const linhasComErros = useMemo(() => {
+    if (selectedRows.size === 0) return [];
+
+    const requiredKeys = config.columns.filter((col) => col.required).map((col) => col.key);
+
+    return Array.from(selectedRows)
+      .filter((rowIndex) => {
+        const row = rows[rowIndex as number];
+        if (!row) return true;
+
+        return requiredKeys.some((key) => {
+          const val = row[key];
+          return val === undefined || val === null || String(val).trim() === "";
+        });
+      })
+      .map((rowIndex) => Number(rowIndex) + 1);
+  }, [selectedRows, rows, config.columns]);
+
+  /**
+   * Função para ir para a linha com erro
+   */
+  const gotoLine = (linha: number) => {
+    const pageIndex = Math.floor((linha - 1) / pageSize);
+    setPage(pageIndex + 1);
+  };
+
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -144,7 +174,21 @@ export function ImportPreviewDialog({
 
           {
             hasRequiredFields && (
-              <p className="text-sm text-red-500">Existem campos obrigatórios não preenchidos.</p>
+              <div>
+                <p className="text-sm text-red-500">Existem campos obrigatórios não preenchidos nas linhas abaixo.</p>
+                {
+                  linhasComErros.length > 0 && (
+                    <div className="flex gap-2 items-center">
+                      <p className="text-sm text-red-500 ">Linhas com erros:</p>
+                      <div className="flex gap-1 items-center cursor-pointer">
+                        {linhasComErros.map((linha, index) => (
+                          <Badge key={index} variant="outline" onClick={() => gotoLine(linha)}>{linha}</Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )
+                }
+              </div>
             )
           }
 
@@ -167,6 +211,10 @@ export function ImportPreviewDialog({
                 height="100%"
                 enableStripedRows={false}
                 className="max-h-110 overflow-auto"
+                rowClassName={(row) => {
+                  const numeroDaLinha = Number(row["_rowIndex"]) + 1;
+                  return linhasComErros.includes(numeroDaLinha) ? "text-red-500" : "";
+                }}
               />
             )}
           </div>
