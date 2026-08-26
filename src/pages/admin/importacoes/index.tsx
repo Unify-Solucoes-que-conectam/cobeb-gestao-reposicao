@@ -68,7 +68,7 @@ export default function AdminImportacoes() {
 			<h1 className="text-2xl font-bold">Importar Dados</h1>
 			<div className="text-sm text-muted-foreground">
 				<p>Cadastros auxiliares devem ser importados antes de clientes, produtos e notas fiscais.</p>
-				<p className="flex items-center gap-1 text-amber-700"><AlertTriangleIcon className="size-4" />Limite máximo de 15.000 registros por importação.</p>
+				<p className="flex items-center gap-1 text-amber-700"><AlertTriangleIcon className="size-4" />Limite máximo de 20.000 registros por importação.</p>
 			</div>
 
 			<Tabs defaultValue="cadastros" className="w-full">
