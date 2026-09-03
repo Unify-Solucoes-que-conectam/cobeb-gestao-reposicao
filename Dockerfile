@@ -12,19 +12,14 @@ COPY . .
 # Variaveis VITE sao incorporadas ao bundle no momento do build.
 ARG VITE_API_URL=http://localhost:8000
 ARG VITE_APP_MODE=production
-ARG VITE_REVERB_APP_KEY=
+ARG REVERB_BROWSER_ID=
 ARG VITE_REVERB_HOST=localhost
 ARG VITE_REVERB_PORT=8080
 ARG VITE_REVERB_SCHEME=http
 
-ENV VITE_API_URL=${VITE_API_URL} \
-    VITE_APP_MODE=${VITE_APP_MODE} \
-    VITE_REVERB_APP_KEY=${VITE_REVERB_APP_KEY} \
-    VITE_REVERB_HOST=${VITE_REVERB_HOST} \
-    VITE_REVERB_PORT=${VITE_REVERB_PORT} \
-    VITE_REVERB_SCHEME=${VITE_REVERB_SCHEME}
-
-RUN bun run build
+# A chave publica do Reverb precisa fazer parte do bundle usado pelo navegador.
+# O nome do ARG deixa explicito que nao se trata do APP_SECRET do Reverb.
+RUN VITE_REVERB_APP_KEY="${REVERB_BROWSER_ID}" bun run build
 
 FROM nginx:1.28-alpine AS runtime
 
