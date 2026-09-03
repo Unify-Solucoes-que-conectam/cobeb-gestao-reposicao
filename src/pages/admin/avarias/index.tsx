@@ -116,7 +116,14 @@ export default function AdminAvarias() {
   // ============== FUNCTIONS ===============
 
   const order = (sortOrder: "asc" | "desc") => {
-    setOrderedAvarias(prev => [...prev].sort((a, b) => sortOrder === "asc" ? a.created_at.localeCompare(b.created_at) : b.created_at.localeCompare(a.created_at)))
+    setOrderedAvarias(prev => [...prev].sort((a, b) => {
+      const dateA = a.created_at ?? a.data_emissao ?? "";
+      const dateB = b.created_at ?? b.data_emissao ?? "";
+
+      return sortOrder === "asc"
+        ? dateA.localeCompare(dateB)
+        : dateB.localeCompare(dateA);
+    }))
   }
 
   // ============== Effects ===============
