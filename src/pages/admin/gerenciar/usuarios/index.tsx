@@ -78,6 +78,7 @@ export default function AdminUsuarios() {
         defaultFilter={filters.role}
         filters={[
           { label: "Todos", value: "todos" },
+          { label: "Administradores", value: "administrador" },
           { label: "Monitoramento", value: "monitoramento" },
           { label: "Motoristas", value: "motorista" }
         ]}

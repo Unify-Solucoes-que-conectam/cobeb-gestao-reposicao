@@ -7,6 +7,7 @@ type UserRole = Usuario['role']
  */
 export function getHomeByRole(role?: UserRole): string {
   switch (role) {
+    case 'administrador':
     case 'monitoramento':
       return '/admin/avarias'
     case 'motorista':

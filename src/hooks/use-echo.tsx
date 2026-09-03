@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import Echo, { type Broadcaster } from 'laravel-echo'
 
 import type { Notificacao } from '@/types/app'
+import { runtimeConfig } from '@/config/runtime'
 
 type UseEchoOptions = {
   channelName: string
@@ -70,21 +71,21 @@ const useEcho = ({ channelName, mode, eventName, isPrivate }: UseEchoOptions) =>
 
         // helpers
         const scheme =
-          import.meta.env.VITE_REVERB_SCHEME ||
+          runtimeConfig.REVERB_SCHEME ||
           (typeof window !== 'undefined' && window.location.protocol.replace(':', '')) ||
           'https'
         const forceTLS = scheme === 'https'
 
-        const port = import.meta.env.VITE_REVERB_PORT
-          ? Number(import.meta.env.VITE_REVERB_PORT)
+        const port = runtimeConfig.REVERB_PORT
+          ? Number(runtimeConfig.REVERB_PORT)
           : (forceTLS ? 443 : 80)
 
         // monte as opções dinamicamente, assim evitamos passar 0/NaN
         const echoOptions: Broadcaster['reverb']['options'] = {
           broadcaster: 'reverb',
-          key: import.meta.env.VITE_REVERB_APP_KEY,
+          key: runtimeConfig.REVERB_APP_KEY,
           wsHost:
-            import.meta.env.VITE_REVERB_HOST ||
+            runtimeConfig.REVERB_HOST ||
             (typeof window !== 'undefined' ? window.location.hostname : 'localhost'),
           wsPort: port,
           wssPort: port,
@@ -92,7 +93,7 @@ const useEcho = ({ channelName, mode, eventName, isPrivate }: UseEchoOptions) =>
           enabledTransports: ['ws', 'wss'],
           activityTimeout: 30000,
           pongTimeout: 15000,
-          authEndpoint: `${import.meta.env.VITE_API_URL}/broadcasting/auth`,
+          authEndpoint: `${runtimeConfig.API_URL}/broadcasting/auth`,
           auth: {
             headers: {
               get 'Authorization'() {

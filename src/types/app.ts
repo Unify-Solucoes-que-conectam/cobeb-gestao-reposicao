@@ -5,7 +5,7 @@ export type Usuario = {
   id: string;
   nome: string;
   cpf: string;
-  role: 'monitoramento' | 'motorista';
+  role: 'administrador' | 'monitoramento' | 'motorista';
   primeiro_acesso: boolean;
   motorista: {
     id: string
@@ -34,6 +34,7 @@ export type Menu = Base & {
   rota: string
   ordem: number
   sub_menus: Menu[]
+  required_role?: Usuario['role'] | null
 }
 
 export type Base = {

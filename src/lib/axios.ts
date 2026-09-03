@@ -1,8 +1,9 @@
 import vanillaAxios, { type AxiosRequestHeaders } from 'axios'
 import { toast } from 'sonner'
+import { runtimeConfig } from '@/config/runtime'
 
-const appMode = import.meta.env.VITE_APP_MODE
-const apiBaseUrl = import.meta.env.VITE_API_URL
+const appMode = runtimeConfig.APP_MODE
+const apiBaseUrl = runtimeConfig.API_URL
 
 if (!apiBaseUrl) throw new Error('VITE_API_URL is not defined')
 

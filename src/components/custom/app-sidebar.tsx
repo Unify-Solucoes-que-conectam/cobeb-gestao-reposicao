@@ -36,7 +36,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               {loading ? (
                 <Skeleton className='w-full p-2' />
               ) : (
-                <p className='text-base font-semibold'>Monitoramento</p>
+                <p className='text-base font-semibold'>Gestão de Reposição</p>
               )}
             </Link>
           </SidebarMenuItem>

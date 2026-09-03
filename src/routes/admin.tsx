@@ -5,6 +5,8 @@ import AdminMapas from '@/pages/admin/gerenciar/mapas'
 import AdminMotoristas from '@/pages/admin/gerenciar/motoristas'
 import AdminUsuarios from '@/pages/admin/gerenciar/usuarios'
 import AdminImportacoes from '@/pages/admin/importacoes'
+import AdminWhatsApp from '@/pages/admin/gerenciar/whatsapp'
+import { ProtectedRoute } from './guards'
 
 export const adminRoutes: RouteObject[] = [
   {
@@ -24,7 +26,10 @@ export const adminRoutes: RouteObject[] = [
     element: <AdminMotoristas />,
   },
   {
-    path: 'gerenciar/usuarios',
-    element: <AdminUsuarios />,
+    element: <ProtectedRoute allowedRoles={['administrador']} />,
+    children: [
+      { path: 'gerenciar/usuarios', element: <AdminUsuarios /> },
+      { path: 'gerenciar/whatsapp', element: <AdminWhatsApp /> },
+    ],
   },
 ]

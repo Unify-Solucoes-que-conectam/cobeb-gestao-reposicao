@@ -26,7 +26,7 @@ const router = createBrowserRouter([
   // Rotas de Admin (monitoramento)
   {
     path: '/admin',
-    element: <ProtectedRoute allowedRoles={['monitoramento']} />,
+    element: <ProtectedRoute allowedRoles={['administrador', 'monitoramento']} />,
     children: [
       {
         element: <AppLayout />,
