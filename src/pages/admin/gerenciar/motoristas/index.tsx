@@ -52,6 +52,10 @@ export default function AdminMotoristas() {
     fetchDrivers()
   }, []);
 
+  useEffect(() => {
+    fetchDrivers()
+  }, [filters]);
+
   const fetchDrivers = async () => {
     try {
       setSpinners((prev) => ({ ...prev, geral: true }));
