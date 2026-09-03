@@ -359,9 +359,27 @@ export default function AdminWhatsApp() {
 
             <Tabs value={provider} onValueChange={(value) => setProvider(value as WhatsAppProvider)}>
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="baileys"><QrCode /> QR Code</TabsTrigger>
-                <TabsTrigger value="official"><MessageCircleMore /> API Oficial</TabsTrigger>
+                <TabsTrigger
+                  value="baileys"
+                  disabled={selected.configuration?.provider === 'official'}
+                  title={selected.configuration?.provider === 'official' ? 'Exclua a configuração da API Oficial antes de trocar de provedor.' : undefined}
+                >
+                  <QrCode /> QR Code
+                </TabsTrigger>
+                <TabsTrigger
+                  value="official"
+                  disabled={selected.configuration?.provider === 'baileys'}
+                  title={selected.configuration?.provider === 'baileys' ? 'Exclua a configuração por QR Code antes de trocar de provedor.' : undefined}
+                >
+                  <MessageCircleMore /> API Oficial
+                </TabsTrigger>
               </TabsList>
+
+              {selected.configuration && (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Para trocar de provedor, exclua primeiro a configuração atual desta filial.
+                </p>
+              )}
 
               <TabsContent value="baileys">
                 <Card>
