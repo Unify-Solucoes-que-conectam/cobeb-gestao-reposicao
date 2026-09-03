@@ -10,7 +10,7 @@ RUN bun install --frozen-lockfile
 COPY . .
 
 # Variaveis VITE sao incorporadas ao bundle no momento do build.
-ARG VITE_API_URL=http://localhost:8000/api
+ARG VITE_API_URL=http://localhost:8000
 ARG VITE_APP_MODE=production
 ARG VITE_REVERB_APP_KEY=
 ARG VITE_REVERB_HOST=localhost
