@@ -1,0 +1,15 @@
+.git
+.github
+.husky
+.vscode
+.env
+.env.*
+!.env.example
+node_modules
+dist
+dev-dist
+android
+coverage
+*.log
+Dockerfile*
+README.md
