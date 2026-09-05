@@ -3,7 +3,7 @@ import { useAuth } from '@/hooks/use-auth'
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
 
 interface ProtectedRouteProps {
-  allowedRoles?: Array<'monitoramento' | 'motorista'>
+  allowedRoles?: Array<'administrador' | 'monitoramento' | 'motorista'>
 }
 
 /**
@@ -35,7 +35,7 @@ export function ProtectedRoute({ allowedRoles }: ProtectedRouteProps) {
   // Se roles específicos são requeridos, verifica se o usuário tem permissão
   if (allowedRoles && user && !allowedRoles.includes(user.role)) {
     // Redireciona para a home do role do usuário
-    const redirectPath = user.role === 'monitoramento'
+    const redirectPath = ['administrador', 'monitoramento'].includes(user.role)
       ? '/admin/avarias'
       : '/client/home'
     return <Navigate to={redirectPath} replace />

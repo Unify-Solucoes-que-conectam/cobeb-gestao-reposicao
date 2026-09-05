@@ -74,7 +74,7 @@ export default function GerenciarUsuario({ user, onSubmit }: GerenciarUsuarioPro
           toast.error(data.debug_errors?.cpf?.[0] || data.message || 'Erro ao editar usuário');
         }
       } else {
-        const response = await axios.post<ApiResponse>('/auth/register', values);
+        const response = await axios.post<ApiResponse>('/usuarios', values);
         const { data } = response;
 
         if (data.success) {
@@ -179,6 +179,7 @@ export default function GerenciarUsuario({ user, onSubmit }: GerenciarUsuarioPro
                       <SelectContent>
                         <SelectGroup>
                           <SelectItem value="monitoramento">Monitoramento</SelectItem>
+                          <SelectItem value="administrador">Administrador</SelectItem>
                           <SelectItem value="motorista">Motorista</SelectItem>
                         </SelectGroup>
                       </SelectContent>
@@ -238,7 +239,7 @@ export default function GerenciarUsuario({ user, onSubmit }: GerenciarUsuarioPro
             />
 
             {
-              !user && form.watch('role') === 'monitoramento' && (
+              !user && form.watch('role') !== 'motorista' && (
                 <FormField
                   control={form.control}
                   name='senha'
@@ -262,7 +263,7 @@ export default function GerenciarUsuario({ user, onSubmit }: GerenciarUsuarioPro
             }
 
             {
-              !user && roleWatcher === 'monitoramento' && (
+              !user && roleWatcher !== 'motorista' && (
                 <FormField
                   control={form.control}
                   name='confirmar_senha'
@@ -287,7 +288,7 @@ export default function GerenciarUsuario({ user, onSubmit }: GerenciarUsuarioPro
 
             {/* info de preenchimento de senha */}
             {
-              !user && roleWatcher === 'monitoramento' && (
+              !user && roleWatcher !== 'motorista' && (
                 <Card className='p-3 gap-3'>
                   <CardHeader className='p-0'>
                     <CardTitle className="text-md pb-3">Sua nova senha precisa:</CardTitle>
