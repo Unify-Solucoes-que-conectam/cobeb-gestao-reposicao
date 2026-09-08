@@ -1,4 +1,6 @@
+import { ImportBatch } from "@/components/custom/progress-panel";
 import axios from "@/lib/axios";
+import { ImportTypes } from "@/pages/admin/importacoes/config";
 import { ApiResponse } from "@/types/api-response";
 import { Avaria, Cliente, Cluster, Filial, ItemAvaria, Mapa, Motorista, NotaFiscal, Produto, TiposAvaria } from "@/types/consults";
 
@@ -417,12 +419,50 @@ export const clusterService = {
   }
 }
 
+/**
+ * Importer Model service
+ */
 export const importerModelService = {
   downloadModel: async (type: string) => {
     try {
       const response = await axios.get<Blob>(`/exportar/modelo/${type}`, {
         responseType: 'blob',
       });
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
+}
+
+/**
+ * Importer service
+ */
+export const importerService = {
+  read: async (params?: {
+    type: ImportTypes
+  }, signal?: AbortSignal) => {
+    try {
+      const response = await axios.get<ApiResponse<ImportBatch[]>>(`/importar`, {
+        params,
+        signal
+      });
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  },
+  importData: async (data: {
+    type: ImportTypes
+    records: Record<string, string>[]
+  }) => {
+    try {
+      const response = await axios.post(
+        `/importar`,
+        data
+      );
       return response.data;
     } catch (error) {
       console.error(error);
