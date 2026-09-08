@@ -459,7 +459,7 @@ export const importerService = {
     records: Record<string, string>[]
   }) => {
     try {
-      const response = await axios.post(
+      const response = await axios.post<ApiResponse<ImportBatch>>(
         `/importar`,
         data
       );

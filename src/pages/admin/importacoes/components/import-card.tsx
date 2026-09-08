@@ -115,14 +115,13 @@ export function ImporterCard({
         records: selectedRows
       });
 
-      const payload = response.data;
-      if (!response.status.toString().startsWith("2") || !payload.success) {
-        toast.error(payload?.message || "Erro ao iniciar importação");
+      if (!response.success) {
+        toast.error(response.message || "Erro ao iniciar importação");
         setImporting(false);
         return;
       }
 
-      const created = payload?.data as ImportBatch | undefined;
+      const created = response.data;
       if (created) {
         setBatch(created);
         onBatchChange?.(config.key, created);
