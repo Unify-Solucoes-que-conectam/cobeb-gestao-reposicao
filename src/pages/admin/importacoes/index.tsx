@@ -1,6 +1,5 @@
 import { type ImportBatch } from "@/components/custom/progress-panel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useAuth } from "@/hooks/use-auth";
 import { useHeader } from "@/hooks/use-header";
 import { importerService } from "@/services/api.service";
 import { AlertTriangleIcon } from "lucide-react";
@@ -9,10 +8,8 @@ import { ImporterCard } from "./components/import-card";
 import { IMPORTER_CONFIGS } from "./config";
 
 export default function AdminImportacoes() {
-	const apiUrl = import.meta.env.VITE_API_URL as string | undefined;
 	const [activeBatches, setActiveBatches] = useState<Record<string, ImportBatch>>({});
 
-	const { token } = useAuth();
 	const { setPageBreadcrumbs } = useHeader();
 
 	const cadastrosConfigs = IMPORTER_CONFIGS.filter((c) =>
@@ -22,7 +19,6 @@ export default function AdminImportacoes() {
 	const vendasTrocasConfigs = IMPORTER_CONFIGS.filter((c) => ["vendas_trocas"].includes(c.key));
 
 	const loadActiveBatches = useCallback(async () => {
-		if (!apiUrl || !token) return;
 		try {
 			const response = await importerService.read();
 
@@ -35,7 +31,7 @@ export default function AdminImportacoes() {
 		} catch {
 			// ignore load errors
 		}
-	}, [apiUrl, token]);
+	}, []);
 
 	useEffect(() => {
 		loadActiveBatches();
