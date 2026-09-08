@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useAuth } from "@/hooks/use-auth";
 import { downloadBlob } from "@/lib/utils";
 import { importerModelService, importerService } from "@/services/api.service";
 import { UploadIcon } from "lucide-react";
@@ -39,8 +38,6 @@ export function ImporterCard({
   const [missingCols, setMissingCols] = useState<string>("");
 
   const fileRef = useRef<HTMLInputElement>(null);
-  const apiUrl = import.meta.env.VITE_API_URL as string | undefined;
-  const { token } = useAuth();
 
   // Sync from parent (e.g. on mount / after loadActiveBatches)
   useEffect(() => {
@@ -111,18 +108,6 @@ export function ImporterCard({
     setPreviewOpen(false);
     setImporting(true);
     setBatch(null);
-
-    if (!apiUrl) {
-      toast.error("VITE_API_URL não configurado");
-      setImporting(false);
-      return;
-    }
-
-    if (!token) {
-      toast.error("Token não encontrado. Faça login novamente.");
-      setImporting(false);
-      return;
-    }
 
     try {
       const response = await importerService.importData({
