@@ -12,14 +12,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/use-auth";
-import axios from "@/lib/axios";
 import { downloadBlob } from "@/lib/utils";
-import { importerModelService } from "@/services/api.service";
+import { importerModelService, importerService } from "@/services/api.service";
+import { UploadIcon } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { ImporterConfig, parseXlsxMapped } from "../config";
 import { ImportPreviewDialog } from "./import-preview-dialog";
-import { UploadIcon } from "lucide-react";
 
 export function ImporterCard({
   config,
@@ -70,7 +69,7 @@ export function ImporterCard({
 
     setImporting(true);
     if (!file || file.length === 0) return;
-    const selectedFile = file[0]; 
+    const selectedFile = file[0];
 
     try {
       const allRows = await parseXlsxMapped(selectedFile, config);
@@ -126,11 +125,10 @@ export function ImporterCard({
     }
 
     try {
-      const response = await axios.post(
-        `${apiUrl}/importar`,
-        { type: config.key, records: selectedRows },
-        { headers: { Authorization: `Bearer ${token}`, Accept: "application/json" } },
-      );
+      const response = await importerService.importData({
+        type: config.key,
+        records: selectedRows
+      });
 
       const payload = response.data;
       if (!response.status.toString().startsWith("2") || !payload.success) {

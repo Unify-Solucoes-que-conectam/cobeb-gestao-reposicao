@@ -2,11 +2,11 @@ import { type ImportBatch } from "@/components/custom/progress-panel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/use-auth";
 import { useHeader } from "@/hooks/use-header";
-import axios from "@/lib/axios";
+import { importerService } from "@/services/api.service";
+import { AlertTriangleIcon } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { ImporterCard } from "./components/import-card";
 import { IMPORTER_CONFIGS } from "./config";
-import { AlertTriangleIcon } from "lucide-react";
 
 export default function AdminImportacoes() {
 	const apiUrl = import.meta.env.VITE_API_URL as string | undefined;
@@ -24,11 +24,9 @@ export default function AdminImportacoes() {
 	const loadActiveBatches = useCallback(async () => {
 		if (!apiUrl || !token) return;
 		try {
-			const response = await axios.get(`${apiUrl}/importar`, {
-				headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
-			});
+			const response = await importerService.read();
 
-			const list = (response.data?.data || []) as ImportBatch[];
+			const list = response.data;
 			const nextMap: Record<string, ImportBatch> = {};
 			for (const item of list) {
 				if (!nextMap[item.type]) nextMap[item.type] = item;
@@ -81,7 +79,7 @@ export default function AdminImportacoes() {
 					</TabsTrigger>
 					<TabsTrigger className="dark:data-[state=active]:bg-primary!" value="vendas_trocas">
 						Vendas & Trocas
-					</TabsTrigger>	
+					</TabsTrigger>
 				</TabsList>
 
 				<TabsContent value="cadastros" className="mt-4 space-y-3">
