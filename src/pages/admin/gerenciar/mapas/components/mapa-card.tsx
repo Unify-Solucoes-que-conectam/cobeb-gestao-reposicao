@@ -119,8 +119,8 @@ export default function MapaCard(props: MapaCardProps) {
 
       {/* Footer / Ações */}
       {
-        dayjs().isBefore(dayjs(props.data.data_entrega), 'day') && (
-          <CardFooter className="flex justify-end gap-2">
+        dayjs().isSame(dayjs(props.data.data_entrega), 'day') && props.data.motorista === null && (
+          <CardFooter className="flex justify-end gap-2 py-2">
             <DesignarMotorista mapa={props.data} reload={props.reload} />
           </CardFooter>
         )
