@@ -10,9 +10,20 @@ export type Avaria = Base & {
   itens: ItemAvaria[]
   anexos: Anexo[]
   nota_fiscal: NotaFiscal
+  whatsapp_notification: AvariaWhatsAppNotification | null
 
   cliente?: Cliente // para consulta no painel
   motorista?: Motorista // para consulta no painel
+}
+
+export type AvariaWhatsAppNotification = {
+  event: 'import_report' | 'avaria_approved' | 'avaria_rejected'
+  status: 'unknown' | 'requires_phone' | 'queued' | 'processing' | 'accepted' | 'failed'
+  phone: string | null
+  error_code: string | null
+  error_message: string | null
+  last_attempt_at: string | null
+  accepted_at: string | null
 }
 
 export type Produto = Base & {
@@ -53,6 +64,8 @@ export type Contato = {
   id: string
   telefone: string
   isWhatsapp: boolean
+  whatsapp_validation_status: 'unknown' | 'valid' | 'invalid'
+  whatsapp_verified_at: string | null
 }
 
 export type Anexo = Base & {

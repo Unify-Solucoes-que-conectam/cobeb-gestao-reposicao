@@ -2,7 +2,7 @@ import { ImportBatch } from "@/components/custom/progress-panel";
 import axios from "@/lib/axios";
 import { ImportTypes } from "@/pages/admin/importacoes/config";
 import { ApiResponse } from "@/types/api-response";
-import { Avaria, Cliente, Cluster, Filial, ItemAvaria, Mapa, Motorista, NotaFiscal, Produto, TiposAvaria } from "@/types/consults";
+import { Avaria, AvariaWhatsAppNotification, Cliente, Cluster, Filial, ItemAvaria, Mapa, Motorista, NotaFiscal, Produto, TiposAvaria } from "@/types/consults";
 
 /**
  * TiposAvaria service
@@ -146,6 +146,18 @@ export const avariaService = {
     try {
       const response = await axios.put<ApiResponse>(`/avarias/${avariaId}/produtos/${produtoId}`, {
         quantidade
+      });
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  },
+
+  atualizarContatoWhatsApp: async (id: string, phone: string) => {
+    try {
+      const response = await axios.post<ApiResponse<AvariaWhatsAppNotification>>(`/avarias/${id}/whatsapp-contact`, {
+        phone,
       });
       return response.data;
     } catch (error) {

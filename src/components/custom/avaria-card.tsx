@@ -2,13 +2,14 @@ import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescript
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { useAuth } from '@/hooks/use-auth';
 import dayjs from '@/lib/dayjs';
 import { cn } from '@/lib/utils';
 import VisualizarAvaria from '@/pages/admin/avarias/visualizar-avaria';
 import { avariaService } from '@/services/api.service';
 import { Avaria } from '@/types/consults';
-import { formatPhoneDisplay } from '@/utils/formatters';
+import { formatBrazilianPhoneInput, formatPhoneDisplay } from '@/utils/formatters';
 import {
   AlertTriangleIcon,
   CalendarIcon,
@@ -17,11 +18,13 @@ import {
   CopyIcon,
   FileTextIcon,
   LayersIcon,
+  MessageCircleWarningIcon,
+  SendIcon,
   TrashIcon,
   TruckIcon,
   XIcon
 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 interface AvariaCardProps {
@@ -49,9 +52,22 @@ export default function AvariaCard(props: AvariaCardProps) {
     removendo: false
   })
   const [copied, setCopied] = useState(false);
+  const [phone, setPhone] = useState('');
+  const [phoneError, setPhoneError] = useState<string | null>(null);
+  const [validatingPhone, setValidatingPhone] = useState(false);
 
   // ======================= Variáveis =================
   const items = props.data.itens;
+  const canManageContact = user?.role === 'administrador' || user?.role === 'monitoramento';
+  const whatsappNotification = props.data.whatsapp_notification;
+
+  useEffect(() => {
+    const currentPhone = whatsappNotification?.phone
+      ?? props.data.cliente?.contatos.find(contact => contact.isWhatsapp)?.telefone
+      ?? '';
+    setPhone(formatBrazilianPhoneInput(currentPhone));
+    setPhoneError(null);
+  }, [props.data.id, whatsappNotification?.phone, whatsappNotification?.status]);
 
   const statusColors = {
     pendente: 'bg-gray-100 text-gray-500 border-gray-200 hover:bg-gray-200 hover:text-gray-500',
@@ -125,6 +141,80 @@ export default function AvariaCard(props: AvariaCardProps) {
     navigator.clipboard.writeText(props.data.id.toString());
     setCopied(true);
     setTimeout(() => setCopied(false), 1000); // Reset after 2 seconds
+  }
+
+  const handleWhatsAppContact = async () => {
+    setValidatingPhone(true);
+    setPhoneError(null);
+
+    try {
+      const response = await avariaService.atualizarContatoWhatsApp(props.data.id, phone);
+
+      if (response.success) {
+        toast.success(response.message || 'Número validado e notificação reenfileirada.');
+        props.reloadData?.();
+      } else {
+        setPhoneError(response.message || 'Não foi possível validar este número.');
+      }
+    } catch {
+      setPhoneError('Não foi possível acessar o serviço de validação agora. Tente novamente.');
+    } finally {
+      setValidatingPhone(false);
+    }
+  }
+
+  const renderWhatsAppStatus = () => {
+    if (!canManageContact || !whatsappNotification) return null;
+
+    if (whatsappNotification.status === 'requires_phone') {
+      return (
+        <div className="w-full rounded-lg border border-amber-200 bg-amber-50 p-3 space-y-3">
+          <div className="flex items-start gap-2 text-amber-800">
+            <MessageCircleWarningIcon size={18} className="mt-0.5 shrink-0" />
+            <div>
+              <p className="text-sm font-semibold">Não foi possível entrar em contato com o cliente.</p>
+              <p className="text-xs">Informe um número cadastrado no WhatsApp para tentar novamente.</p>
+            </div>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Input
+              value={phone}
+              onChange={(event) => {
+                setPhone(formatBrazilianPhoneInput(event.target.value));
+                setPhoneError(null);
+              }}
+              placeholder="(37) 99999-9999"
+              inputMode="tel"
+              aria-label="WhatsApp do cliente"
+              disabled={validatingPhone}
+            />
+            <Button onClick={handleWhatsAppContact} disabled={validatingPhone || !phone} loading={validatingPhone}>
+              <SendIcon size={16} />
+              {validatingPhone ? 'Verificando número...' : 'Validar e reenviar'}
+            </Button>
+          </div>
+          {phoneError && <p className="text-xs font-medium text-red-600">{phoneError}</p>}
+        </div>
+      );
+    }
+
+    if (whatsappNotification.status === 'queued' || whatsappNotification.status === 'processing') {
+      return <p className="text-sm text-amber-600">Notificação aguardando processamento pelo WhatsApp.</p>;
+    }
+
+    if (whatsappNotification.status === 'accepted') {
+      return (
+        <p className="text-sm text-green-700">
+          Envio aceito pela Evolution{whatsappNotification.phone ? ` para ${formatPhoneDisplay(whatsappNotification.phone)}` : ''}.
+        </p>
+      );
+    }
+
+    if (whatsappNotification.status === 'failed') {
+      return <p className="text-sm text-red-600">Não foi possível processar a notificação do WhatsApp. Tente novamente mais tarde.</p>;
+    }
+
+    return <p className="text-sm text-muted-foreground">O histórico deste envio não está disponível.</p>;
   }
 
   return (
@@ -272,14 +362,10 @@ export default function AvariaCard(props: AvariaCardProps) {
 
       {/* Footer / Ações */}
       <CardFooter className={cn("px-4 py-3 flex items-center gap-2 border-t justify-end", {
-        "justify-between": props.data.cliente?.contatos && user?.role === 'monitoramento'
+        "justify-between": props.data.cliente?.contatos && canManageContact
       })}>
 
-        {
-          user?.role === 'monitoramento' && props.data.cliente?.contatos && (
-            <p className="text-sm text-muted-foreground">Notificações enviadas para o número: {formatPhoneDisplay(props.data.cliente?.contatos.find(contato => contato.isWhatsapp)?.telefone ?? '')}</p>
-          )
-        }
+        {renderWhatsAppStatus()}
 
         {/* Mensagens de status (Exclusivas para Motorista) */}
         {user?.role === 'motorista' && (
@@ -323,7 +409,7 @@ export default function AvariaCard(props: AvariaCardProps) {
         )}
 
         {/* Botão de Monitoramento (Exclusivo para Monitoramento) */}
-        {user?.role === 'monitoramento' && (
+        {canManageContact && (
           <VisualizarAvaria avaria={props.data} reload={() => props.reloadData?.()} />
         )}
       </CardFooter>

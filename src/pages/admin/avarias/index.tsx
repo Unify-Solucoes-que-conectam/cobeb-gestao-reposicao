@@ -83,8 +83,8 @@ export default function AdminAvarias() {
   /**
    * Consultar avarias, filtrando por status (opcional)
    */
-  const fetchAvarias = async ({ signal }: { signal?: AbortSignal } = {}) => {
-    setSpinners(prev => ({ ...prev, geral: true }));
+  const fetchAvarias = async ({ signal, silent = false }: { signal?: AbortSignal, silent?: boolean } = {}) => {
+    if (!silent) setSpinners(prev => ({ ...prev, geral: true }));
     const response = await avariaService.read({ search: filters.busca, status: filters.status === 'todas' ? undefined : filters.status, filialId: filters.filial === 'todas' ? undefined : filters.filial }, signal);
 
     if (response.success) {
@@ -94,7 +94,7 @@ export default function AdminAvarias() {
       toast.error(response.message || 'Erro ao consultar avarias');
     }
 
-    setSpinners(prev => ({ ...prev, geral: false }));
+    if (!silent) setSpinners(prev => ({ ...prev, geral: false }));
   }
 
   /**
@@ -136,6 +136,21 @@ export default function AdminAvarias() {
 
     return () => clearTimeout(debounceTimeout);
   }, [filters, notificationReceived]);
+
+  useEffect(() => {
+    const hasPendingWhatsApp = avarias.some((avaria) =>
+      avaria.whatsapp_notification?.status === 'queued'
+      || avaria.whatsapp_notification?.status === 'processing'
+    );
+
+    if (!hasPendingWhatsApp) return;
+
+    const interval = window.setInterval(() => {
+      fetchAvarias({ silent: true });
+    }, 3000);
+
+    return () => window.clearInterval(interval);
+  }, [avarias, filters]);
 
   return (
     <div className="flex flex-col gap-6 h-full">

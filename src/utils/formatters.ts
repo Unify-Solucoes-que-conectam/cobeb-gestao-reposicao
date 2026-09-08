@@ -26,14 +26,33 @@ export function capitalizeName(nome: string) {
 }
 
 export function formatPhoneDisplay(phone: string): string {
-  const cleaned = phone.replace(/\D/g, '')
-  if (cleaned.length <= 2) return cleaned
-  if (cleaned.length <= 7) return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2)}`
-  return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2, 7)}-${cleaned.slice(7, 11)}`
+  return formatBrazilianPhoneInput(phone)
 }
 
 export function unformatPhone(phone: string): string {
   return phone.replace(/\D/g, '')
+}
+
+export function formatBrazilianPhoneInput(phone: string): string {
+  let digits = unformatPhone(phone).slice(0, 13)
+  let prefix = ''
+
+  if (digits.startsWith('55') && digits.length > 11) {
+    prefix = '+55 '
+    digits = digits.slice(2)
+  } else {
+    digits = digits.slice(0, 11)
+  }
+
+  if (digits.length <= 2) return `${prefix}${digits}`
+
+  const ddd = digits.slice(0, 2)
+  const subscriber = digits.slice(2)
+  const split = subscriber.length > 8 ? 5 : 4
+
+  if (subscriber.length <= split) return `${prefix}(${ddd}) ${subscriber}`
+
+  return `${prefix}(${ddd}) ${subscriber.slice(0, split)}-${subscriber.slice(split, split + 4)}`
 }
 
 /**
