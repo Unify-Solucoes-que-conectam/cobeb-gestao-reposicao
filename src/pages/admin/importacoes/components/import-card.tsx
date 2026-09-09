@@ -32,6 +32,7 @@ export function ImporterCard({
   const [batch, setBatch] = useState<ImportBatch | null>(initialBatch ?? null);
   const [previewRows, setPreviewRows] = useState<Record<string, string>[]>([]);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [validationRevision, setValidationRevision] = useState(0);
   const [importOptions, setImportOptions] = useState<ImportOptions | null>(null);
 
   // Novos estados para o AlertDialog de erro
@@ -107,7 +108,6 @@ export function ImporterCard({
 
   // Step 2: Send selected records to API as JSON
   const handleImport = async (selectedRows: Record<string, string>[]) => {
-    setPreviewOpen(false);
     setImporting(true);
     setBatch(null);
 
@@ -120,10 +120,12 @@ export function ImporterCard({
 
       if (!response.success) {
         toast.error(response.message || "Erro ao iniciar importação");
+        setValidationRevision(value => value + 1);
         setImporting(false);
         return;
       }
 
+      setPreviewOpen(false);
       const created = response.data;
       if (created) {
         setBatch(created);
@@ -206,6 +208,8 @@ export function ImporterCard({
         open={previewOpen}
         onOpenChange={setPreviewOpen}
         onImport={handleImport}
+        options={importOptions}
+        validationRevision={validationRevision}
         importing={importing}
       />
 
