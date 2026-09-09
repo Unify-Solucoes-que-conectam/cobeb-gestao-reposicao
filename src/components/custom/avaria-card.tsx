@@ -250,7 +250,7 @@ export default function AvariaCard(props: AvariaCardProps) {
 
         {/* Coluna 2: Informações do Motorista */}
         {
-          user?.role === 'monitoramento' && props.data.motorista && props.data.motorista.mapa && (
+          user?.role !== 'motorista' && props.data.motorista && props.data.motorista.mapa && (
             <div className="flex items-start gap-3">
               <div className="p-2 bg-blue-50 rounded-lg shrink-0">
                 <TruckIcon size={18} className="text-blue-600" />
