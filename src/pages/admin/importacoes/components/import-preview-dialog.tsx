@@ -22,9 +22,10 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { UploadIcon, Pencil, FileWarning } from "lucide-react";
+import { UploadIcon, Pencil } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { ImporterConfig } from "../config";
+import { getImportDuplicateKey } from "../duplicate-rows";
 
 interface ImportPreviewDialogProps {
   config: ImporterConfig;
@@ -48,6 +49,7 @@ export function ImportPreviewDialog({
   const [renderedRows, setRenderedRows] = useState<Record<string, string>[]>(rows);
   const [selectedRows, setSelectedRows] = useState<Set<string | number>>(new Set());
   const [page, setPage] = useState(1);
+  const [duplicatesOnly, setDuplicatesOnly] = useState(false);
   const [pageSize, setPageSize] = useState(10);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [depsOptions, setDepsOptions] = useState<Record<string, any>>({});
@@ -63,6 +65,9 @@ export function ImportPreviewDialog({
       setRenderedRows(rows);
       setSelectedRows(new Set(rows.map((_, i) => i)));
       setPage(1);
+      setDuplicatesOnly(false);
+      setConfirmOpen(false);
+      setEditingRowIndex(null);
     }
   }, [open, rows]);
 
@@ -71,13 +76,32 @@ export function ImportPreviewDialog({
     [renderedRows]
   );
 
-  const pageStart = (page - 1) * pageSize;
+  const duplicateIndexes = useMemo(() => {
+    const groups = new Map<string, number[]>();
+    renderedRows.forEach((row, index) => {
+      if (!selectedRows.has(index)) return;
+      const key = getImportDuplicateKey(config.key, row);
+      if (key === null) return;
+      const group = groups.get(key);
+      if (group) group.push(index);
+      else groups.set(key, [index]);
+    });
+    return new Set([...groups.values()].filter(group => group.length > 1).flat());
+  }, [renderedRows, selectedRows, config.key]);
+  const hasDuplicates = duplicateIndexes.size > 0;
+  const visibleRows = useMemo(
+    () => duplicatesOnly ? indexedRows.filter(row => duplicateIndexes.has(Number(row._rowIndex))) : indexedRows,
+    [indexedRows, duplicateIndexes, duplicatesOnly]
+  );
+  const currentPage = Math.min(page, Math.max(1, Math.ceil(visibleRows.length / pageSize)));
+  const pageStart = (currentPage - 1) * pageSize;
   const pageIndexedRows = useMemo(
-    () => indexedRows.slice(pageStart, pageStart + pageSize),
-    [indexedRows, pageStart, pageSize]
+    () => visibleRows.slice(pageStart, pageStart + pageSize),
+    [visibleRows, pageStart, pageSize]
   );
 
   const handleConfirm = () => {
+    if (selectedRows.size === 0 || importing || hasRequiredFields || hasDuplicates) return;
     const filteredRows = renderedRows
       .filter((_, i) => selectedRows.has(i))
       .map((row) => {
@@ -146,7 +170,6 @@ export function ImportPreviewDialog({
   }, [renderedRows, config.columns, selectedRows]);
 
   const hasRequiredFields = useMemo(() => linhasComErrosIndexes.length > 0, [linhasComErrosIndexes]);
-  const hasTooManyErrors = useMemo(() => linhasComErrosIndexes.length > 10, [linhasComErrosIndexes]);
 
   const openEditModal = (globalRowIndex: number) => {
     setEditingRowIndex(globalRowIndex);
@@ -173,29 +196,23 @@ export function ImportPreviewDialog({
           <DialogHeader>
             <DialogTitle>Pré-visualização — {config.label}</DialogTitle>
             <DialogDescription>
-              {hasTooManyErrors
-                ? "Muitos erros encontrados no arquivo."
-                : "Revise os registros abaixo. Desmarque as linhas que não deseja importar."}
+              Revise os registros abaixo. Corrija ou desmarque as linhas que não deseja importar.
             </DialogDescription>
           </DialogHeader>
 
-          {hasTooManyErrors ? (
-            // VIEW DE BLOQUEIO POR EXCESSO DE ERROS
-            <div className="flex flex-col items-center justify-center flex-1 space-y-4 py-12 px-4 text-center">
-              <div className="rounded-full bg-red-100 p-4">
-                <FileWarning className="h-12 w-12 text-red-600" />
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900">
-                Atenção: Existem muitos registros com erro
-              </h3>
-              <p className="text-sm text-gray-500 max-w-lg">
-                Identificamos <strong>{linhasComErrosIndexes.length} registros</strong> com campos obrigatórios não preenchidos.
-                Como a correção manual de todos esses dados por aqui seria inviável, por favor, verifique sua planilha original no Excel, preencha os dados em branco e tente realizar a importação novamente.
-              </p>
-            </div>
-          ) : (
-            // VIEW NORMAL COM DATAGRID
-            <>
+          <>
+              {hasDuplicates && (
+                <div role="alert" className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">
+                  <p className="font-medium">{duplicateIndexes.size} registros selecionados possuem a mesma chave de importação.</p>
+                  <p>Corrija os dados ou desmarque as repetições para liberar a importação. A verificação considera apenas este arquivo.</p>
+                </div>
+              )}
+              {(hasDuplicates || duplicatesOnly) && (
+                <Button variant="outline" className="self-start" onClick={() => { setDuplicatesOnly(!duplicatesOnly); setPage(1); }}>
+                  {duplicatesOnly ? "Mostrar todos os registros" : "Ir para registros duplicados"}
+                </Button>
+              )}
+              {duplicatesOnly && !hasDuplicates && <p role="status" className="text-sm">Duplicatas resolvidas. Volte a todos os registros para continuar a revisão.</p>}
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">
                   {hasRequiredFields && (
@@ -234,7 +251,20 @@ export function ImportPreviewDialog({
                 ) : (
                   <DataGrid
                     data={pageIndexedRows}
-                    columns={config.columnsDef(depsOptions) ?? []}
+                    columns={[
+                      {
+                        id: "_rowIndex",
+                        header: "Registro / corrigir",
+                        width: 160,
+                        renderCell: (_value: unknown, row: IndexedRow) => (
+                          <Button variant="ghost" size="sm" onClick={() => openEditModal(Number(row._rowIndex))}>
+                            <Pencil className="mr-1 h-3 w-3" />
+                            {Number(row._rowIndex) + 1}{duplicateIndexes.has(Number(row._rowIndex)) ? " · Duplicado" : ""}
+                          </Button>
+                        ),
+                      },
+                      ...(config.columnsDef(depsOptions) ?? []),
+                    ]}
                     getRowId={(row) => row["_rowIndex"] as number}
                     enableSelection
                     selectedRows={selectedRows}
@@ -244,38 +274,35 @@ export function ImportPreviewDialog({
                     className="max-h-110 overflow-auto"
                     rowClassName={(row) => {
                       const globalIndex = Number(row["_rowIndex"]);
-                      return linhasComErrosIndexes.includes(globalIndex) ? "bg-red-50" : "";
+                      return duplicateIndexes.has(globalIndex) ? "bg-amber-50" : linhasComErrosIndexes.includes(globalIndex) ? "bg-red-50" : "";
                     }}
                   />
                 )}
               </div>
 
               <Paginacao
-                page={page}
+                page={currentPage}
                 pageSize={pageSize}
-                total={renderedRows.length}
+                total={visibleRows.length}
                 onPageChange={setPage}
-                onPageSizeChange={setPageSize}
+                onPageSizeChange={(size) => { setPageSize(size); setPage(1); }}
                 className="border-t pt-3"
               >
                 {selectedRows.size} de {renderedRows.length} registro(s) selecionado(s).
               </Paginacao>
-            </>
-          )}
+          </>
 
           <DialogFooter>
             <Button variant="outline" onClick={() => onOpenChange(false)}>
-              {hasTooManyErrors ? "Fechar e Corrigir Planilha" : "Cancelar"}
+              Cancelar
             </Button>
-            {!hasTooManyErrors && (
               <Button
-                disabled={selectedRows.size === 0 || importing || hasRequiredFields}
+                disabled={selectedRows.size === 0 || importing || hasRequiredFields || hasDuplicates}
                 onClick={() => setConfirmOpen(true)}
               >
                 <UploadIcon className="mr-1 h-4 w-4" />
                 Importar ({selectedRows.size})
               </Button>
-            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -355,7 +382,7 @@ export function ImportPreviewDialog({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirm}>Confirmar</AlertDialogAction>
+            <AlertDialogAction disabled={selectedRows.size === 0 || importing || hasRequiredFields || hasDuplicates} onClick={handleConfirm}>Confirmar</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
