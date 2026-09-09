@@ -1,3 +1,4 @@
+import { ImportOptions } from "@/components/custom/data-importer";
 import { ImportBatch } from "@/components/custom/progress-panel";
 import axios from "@/lib/axios";
 import { ImportTypes } from "@/pages/admin/importacoes/config";
@@ -457,6 +458,7 @@ export const importerService = {
   importData: async (data: {
     type: ImportTypes
     records: Record<string, string>[]
+    options: ImportOptions | null
   }) => {
     try {
       const response = await axios.post<ApiResponse<ImportBatch>>(

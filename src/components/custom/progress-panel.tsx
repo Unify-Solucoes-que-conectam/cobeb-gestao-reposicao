@@ -13,6 +13,7 @@ export type ImportBatch = {
   processed_rows: number;
   percentage: number;
   last_log: string | null;
+  row_errors?: string[];
   current_step: string | null;
   updated_at: string;
 };
@@ -80,6 +81,7 @@ export function ImportProgressPanel({ batchId, initialBatch, onUpdate }: ImportP
         <Progress value={batch.percentage} className="h-1.5" />
       )}
       <div className="flex justify-between items-center gap-3">
+        {!!batch.row_errors?.length && <details className="text-red-600"><summary>Ver {batch.row_errors.length} erro(s) de importação</summary><ul className="max-h-48 overflow-y-auto">{batch.row_errors.map((error, index) => <li key={index}>{error}</li>)}</ul></details>}
         {batch.last_log && (
           <p className="text-muted-foreground truncate" title={batch.last_log}>{batch.last_log}</p>
         )}
