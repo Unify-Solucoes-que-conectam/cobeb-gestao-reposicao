@@ -1,4 +1,4 @@
-import { DataImporter } from "@/components/custom/data-importer";
+import { DataImporter, ImportOptions } from "@/components/custom/data-importer";
 import { ImportBatch, ImportProgressPanel } from "@/components/custom/progress-panel";
 import {
   AlertDialog,
@@ -32,6 +32,7 @@ export function ImporterCard({
   const [batch, setBatch] = useState<ImportBatch | null>(initialBatch ?? null);
   const [previewRows, setPreviewRows] = useState<Record<string, string>[]>([]);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [importOptions, setImportOptions] = useState<ImportOptions | null>(null);
 
   // Novos estados para o AlertDialog de erro
   const [wrongFileOpen, setWrongFileOpen] = useState(false);
@@ -62,7 +63,7 @@ export function ImporterCard({
   );
 
   // Step 1: Read file and open preview dialog ou mostrar erro
-  const handleFileChange = async (file: File[]) => {
+  const handleFileChange = async (file: File[], options: ImportOptions) => {
 
     setImporting(true);
     if (!file || file.length === 0) return;
@@ -95,6 +96,7 @@ export function ImporterCard({
 
       setPreviewRows(nonEmpty);
       setPreviewOpen(true);
+      setImportOptions(options); // Save the import options for later use
     } catch {
       toast.error("Erro ao ler o arquivo. Verifique se o formato está correto.");
     } finally {
@@ -112,7 +114,8 @@ export function ImporterCard({
     try {
       const response = await importerService.importData({
         type: config.key,
-        records: selectedRows
+        records: selectedRows,
+        options: importOptions,
       });
 
       if (!response.success) {
@@ -172,6 +175,7 @@ export function ImporterCard({
               acceptedFiles={['xlsx', 'xls', 'csv']}
               multiple={false}
               mode='async'
+              showDuplicateAction={true}
               onSave={handleFileChange}
               onDownloadModel={handleDownloadModel}
             >
