@@ -193,7 +193,7 @@ export default function VisualizarAvaria(props: VisualizarAvariaProps) {
           )}
           <CardNotaFiscal avariaId={props.avaria.id} notaFiscal={props.avaria.nota_fiscal} itens={props.avaria.itens} canEdit={props.avaria.status === 'aguardando_aprovacao'} />
           <div className='w-full md:w-90 flex flex-col gap-4'>
-            <CardContextoRota motorista={props.avaria.motorista!} />
+            {props.avaria.motorista && <CardContextoRota motorista={props.avaria.motorista} />}
             <CardEvidencias avaria={props.avaria} anexos={props.avaria.anexos} />
           </div>
         </div>

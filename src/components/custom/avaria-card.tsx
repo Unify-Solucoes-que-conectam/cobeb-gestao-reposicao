@@ -273,19 +273,21 @@ export default function AvariaCard(props: AvariaCardProps) {
 
         {/* Coluna 2: Informações do Motorista */}
         {
-          user?.role !== 'motorista' && props.data.motorista && props.data.motorista.mapa && (
+          user?.role !== 'motorista' && props.data.motorista && (
             <div className="flex items-start gap-3">
               <div className="p-2 bg-blue-50 rounded-lg shrink-0">
                 <TruckIcon size={18} className="text-blue-600" />
               </div>
               <div className="min-w-0">
-                <p className="text-[10px] text-slate-400 uppercase font-bold mb-1.5 tracking-tight">{props.data.motorista.cluster.descricao}</p>
+                <p className="text-[10px] text-slate-400 uppercase font-bold mb-1.5 tracking-tight">{props.data.motorista.cluster?.descricao ?? 'Motorista responsável'}</p>
                 <p className="text-sm font-medium text-slate-500 truncate">
-                  <span className="text-slate-400 font-normal mr-1">[{props.data.motorista.mapa.codigo}]</span>
+                  {props.data.motorista.mapa?.codigo && (
+                    <span className="text-slate-400 font-normal mr-1">[{props.data.motorista.mapa.codigo}]</span>
+                  )}
                   {props.data.motorista.nome}
                 </p>
                 <p className="text-xs text-slate-500 truncate mt-1">
-                  Mapa: <span className="font-semibold">{props.data.motorista.mapa.codigo}</span> • {props.data.motorista.filial.descricao}
+                  Mapa: <span className="font-semibold">{props.data.motorista.mapa?.codigo ?? 'Não informado'}</span> • {props.data.motorista.filial?.descricao ?? 'Filial não informada'}
                 </p>
               </div>
             </div>

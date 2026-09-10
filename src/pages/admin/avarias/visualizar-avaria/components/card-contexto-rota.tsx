@@ -24,7 +24,7 @@ export default function CardContextoRota(props: CardContextoRotaProps) {
 
           <div>
             <span className='text-muted-foreground font-bold'>Mapa</span>
-            <p className='uppercase'>{props.motorista.mapa!.codigo}</p>
+            <p className='uppercase'>{props.motorista.mapa?.codigo ?? 'Não informado'}</p>
           </div>
         </CardContent>
       </Card>
