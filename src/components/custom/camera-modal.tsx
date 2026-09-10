@@ -36,11 +36,12 @@ export function CameraModal({ isOpen, onClose, onCapture }: CameraModalProps) {
     stopCamera();
 
     try {
+      const portrait = window.innerHeight > window.innerWidth;
       const newStream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: { ideal: facingMode },
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
+          width: { ideal: portrait ? 720 : 1280 },
+          height: { ideal: portrait ? 1280 : 720 },
         },
         audio: false,
       });
@@ -89,12 +90,16 @@ export function CameraModal({ isOpen, onClose, onCapture }: CameraModalProps) {
     const video = videoRef.current;
     const canvas = document.createElement("canvas");
 
-    canvas.width = video.videoWidth || 1280;
-    canvas.height = video.videoHeight || 720;
+    const sourceWidth = video.videoWidth || 1280;
+    const sourceHeight = video.videoHeight || 720;
+    const maxDimension = 1280;
+    const scale = Math.min(1, maxDimension / Math.max(sourceWidth, sourceHeight));
+    canvas.width = Math.round(sourceWidth * scale);
+    canvas.height = Math.round(sourceHeight * scale);
 
     const context = canvas.getContext("2d");
     if (context) {
-      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      context.drawImage(video, 0, 0, sourceWidth, sourceHeight, 0, 0, canvas.width, canvas.height);
 
       // Comprime a foto diretamente na renderização do canvas em JPEG qualidade 0.7 (~200KB-400KB)
       const base64Image = canvas.toDataURL("image/jpeg", 0.7);
@@ -147,13 +152,13 @@ export function CameraModal({ isOpen, onClose, onCapture }: CameraModalProps) {
       </div>
 
       {/* ÁREA DE VISUALIZAÇÃO DA CÂMERA OU PRÉVIA */}
-      <div className="relative w-full flex-1 flex items-center justify-center overflow-hidden my-4 rounded-xl bg-neutral-900">
+      <div className="relative my-4 flex w-full flex-1 items-center justify-center overflow-hidden rounded-xl bg-neutral-900">
         {capturedImage ? (
           // PRÉVIA DA IMAGEM CAPTURADA
           <img
             src={capturedImage}
             alt="Prévia da foto capturada"
-            className="w-full h-full object-cover"
+            className="h-full w-full object-contain"
           />
         ) : error ? (
           <div className="text-red-400 text-center p-4 text-sm">{error}</div>
@@ -164,7 +169,7 @@ export function CameraModal({ isOpen, onClose, onCapture }: CameraModalProps) {
               autoPlay
               playsInline // Fundamental para rodar inline em navegadores móveis (Safari/Chrome Android)
               muted
-              className="w-full h-full object-cover"
+              className="h-full w-full object-contain"
             />
             {isLoading && (
               <div className="absolute inset-0 flex items-center justify-center bg-black/50">

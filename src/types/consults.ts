@@ -17,6 +17,7 @@ export type Avaria = Base & {
 
   cliente?: Cliente // para consulta no painel
   motorista?: Motorista // para consulta no painel
+  aprovador?: { id: string, nome: string } | null
 }
 
 export type Produto = Base & {
@@ -137,4 +138,15 @@ export type ItemAvaria = Base & {
     quantidade_total: number
     tipo_avaria: TiposAvaria
   }
+  trocas?: TrocaAvaria[]
+}
+
+export type TrocaAvaria = Base & {
+  quantidade: number
+  quantidade_movimento: number
+  operacao: '5' | '39'
+  data_operacao: string
+  correcoes: number
+  motivo_parcial: string | null
+  responsavel: { id: string, nome: string } | null
 }
