@@ -7,6 +7,10 @@ export type Avaria = Base & {
   data_emissao: string
   data_aprovacao: string | null
   motivo_reprovacao: string | null
+  whatsapp_notification_status: 'pending' | 'sent' | 'failed' | null
+  whatsapp_notification_phone: string | null
+  whatsapp_notification_error: string | null
+  whatsapp_notification_sent_at: string | null
   itens: ItemAvaria[]
   anexos: Anexo[]
   nota_fiscal: NotaFiscal

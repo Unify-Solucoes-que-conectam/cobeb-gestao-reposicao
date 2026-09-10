@@ -1,6 +1,7 @@
 import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/hooks/use-auth';
 import dayjs from '@/lib/dayjs';
@@ -19,9 +20,10 @@ import {
   LayersIcon,
   TrashIcon,
   TruckIcon,
+  SendIcon,
   XIcon
 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 interface AvariaCardProps {
@@ -49,6 +51,12 @@ export default function AvariaCard(props: AvariaCardProps) {
     removendo: false
   })
   const [copied, setCopied] = useState(false);
+  const [whatsappPhone, setWhatsappPhone] = useState(props.data.whatsapp_notification_phone ?? '');
+  const [retryingWhatsApp, setRetryingWhatsApp] = useState(false);
+
+  useEffect(() => {
+    setWhatsappPhone(props.data.whatsapp_notification_phone ?? '');
+  }, [props.data.whatsapp_notification_phone]);
 
   // ======================= Variáveis =================
   const items = props.data.itens;
@@ -125,6 +133,21 @@ export default function AvariaCard(props: AvariaCardProps) {
     navigator.clipboard.writeText(props.data.id.toString());
     setCopied(true);
     setTimeout(() => setCopied(false), 1000); // Reset after 2 seconds
+  }
+
+  const handleRetryWhatsApp = async () => {
+    setRetryingWhatsApp(true);
+    try {
+      const response = await avariaService.retryWhatsApp(props.data.id, whatsappPhone);
+      if (response.success) {
+        toast.success(response.message);
+        props.reloadData?.();
+      } else {
+        toast.error(response.message || 'Não foi possível reenviar a notificação.');
+      }
+    } finally {
+      setRetryingWhatsApp(false);
+    }
   }
 
   return (
@@ -271,9 +294,35 @@ export default function AvariaCard(props: AvariaCardProps) {
       </CardContent>
 
       {/* Footer / Ações */}
-      <CardFooter className={cn("px-4 py-3 flex items-center gap-2 border-t justify-end", {
+      <CardFooter className={cn("px-4 py-3 flex flex-wrap items-center gap-2 border-t justify-end", {
         "justify-between": props.data.cliente?.contatos && user?.role === 'monitoramento'
       })}>
+
+        {user?.role === 'monitoramento' && props.data.whatsapp_notification_status === 'failed' && (
+          <div role="alert" className="w-full rounded-md border border-red-200 bg-red-50 p-3 text-red-700">
+            <div className="mb-2 flex gap-2 text-sm font-medium">
+              <AlertTriangleIcon size={16} className="mt-0.5 shrink-0" />
+              <p>O envio pelo WhatsApp falhou na avaria #{props.data.id}. Informe um número válido para corrigir e reenviar.</p>
+            </div>
+            <p className="mb-2 text-xs">{props.data.whatsapp_notification_error}</p>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Input inputMode="tel" aria-label={`Novo WhatsApp da avaria ${props.data.id}`} placeholder="DDD + número" value={whatsappPhone} onChange={(event) => setWhatsappPhone(event.target.value)} />
+              <Button onClick={handleRetryWhatsApp} loading={retryingWhatsApp} disabled={retryingWhatsApp || whatsappPhone.trim() === ''}>
+                {!retryingWhatsApp && <SendIcon size={16} />}
+                Atualizar e reenviar
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {user?.role === 'monitoramento' && props.data.whatsapp_notification_status === 'pending' && (
+          <div role="status" className="w-full rounded-md border border-blue-200 bg-blue-50 p-3 text-sm text-blue-700">
+            <div className="flex items-center gap-2 font-medium">
+              <SendIcon size={16} className="shrink-0" />
+              <p>A notificação da avaria #{props.data.id} está sendo enviada para {props.data.whatsapp_notification_phone}.</p>
+            </div>
+          </div>
+        )}
 
         {
           user?.role === 'monitoramento' && props.data.cliente?.contatos && (
