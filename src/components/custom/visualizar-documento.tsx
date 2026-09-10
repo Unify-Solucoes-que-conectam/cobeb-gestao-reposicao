@@ -10,13 +10,13 @@ export default function VisualizarDocumento({ isImage, fileUrl, fileId }: Visual
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <div key={fileId} className='hover:bg-accent/70 cursor-pointer relative flex justify-center items-center'>
-          <img src={fileUrl} alt={`evidência_${fileId}`} className='w-full h-auto rounded-md border object-cover' />
+        <div key={fileId} className='relative flex h-full w-full cursor-pointer items-center justify-center hover:bg-accent/70'>
+          <img src={fileUrl} alt={`evidência_${fileId}`} className='h-full w-full rounded-md border object-cover' />
         </div>
       </DialogTrigger>
 
       {/* Container padrão com padding (p-4), sem o fundo preto */}
-      <DialogContent className="max-w-4xl w-full max-h-[90vh] overflow-hidden p-4">
+      <DialogContent className="flex max-h-[92vh] w-fit max-w-[calc(100vw-2rem)] flex-col overflow-hidden p-4">
 
         {/* Cabeçalho padrão sempre visível */}
         <DialogHeader>
@@ -25,13 +25,12 @@ export default function VisualizarDocumento({ isImage, fileUrl, fileId }: Visual
           </DialogTitle>
         </DialogHeader>
 
-        <div className="w-full">
+        <div className="flex min-h-0 w-full items-center justify-center overflow-auto rounded-md bg-black/5">
           {isImage ? (
             <img
               src={fileUrl}
               alt={`evidência_${fileId}`}
-              // Ajustado para ficar igual ao iframe: borda, fundo arredondado e contido na caixa
-              className="w-full h-auto object-contain rounded-md border bg-accent/20"
+              className="h-auto max-h-[78vh] w-auto max-w-[calc(100vw-4rem)] rounded-md border object-contain"
             />
           ) : (
             <iframe

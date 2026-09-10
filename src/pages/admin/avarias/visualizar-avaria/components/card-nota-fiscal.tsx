@@ -1,12 +1,13 @@
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { avariaService, itemAvariaService } from "@/services/api.service";
-import { ItemAvaria, NotaFiscal } from "@/types/consults";
-import { CheckIcon, FileTextIcon, Loader2Icon, PencilIcon, XIcon } from "lucide-react";
-import { useState } from "react";
-import { toast } from "sonner";
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import dayjs from '@/lib/dayjs'
+import { avariaService, itemAvariaService } from '@/services/api.service'
+import { ItemAvaria, NotaFiscal } from '@/types/consults'
+import { CheckIcon, FileTextIcon, Loader2Icon, PackageIcon, PencilIcon, XIcon } from 'lucide-react'
+import { useState } from 'react'
+import { toast } from 'sonner'
 
 interface CardNotaFiscalProps {
   avariaId: string
@@ -14,201 +15,151 @@ interface CardNotaFiscalProps {
   itens: ItemAvaria[]
   canEdit: boolean
 }
-
-export default function CardNotaFiscal(props: CardNotaFiscalProps) {
+export default function CardNotaFiscal({ avariaId, notaFiscal, itens, canEdit }: CardNotaFiscalProps) {
+  const quantidadeTotal = itens.reduce((total, item) => total + Number(item.produto.quantidade_avariada), 0)
 
   return (
-    <div className='flex-1 flex flex-col gap-3 max-h-[calc(100vh-16rem)]'>
-      <div className="flex gap-2 items-center">
-        <FileTextIcon className='text-primary' />
-        Notas Fiscais e Produtos
+    <section className="min-w-0 space-y-3">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-slate-700 dark:text-slate-200">
+          <span className="rounded-md bg-emerald-100 p-1.5 text-emerald-700 dark:bg-emerald-950"><FileTextIcon className="size-4" /></span>
+          Nota fiscal e produtos
+        </div>
+        <span className="text-xs text-muted-foreground">{itens.length} {itens.length === 1 ? 'item registrado' : 'itens registrados'}</span>
       </div>
 
-      <div className='flex flex-col gap-2 overflow-auto'>
-        {
-          props.itens.map(item => (
-            <CardItemAvaria
-              key={item.id}
-              avariaId={props.avariaId}
-              canEdit={props.canEdit}
-              item={item}
-            />
-          ))
-        }
+      <Card className="shadow-none">
+        <CardContent className="flex flex-wrap items-center justify-between gap-3 p-3 text-xs">
+          <div className="flex items-center gap-2 font-semibold">
+            <FileTextIcon className="size-4 text-slate-400" />
+            NF-e #{notaFiscal.numero}
+          </div>
+          <div className="flex flex-wrap gap-x-5 gap-y-1 text-muted-foreground">
+            <span>Pedido: <strong className="text-foreground">{notaFiscal.pedido || 'Não informado'}</strong></span>
+            <span>Emissão: <strong className="text-foreground">{dayjs(notaFiscal.data_emissao).format('DD/MM/YYYY')}</strong></span>
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="space-y-2.5">
+        {itens.map((item) => (
+          <CardItemAvaria key={item.id} avariaId={avariaId} canEdit={canEdit} item={item} />
+        ))}
       </div>
-    </div>
+
+      <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border bg-slate-50 px-4 py-3 text-xs dark:bg-slate-900/40">
+        <span className="text-muted-foreground">Total declarado: <strong className="text-foreground">{itens.length} {itens.length === 1 ? 'produto' : 'produtos'}</strong></span>
+        <span className="text-muted-foreground">Quantidade avariada: <strong className="text-rose-600">{quantidadeTotal} un.</strong></span>
+      </div>
+    </section>
   )
 }
 
 interface CardItemAvariaProps {
-  item: ItemAvaria;
-  avariaId: string;
-  canEdit: boolean;
+  item: ItemAvaria
+  avariaId: string
+  canEdit: boolean
 }
 
-export function CardItemAvaria(props: CardItemAvariaProps) {
+function CardItemAvaria({ item, avariaId, canEdit }: CardItemAvariaProps) {
+  const [editing, setEditing] = useState(false)
+  const [newQuantity, setNewQuantity] = useState<number | null>(null)
+  const [isSaving, setIsSaving] = useState(false)
+  const [updatedItem, setUpdatedItem] = useState<ItemAvaria | null>(null)
+  const currentQuantity = updatedItem?.produto.quantidade_avariada ?? item.produto.quantidade_avariada
+  const exchangedQuantity = item.trocas?.reduce((total, troca) => total + troca.quantidade, 0) ?? 0
+  const typeCode = item.produto.tipo_avaria.codigo
+  const isDamage = typeCode === '5'
 
-  const [editingItemId, setEditingItemId] = useState<string | null>(null);
-  const [newQuantity, setNewQuantity] = useState<number | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
-  const [updatedItem, setUpdatedItem] = useState<ItemAvaria | null>(null);
-
-  const handleEditClick = (item: ItemAvaria) => {
-    setEditingItemId(item.id);
-    setNewQuantity(item.produto.quantidade_avariada);
-  };
-
-  const handleSave = async (produtoId: string) => {
-    setIsSaving(true);
-    try {
-      const response = await avariaService.atualizarQuantidadeAvariada(props.avariaId, produtoId, newQuantity ?? 0);
-
-      if (response.success) {
-        setEditingItemId(null);
-
-        const controller = new AbortController();
-        const signal = controller.signal;
-        fetchItensAvaria({ signal });
-        // reseta a quantidade nova para evitar que o valor antigo seja exibido ao reabrir o modo de edição
-        setNewQuantity(null);
-      } else {
-        toast.error(response.message || 'Erro ao atualizar quantidade. Tente novamente mais tarde.');
-      }
-    } catch (error) {
-      console.error("Erro ao atualizar quantidade", error);
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const statusColors = {
-    '5': 'bg-yellow-100 text-yellow-500 border-yellow-200 hover:bg-yellow-200 hover:text-yellow-500',
-    '39': 'bg-violet-100 text-violet-500 border-violet-200 hover:bg-violet-200 hover:text-blue-500',
-  };
-
-  const statusLabels = {
-    '5': 'Avariado',
-    '39': 'Inversão',
-  };
-
-  /**
-   * Consultar itens da avaria
-   */
-  const fetchItensAvaria = async ({ signal }: { signal?: AbortSignal } = {}) => {
-    const response = await itemAvariaService.read({ id: props.avariaId }, signal);
-
+  const fetchItem = async () => {
+    const response = await itemAvariaService.read({ id: avariaId })
     if (response.success) {
-      const foundItem = response.data.find(item => item.id === props.item.id) || props.item;
-      setUpdatedItem(foundItem);
-      console.log(foundItem)
-    } else {
-      toast.error(response.message || 'Erro ao consultar itens da avaria. Tente novamente mais tarde.');
+      setUpdatedItem(response.data.find((candidate) => candidate.id === item.id) || item)
+    }
+  }
+
+  const handleSave = async () => {
+    setIsSaving(true)
+    try {
+      const response = await avariaService.atualizarQuantidadeAvariada(avariaId, item.id, newQuantity ?? 0)
+      if (response.success) {
+        setEditing(false)
+        setNewQuantity(null)
+        await fetchItem()
+      } else {
+        toast.error(response.message || 'Erro ao atualizar quantidade.')
+      }
+    } finally {
+      setIsSaving(false)
     }
   }
 
   return (
-    <Card className={`group transition-all duration-200 hover:shadow-md border border-l-4 ${props.item.produto.tipo_avaria.codigo === '5'
-      ? 'border-l-amber-500'
-      : props.item.produto.tipo_avaria.codigo === '39'
-        ? 'border-l-purple-500'
-        : 'border-l-slate-400'
-      }`}>
-      <CardContent className="p-3.5">
-        {/* Topo do Card: Nome do Produto e Código */}
-        <div className="flex items-start justify-between gap-3">
-          <h4 className="font-bold text-sm leading-snug transition-colors">
-            {props.item.produto.descricao}
-          </h4>
-          <Badge
-            variant="outline"
-            className="font-mono text-[11px] font-semibold shrink-0 whitespace-nowrap"
-          >
-            CÓD: {props.item.produto.codigo}
-          </Badge>
-        </div>
-
-        {/* Rodapé do Card: Quantidade, Status e Ações */}
-        <div className="flex items-center justify-between pt-2.5 mt-2.5 border-t border-slate-100 text-xs">
-          {/* Lado Esquerdo: Quantidade e Badge de Status */}
-          <div className="flex items-center gap-2">
-            <Badge className="font-bold text-slate-700 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg flex gap-1 items-center">
-              {updatedItem?.produto.quantidade_avariada ?? props.item.produto.quantidade_avariada} <span className="font-normal text-slate-500">
-                {(updatedItem?.produto.quantidade_avariada === 1 || props.item.produto.quantidade_avariada === 1) ? 'unidade avariada' : 'unidades avariadas'}
-              </span>
-            </Badge>
-            <Badge className={`text-xs font-semibold rounded-md ${statusColors[props.item.produto.tipo_avaria.codigo]}`}>
-              {statusLabels[props.item.produto.tipo_avaria.codigo]}
-            </Badge>
+    <Card className={`overflow-hidden border-l-4 shadow-none ${isDamage ? 'border-l-amber-500' : 'border-l-violet-500'}`}>
+      <CardContent className="p-4">
+        <div className="flex items-start gap-3">
+          <div className={`rounded-lg p-2.5 ${isDamage ? 'bg-amber-50 text-amber-600' : 'bg-violet-50 text-violet-600'}`}>
+            <PackageIcon className="size-5" />
           </div>
-
-          {/* Lado Direito: Modo Edição vs Modo Leitura */}
-          {editingItemId === props.item.id ? (
-            // MODO EDIÇÃO
-            <div className="flex items-center gap-1.5">
-              <Input
-                type="number"
-                value={newQuantity || ''}
-                placeholder="0"
-                min={0}
-                max={props.item.produto.quantidade_total}
-                onChange={(e) => {
-                  const raw = e.target.value;
-
-                  if (raw === '') {
-                    setNewQuantity(0);
-                    return;
-                  }
-
-                  const max = props.item.produto.quantidade_total;
-                  const parsed = Math.max(0, parseInt(raw, 10) || 0);
-
-                  setNewQuantity(max !== undefined && parsed > max ? max : parsed);
-
-                  if (max !== undefined && parsed > max) {
-                    toast.warning(`A quantidade avariada não pode ser maior que a quantidade total contida na nota fiscal (${max}).`);
-                  }
-                }}
-                onBlur={() => {
-                  if (!newQuantity || newQuantity < 0) {
-                    setNewQuantity(0);
-                  }
-                }}
-                className="w-16 h-8 text-center text-xs font-bold border-slate-300 focus-visible:ring-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-              />
-              <Button
-                size="icon"
-                variant="ghost"
-                onClick={() => handleSave(props.item.id)}
-                disabled={isSaving}
-                className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 h-8 w-8 rounded-lg"
-                title="Salvar"
-              >
-                {isSaving ? <Loader2Icon className="animate-spin size-4" /> : <CheckIcon size={18} />}
-              </Button>
-              <Button
-                size="icon"
-                variant="ghost"
-                onClick={() => setEditingItemId(null)}
-                disabled={isSaving}
-                className="text-rose-500 hover:text-rose-600 hover:bg-rose-50 h-8 w-8 rounded-lg"
-                title="Cancelar"
-              >
-                <XIcon size={18} />
-              </Button>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <div>
+                <p className="font-semibold text-slate-800 dark:text-slate-100">{item.produto.descricao}</p>
+                <p className="mt-0.5 text-[11px] text-muted-foreground">Código do produto: {item.produto.codigo}</p>
+              </div>
+              <Badge variant="outline" className="font-mono text-[10px]">CÓD: {item.produto.codigo}</Badge>
             </div>
-          ) : (
-            // MODO LEITURA
-            <Button
-              size="icon"
-              variant="ghost"
-              onClick={() => handleEditClick(props.item)}
-              className="h-8 w-8 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-              title="Editar quantidade"
-              disabled={isSaving || !props.canEdit}
-            >
-              <PencilIcon size={16} />
-            </Button>
-          )}
+
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t pt-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge className={isDamage ? 'border border-amber-200 bg-amber-50 text-amber-700' : 'border border-violet-200 bg-violet-50 text-violet-700'}>
+                  {item.produto.tipo_avaria.nome}
+                </Badge>
+                <span className="text-xs text-muted-foreground"><strong className="text-foreground">{currentQuantity}</strong> un. de {item.produto.quantidade_total} na nota</span>
+                {exchangedQuantity > 0 && (
+                  <Badge className="border border-violet-200 bg-violet-50 text-violet-700">
+                    {exchangedQuantity} un. atendida{exchangedQuantity === 1 ? '' : 's'} na troca
+                  </Badge>
+                )}
+              </div>
+
+              {editing ? (
+                <div className="flex items-center gap-1.5">
+                  <Input
+                    type="number"
+                    min={1}
+                    max={item.produto.quantidade_total}
+                    value={newQuantity ?? ''}
+                    onChange={(event) => {
+                      const quantity = Math.max(0, Number.parseInt(event.target.value, 10) || 0)
+                      if (quantity > item.produto.quantidade_total) {
+                        toast.warning(`A quantidade avariada não pode ser maior que a quantidade da nota (${item.produto.quantidade_total}).`)
+                      }
+                      setNewQuantity(Math.min(quantity, item.produto.quantidade_total))
+                    }}
+                    className="h-8 w-20 text-center"
+                  />
+                  <Button size="icon" variant="ghost" className="size-8 text-emerald-600" onClick={handleSave} disabled={isSaving || !newQuantity}>
+                    {isSaving ? <Loader2Icon className="size-4 animate-spin" /> : <CheckIcon className="size-4" />}
+                  </Button>
+                  <Button size="icon" variant="ghost" className="size-8 text-rose-600" onClick={() => setEditing(false)} disabled={isSaving}>
+                    <XIcon className="size-4" />
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-8 gap-1.5 text-xs"
+                  onClick={() => { setNewQuantity(currentQuantity); setEditing(true) }}
+                  disabled={!canEdit}
+                  title={canEdit ? 'Editar quantidade' : 'A quantidade só pode ser alterada antes da decisão'}
+                >
+                  <PencilIcon className="size-3.5" /> Editar quantidade
+                </Button>
+              )}
+            </div>
+          </div>
         </div>
       </CardContent>
     </Card>
