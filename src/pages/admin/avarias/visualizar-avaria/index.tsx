@@ -1,10 +1,13 @@
 import MotivoReprovacao from "@/components/custom/motivo-reprovacao";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { avariaService } from "@/services/api.service";
 import { Avaria } from "@/types/consults";
-import { CheckIcon, EyeIcon, XIcon } from "lucide-react";
+import { AlertTriangleIcon, CheckIcon, EyeIcon, SendIcon, XIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import CardContextoRota from "./components/card-contexto-rota";
@@ -25,6 +28,9 @@ export default function VisualizarAvaria(props: VisualizarAvariaProps) {
 
   // ======================= States ====================
   const [open, setOpen] = useState(false);
+  const [phone, setPhone] = useState(props.avaria.whatsapp_notification_phone ?? '');
+  const [retryingWhatsApp, setRetryingWhatsApp] = useState(false);
+  const [showLegacyRetry, setShowLegacyRetry] = useState(false);
   const [spinners, setSpinners] = useState<Spinners>({
     aprovando: false,
     reprovando: false,
@@ -94,6 +100,21 @@ export default function VisualizarAvaria(props: VisualizarAvariaProps) {
     setSpinners(prev => ({ ...prev, reprovando: false }));
   }
 
+  const handleRetryWhatsApp = async () => {
+    setRetryingWhatsApp(true);
+    try {
+      const response = await avariaService.retryWhatsApp(props.avaria.id, phone);
+      if (response.success) {
+        toast.success(response.message);
+        props.reload?.();
+      } else {
+        toast.error(response.message || 'Não foi possível reenviar a notificação.');
+      }
+    } finally {
+      setRetryingWhatsApp(false);
+    }
+  }
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -125,6 +146,51 @@ export default function VisualizarAvaria(props: VisualizarAvariaProps) {
         </DialogHeader>
 
         <div className='flex flex-wrap gap-4 p-3 overflow-hidden'>
+          {props.avaria.whatsapp_notification_status === null
+            && ['aprovada', 'reprovada'].includes(props.avaria.status)
+            && !showLegacyRetry && (
+            <Alert className="w-full">
+              <SendIcon />
+              <AlertTitle>Envio anterior sem acompanhamento</AlertTitle>
+              <AlertDescription className="space-y-2">
+                <p>Esta avaria foi processada antes do acompanhamento das notificações. Se o cliente não recebeu, você pode informar outro número e reenviar.</p>
+                <Button variant="outline" onClick={() => setShowLegacyRetry(true)}>Corrigir número e reenviar</Button>
+              </AlertDescription>
+            </Alert>
+          )}
+          {(props.avaria.whatsapp_notification_status === 'failed' || showLegacyRetry) && (
+            <Alert variant="destructive" className="w-full">
+              <AlertTriangleIcon />
+              <AlertTitle>{props.avaria.whatsapp_notification_status === 'failed' ? 'Cliente não recebeu a notificação pelo WhatsApp' : 'Reenviar notificação para outro número'}</AlertTitle>
+              <AlertDescription className="space-y-3">
+                {props.avaria.whatsapp_notification_error && <p>{props.avaria.whatsapp_notification_error}</p>}
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+                  <div className="flex-1 space-y-1">
+                    <Label htmlFor={`whatsapp-${props.avaria.id}`}>Novo número com DDD</Label>
+                    <Input
+                      id={`whatsapp-${props.avaria.id}`}
+                      inputMode="tel"
+                      placeholder="Ex.: 37999999999"
+                      value={phone}
+                      onChange={(event) => setPhone(event.target.value)}
+                    />
+                  </div>
+                  <Button onClick={handleRetryWhatsApp} loading={retryingWhatsApp} disabled={retryingWhatsApp || phone.trim() === ''}>
+                    {!retryingWhatsApp && <SendIcon size={16} />}
+                    Atualizar e reenviar
+                  </Button>
+                </div>
+                <p className="text-xs">O número será salvo como WhatsApp principal do cliente.</p>
+              </AlertDescription>
+            </Alert>
+          )}
+          {props.avaria.whatsapp_notification_status === 'pending' && (
+            <Alert className="w-full">
+              <SendIcon />
+              <AlertTitle>Notificação em processamento</AlertTitle>
+              <AlertDescription>O envio para {props.avaria.whatsapp_notification_phone} está na fila do WhatsApp.</AlertDescription>
+            </Alert>
+          )}
           <CardNotaFiscal avariaId={props.avaria.id} notaFiscal={props.avaria.nota_fiscal} itens={props.avaria.itens} canEdit={props.avaria.status === 'aguardando_aprovacao'} />
           <div className='w-full md:w-90 flex flex-col gap-4'>
             <CardContextoRota motorista={props.avaria.motorista!} />

@@ -9,21 +9,17 @@ type HeaderContextData = {
   pageBreadcrumbs: Breadcrumb[]
   setPageBreadcrumbs: (breadcrumbs: Breadcrumb[]) => void
   emitNotificationReceived: () => void
-  notificationReceived: boolean
+  notificationReceived: number
 }
 
 export const HeaderContext = createContext<HeaderContextData | undefined>(undefined)
 
 export function HeaderProvider({ children }: { children: ReactNode }) {
   const [pageBreadcrumbs, setPageBreadcrumbs] = useState<Breadcrumb[]>([])
-  const [notificationReceived, setNotificationReceived] = useState(false)
+  const [notificationReceived, setNotificationReceived] = useState(0)
 
   const emitNotificationReceived = () => {
-    setNotificationReceived(true)
-
-    setTimeout(() => {
-      setNotificationReceived(false)
-    }, 5000) // Reseta o estado após 5 segundos
+    setNotificationReceived((current) => current + 1)
   }
 
   return (

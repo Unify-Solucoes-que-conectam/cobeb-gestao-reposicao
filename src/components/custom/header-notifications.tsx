@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 import { BellIcon } from 'lucide-react'
 
@@ -20,6 +21,7 @@ const HeaderNotifications = () => {
   // ID do usuário logado, necessário para o canal privado
   const { user } = useAuth();
   const { emitNotificationReceived } = useHeader();
+  const navigate = useNavigate()
 
   const scrollRef = useRef<HTMLDivElement>(null)
   const notificationSound = useRef<HTMLAudioElement | null>(null)
@@ -213,20 +215,30 @@ const HeaderNotifications = () => {
             <div className='h-87.5 overflow-auto' ref={scrollRef}>
               {Array.from(new Map(notifications.map((n) => [n.id, n])).values()).map(
                 (notification) => {
-                  const Component = notification.link ? 'a' : 'div'
+                  const link = notification.link
+                  const Component = link ? 'a' : 'div'
+                  const isInternalLink = link?.startsWith('/') ?? false
                   return (
                     <Component
                       key={notification.id}
-                      href={notification.link || '#'}
-                      target='_blank'
-                      onClick={() => {
-                        if (notification.link) setOpen(false)
+                      href={link || '#'}
+                      target={link && !isInternalLink ? '_blank' : undefined}
+                      rel={link && !isInternalLink ? 'noopener noreferrer' : undefined}
+                      onClick={(event) => {
+                        if (link) {
+                          setOpen(false)
+
+                          if (isInternalLink) {
+                            event.preventDefault()
+                            navigate(link)
+                          }
+                        }
                       }}
                     >
                       <div
                         className={cn({
                           'border-l-4 border-blue-500': !notification.lida,
-                          'cursor-pointer': notification.link,
+                          'cursor-pointer': link,
                         })}
                       >
                         <div

@@ -18,6 +18,7 @@ import { avariaService, filialService } from "@/services/api.service";
 import { Avaria, Filial } from "@/types/consults";
 import { ArrowDownUpIcon, ArrowRightLeftIcon, Building2Icon, FolderOpenIcon, SearchIcon, Trash2Icon } from "lucide-react";
 import { toast } from "sonner";
+import { useSearchParams } from "react-router-dom";
 import AvariaCard from "../../../components/custom/avaria-card";
 
 interface Dashboard {
@@ -37,10 +38,12 @@ export default function AdminAvarias() {
 
   // =============== HOOKS   ===============
   const { setPageBreadcrumbs, notificationReceived } = useHeader();
+  const [searchParams] = useSearchParams();
+  const avariaFromUrl = searchParams.get('avaria') ?? '';
 
   // ============== FILTERS ===============
   const [filters, setFilters] = useState<Filters>({
-    busca: '',
+    busca: avariaFromUrl,
     status: 'todas',
     filial: 'todas',
   });
@@ -64,6 +67,10 @@ export default function AdminAvarias() {
     fetchFiliais();
   }, [])
 
+  useEffect(() => {
+    setFilters(prev => prev.busca === avariaFromUrl ? prev : { ...prev, busca: avariaFromUrl });
+  }, [avariaFromUrl]);
+
   const dashboards: Dashboard[] = [
     {
       total: orderedAvarias.flatMap(avaria => avaria.itens).filter(item => item.produto.tipo_avaria.codigo === '5').length,
@@ -83,8 +90,11 @@ export default function AdminAvarias() {
   /**
    * Consultar avarias, filtrando por status (opcional)
    */
-  const fetchAvarias = async ({ signal }: { signal?: AbortSignal } = {}) => {
-    setSpinners(prev => ({ ...prev, geral: true }));
+  const fetchAvarias = async ({ signal, silent = false }: { signal?: AbortSignal, silent?: boolean } = {}) => {
+    if (!silent) {
+      setSpinners(prev => ({ ...prev, geral: true }));
+    }
+
     const response = await avariaService.read({ search: filters.busca, status: filters.status === 'todas' ? undefined : filters.status, filialId: filters.filial === 'todas' ? undefined : filters.filial }, signal);
 
     if (response.success) {
@@ -94,7 +104,9 @@ export default function AdminAvarias() {
       toast.error(response.message || 'Erro ao consultar avarias');
     }
 
-    setSpinners(prev => ({ ...prev, geral: false }));
+    if (!silent) {
+      setSpinners(prev => ({ ...prev, geral: false }));
+    }
   }
 
   /**
@@ -132,10 +144,16 @@ export default function AdminAvarias() {
     // debounce para evitar múltiplas requisições em sequência ao digitar na busca
     const debounceTimeout = setTimeout(() => {
       fetchAvarias();
-    }, 500);
+    }, avariaFromUrl && filters.busca === avariaFromUrl ? 0 : 500);
 
     return () => clearTimeout(debounceTimeout);
-  }, [filters, notificationReceived]);
+  }, [filters, avariaFromUrl]);
+
+  useEffect(() => {
+    if (notificationReceived > 0) {
+      fetchAvarias({ silent: true });
+    }
+  }, [notificationReceived]);
 
   return (
     <div className="flex flex-col gap-6 h-full">
@@ -145,7 +163,7 @@ export default function AdminAvarias() {
 
       <div className="flex justify-between items-center gap-3">
         <InputGroup className="h-10">
-          <InputGroupInput placeholder="Search..." onChange={(e) => setFilters(prev => ({ ...prev, busca: e.target.value }))} />
+          <InputGroupInput placeholder="Buscar cliente ou ID da avaria..." value={filters.busca} onChange={(e) => setFilters(prev => ({ ...prev, busca: e.target.value }))} />
           <InputGroupAddon>
             <SearchIcon />
           </InputGroupAddon>
@@ -237,8 +255,8 @@ export default function AdminAvarias() {
         ) : (
           <div className="flex flex-col gap-3">
             {
-              orderedAvarias.map((av, index) => (
-                <AvariaCard key={index} data={av} reloadData={fetchAvarias} />
+              orderedAvarias.map((av) => (
+                <AvariaCard key={av.id} data={av} reloadData={fetchAvarias} />
               ))
             }
           </div>

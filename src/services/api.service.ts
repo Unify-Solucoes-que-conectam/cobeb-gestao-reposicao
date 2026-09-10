@@ -121,6 +121,16 @@ export const avariaService = {
     }
   },
 
+  retryWhatsApp: async (id: string, phone: string) => {
+    try {
+      const response = await axios.post<ApiResponse<Avaria>>(`/avarias/${id}/whatsapp/retry`, { phone });
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  },
+
   enviar: async (id: string) => {
     try {
       const response = await axios.put<ApiResponse>(`/avarias/${id}/status`, {
