@@ -13,11 +13,13 @@ export type TrocaValidation = {
 };
 
 export function useTrocaValidation(enabled: boolean, rows: Record<string, string>[], selected: Set<string | number>, options: ImportOptions | null, revision: number) {
-  const payload = useMemo(() => rows.map((row, index) => ({ row, index })).filter(({ index }) => selected.has(index)), [rows, selected]);
+  // A validação pertence ao conteúdo do arquivo, não à seleção. Assim, desmarcar
+  // linhas inválidas não dispara uma nova consulta para milhares de registros.
+  const payload = useMemo(() => rows.map((row, index) => ({ row, index })), [rows]);
   const key = JSON.stringify({ payload, action: options?.duplicateAction ?? 'ignore', revision });
   const [state, setState] = useState<{ key: string; results: TrocaValidation[]; error: string }>({ key: '', results: [], error: '' });
   const [retry, setRetry] = useState(0);
-  const active = enabled && payload.some(({ row }) => ['5', '39'].includes(String(row.operacao).trim()));
+  const active = enabled && payload.length > 0;
 
   useEffect(() => {
     if (!active) return;
@@ -26,7 +28,7 @@ export function useTrocaValidation(enabled: boolean, rows: Record<string, string
       try {
         const response = await axios.post('/importar/validar-trocas', { records: payload.map(({ row }) => row), options }, { signal: controller.signal });
         if (controller.signal.aborted) return;
-        if (!response.data.success || !Array.isArray(response.data.data)) throw new Error(response.data.message || 'Não foi possível validar as trocas.');
+        if (!response.data.success || !Array.isArray(response.data.data)) throw new Error(response.data.message || 'Não foi possível validar os registros.');
         setState({ key, error: '', results: response.data.data.map((result: TrocaValidation) => ({ ...result, row_index: payload[result.row_index].index })) });
       } catch (error) {
         if (!controller.signal.aborted) setState({ key, results: [], error: error instanceof Error ? error.message : 'Erro ao consultar saldos.' });
@@ -38,6 +40,7 @@ export function useTrocaValidation(enabled: boolean, rows: Record<string, string
   const pending = active && state.key !== key;
   const results = active && !pending ? state.results : [];
   const error = active && !pending ? state.error : '';
-  return { results, pending, error, blocked: pending || !!error || results.some(row => ['error', 'confirmation'].includes(row.status)),
+  const hasSelectedBlockingResult = results.some(row => selected.has(row.row_index) && ['error', 'confirmation'].includes(row.status));
+  return { results, pending, error, blocked: pending || !!error || hasSelectedBlockingResult,
     retry: () => { setState({ key: '', results: [], error: '' }); setRetry(value => value + 1); } };
 }

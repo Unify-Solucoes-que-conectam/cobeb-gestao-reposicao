@@ -1,4 +1,6 @@
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
 import useEcho from '@/hooks/use-echo';
 import dayjs from '@/lib/dayjs';
@@ -26,6 +28,7 @@ type ImportProgressPanelProps = {
 
 export function ImportProgressPanel({ batchId, initialBatch, onUpdate }: ImportProgressPanelProps) {
   const [batch, setBatch] = useState<ImportBatch | null>(initialBatch ?? null);
+  const [errorsOpen, setErrorsOpen] = useState(false);
 
   const { messages, disconnect } = useEcho({
     channelName: batchId ? `imports.${batchId}` : '',
@@ -81,7 +84,7 @@ export function ImportProgressPanel({ batchId, initialBatch, onUpdate }: ImportP
         <Progress value={batch.percentage} className="h-1.5" />
       )}
       <div className="flex justify-between items-center gap-3">
-        {!!batch.row_errors?.length && <details className="text-red-600"><summary>Ver {batch.row_errors.length} erro(s) de importação</summary><ul className="max-h-48 overflow-y-auto">{batch.row_errors.map((error, index) => <li key={index}>{error}</li>)}</ul></details>}
+        {!!batch.row_errors?.length && <Button variant="destructive" size="sm" onClick={() => setErrorsOpen(true)}>Ver {batch.row_errors.length} erro(s)</Button>}
         {batch.last_log && (
           <p className="text-muted-foreground truncate" title={batch.last_log}>{batch.last_log}</p>
         )}
@@ -93,6 +96,18 @@ export function ImportProgressPanel({ batchId, initialBatch, onUpdate }: ImportP
           )
         }
       </div>
+      <Dialog open={errorsOpen} onOpenChange={setErrorsOpen}>
+        <DialogContent className="flex h-[80dvh] max-h-[80vh] max-w-2xl flex-col overflow-hidden">
+          <DialogHeader className="shrink-0">
+            <DialogTitle>Erros da importação</DialogTitle>
+            <DialogDescription>{batch.row_errors?.length ?? 0} registro(s) não foram importados.</DialogDescription>
+          </DialogHeader>
+          <ol className="min-h-0 flex-1 space-y-2 overflow-y-auto rounded-md border bg-muted/30 p-3 text-sm text-destructive">
+            {batch.row_errors?.map((error, index) => <li key={index} className="rounded bg-background p-2">{error}</li>)}
+          </ol>
+          <DialogFooter className="shrink-0"><Button onClick={() => setErrorsOpen(false)}>Fechar</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

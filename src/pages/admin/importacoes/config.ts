@@ -132,7 +132,7 @@ export const IMPORTER_CONFIGS: ImporterConfig[] = [
       { header: "Nr. Pedido", key: "nr_pedido", example: "Número do pedido", required: true },
       { header: "Cliente", key: "cliente", example: "Código do cliente", required: true },
       { header: "Dt. Operação", key: "dt_operacao", example: "Data da operação (Venda ou Troca)", required: true },
-      { header: "Operação", key: "operacao", example: "Tipo de operação (Venda ou Troca)", required: true },
+      { header: "Operação", key: "operacao", example: "1: Entrada; 2: Bonificação; 5 ou 39: Troca", required: true },
       { header: "Emissão", key: "emissao", example: "Data de emissão da nota fiscal", required: true },
       { header: "Produto", key: "produto", example: "Código do produto", required: true },
       { header: "Qtde", key: "quantidade", example: "Quantidade do produto", required: true },
