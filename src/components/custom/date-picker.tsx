@@ -6,6 +6,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import dayjs from "@/lib/dayjs"
+import { cn } from "@/lib/utils"
 import { ptBR } from "date-fns/locale"
 import { CalendarIcon, ChevronDownIcon } from "lucide-react"
 import { useEffect, useState } from "react"
@@ -18,13 +19,19 @@ interface DatePickerProps {
   date?: Date
   onSelect?: (date: Date | undefined) => void
 }
+
+const validDate = (date?: Date): Date | undefined =>
+  date && !Number.isNaN(date.getTime()) ? date : undefined
+
 export function DatePicker({ className, placeholder, minDate, maxDate, date, onSelect }: DatePickerProps) {
 
   const [open, setOpen] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(date);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(() => validDate(date));
+  const minimumDate = validDate(minDate);
+  const maximumDate = validDate(maxDate);
 
   useEffect(() => {
-    setSelectedDate(date);
+    setSelectedDate(validDate(date));
   }, [date]);
 
   return (
@@ -33,7 +40,7 @@ export function DatePicker({ className, placeholder, minDate, maxDate, date, onS
         <Button
           variant="outline"
           data-empty={!selectedDate}
-          className={`data-[empty=true]:text-muted-foreground w-53 justify-between text-left font-normal ${className}`}
+          className={cn("data-[empty=true]:text-muted-foreground w-53 justify-between text-left font-normal", className)}
         >
           <div className="flex gap-3 items-center">
             <CalendarIcon />
@@ -51,9 +58,9 @@ export function DatePicker({ className, placeholder, minDate, maxDate, date, onS
             setOpen(false);
             if (onSelect) onSelect(date);
           }}
-          defaultMonth={date}
+          defaultMonth={validDate(date)}
           locale={ptBR}
-          disabled={(date) => ((minDate && date < minDate) || (maxDate && date > maxDate)) ?? false}
+          disabled={(date) => ((minimumDate && date < minimumDate) || (maximumDate && date > maximumDate)) ?? false}
           required
           captionLayout="dropdown"
         />

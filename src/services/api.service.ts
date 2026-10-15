@@ -2,7 +2,7 @@ import { ImportOptions } from "@/components/custom/data-importer";
 import { ImportBatch } from "@/components/custom/progress-panel";
 import axios from "@/lib/axios";
 import { ImportTypes } from "@/pages/admin/importacoes/config";
-import { ApiResponse } from "@/types/api-response";
+import { ApiResponse, PaginationData } from "@/types/api-response";
 import { Avaria, Cliente, Cluster, Filial, ItemAvaria, Mapa, Motorista, NotaFiscal, Produto, TiposAvaria } from "@/types/consults";
 
 /**
@@ -66,6 +66,31 @@ export const produtoService = {
     }
   }
 }
+
+export type MovimentoVendaTroca = {
+  id: string;
+  origem: 'nota' | 'troca';
+  cliente: string;
+  cliente_codigo: string;
+  nota: string;
+  produto_codigo: string;
+  produto: string;
+  quantidade: number;
+  operacao: '1' | '2' | '5' | '39';
+  data_operacao: string;
+  created_at: string;
+};
+
+export const trocaService = {
+  read: async (params: { page: number; per_page: number; search?: string; operacao?: string; data_inicial?: string; data_final?: string }, signal?: AbortSignal) => {
+    const response = await axios.get<ApiResponse<MovimentoVendaTroca[]> & { pagination: PaginationData }>('/trocas', { params, signal });
+    return response.data;
+  },
+  exportar: async (dataInicial: string, dataFinal: string) => {
+    const response = await axios.get<Blob>('/trocas/exportar', { params: { data_inicial: dataInicial, data_final: dataFinal }, responseType: 'blob' });
+    return response.data;
+  },
+};
 
 /**
  * Avaria service
