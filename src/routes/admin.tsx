@@ -6,6 +6,7 @@ import AdminMotoristas from '@/pages/admin/gerenciar/motoristas'
 import AdminUsuarios from '@/pages/admin/gerenciar/usuarios'
 import AdminImportacoes from '@/pages/admin/importacoes'
 import AdminWhatsApp from '@/pages/admin/gerenciar/whatsapp'
+import AdminVendasTrocas from '@/pages/admin/vendas-trocas'
 import { ProtectedRoute } from './guards'
 
 export const adminRoutes: RouteObject[] = [
@@ -16,6 +17,10 @@ export const adminRoutes: RouteObject[] = [
   {
     path: 'importacoes',
     element: <AdminImportacoes />,
+  },
+  {
+    path: 'vendas-trocas',
+    element: <AdminVendasTrocas />,
   },
   {
     path: 'gerenciar/mapas',
