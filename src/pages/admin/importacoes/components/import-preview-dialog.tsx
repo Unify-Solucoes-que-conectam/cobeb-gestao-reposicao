@@ -89,6 +89,9 @@ export function ImportPreviewDialog({
   );
 
   const duplicateIndexes = useMemo(() => {
+    // Vendas e trocas pode conter o mesmo produto mais de uma vez na mesma nota
+    // (por exemplo, componentes de um combo promocional).
+    if (config.key === "vendas_trocas") return new Set<number>();
     const groups = new Map<string, number[]>();
     renderedRows.forEach((row, index) => {
       if (!selectedRows.has(index)) return;
@@ -208,15 +211,15 @@ export function ImportPreviewDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="flex max-h-[90vh] max-w-5xl flex-col">
-          <DialogHeader>
+        <DialogContent className="flex h-[90dvh] max-h-[90vh] max-w-5xl flex-col overflow-hidden">
+          <DialogHeader className="shrink-0">
             <DialogTitle>Pré-visualização — {config.label}</DialogTitle>
             <DialogDescription>
               Revise os registros abaixo. Corrija ou desmarque as linhas que não deseja importar.
             </DialogDescription>
           </DialogHeader>
 
-          <>
+          <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden">
             {config.key === "vendas_trocas" && (
               <div className="space-y-2 text-sm" aria-live="polite">
                 {tradeValidation.pending && <p>Validando saldos e correções das trocas...</p>}
@@ -273,7 +276,7 @@ export function ImportPreviewDialog({
               </div>
             </div>
 
-            <div className="flex-1 min-h-0 mt-2">
+            <div className="mt-2 min-h-0 flex-1">
               {loadingDeps ? (
                 <div className="flex h-full items-center justify-center">
                   <div className="flex flex-col items-center gap-2">
@@ -314,7 +317,7 @@ export function ImportPreviewDialog({
                   onSelectionChange={setSelectedRows}
                   height="100%"
                   enableStripedRows={false}
-                  className="max-h-110 overflow-auto"
+                  className="h-full overflow-auto"
                   rowClassName={(row) => {
                     const globalIndex = Number(row["_rowIndex"]);
                     return tradeResults.get(globalIndex)?.status === "error" ? "bg-red-50" : duplicateIndexes.has(globalIndex) ? "bg-amber-50" : linhasComErrosIndexes.includes(globalIndex) ? "bg-red-50" : "";
@@ -329,13 +332,13 @@ export function ImportPreviewDialog({
               total={visibleRows.length}
               onPageChange={setPage}
               onPageSizeChange={(size) => { setPageSize(size); setPage(1); }}
-              className="border-t pt-3"
+              className="shrink-0 border-t pt-3"
             >
               {selectedRows.size} de {renderedRows.length} registro(s) selecionado(s).
             </Paginacao>
-          </>
+          </div>
 
-          <DialogFooter>
+          <DialogFooter className="shrink-0">
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
