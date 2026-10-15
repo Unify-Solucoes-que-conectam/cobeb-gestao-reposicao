@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Pencil, UploadIcon } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { ImporterConfig } from "../config";
@@ -69,6 +70,9 @@ export function ImportPreviewDialog({
   const [correction, setCorrection] = useState<TrocaValidation | null>(null);
   const tradeValidation = useTrocaValidation(open && config.key === 'vendas_trocas', renderedRows, selectedRows, options, validationRevision);
   const tradeResults = useMemo(() => new Map(tradeValidation.results.map(result => [result.row_index, result])), [tradeValidation.results]);
+  const selectedTradeErrors = useMemo(() => tradeValidation.results.filter(result =>
+    selectedRows.has(result.row_index) && (result.status === "error" || result.status === "confirmation")
+  ), [tradeValidation.results, selectedRows]);
 
   // Reseta os dados e a seleção apenas ao abrir o modal
   useEffect(() => {
@@ -189,6 +193,19 @@ export function ImportPreviewDialog({
   }, [renderedRows, config.columns, selectedRows]);
 
   const hasRequiredFields = useMemo(() => linhasComErrosIndexes.length > 0, [linhasComErrosIndexes]);
+  const invalidSelectedIndexes = useMemo(() => new Set([
+    ...linhasComErrosIndexes,
+    ...selectedTradeErrors
+      .map(result => result.row_index),
+  ]), [linhasComErrosIndexes, selectedTradeErrors]);
+
+  const deselectAllInvalidRows = () => {
+    setSelectedRows(previous => {
+      const next = new Set(previous);
+      invalidSelectedIndexes.forEach(index => next.delete(index));
+      return next;
+    });
+  };
 
   const openEditModal = (globalRowIndex: number) => {
     setEditingRowIndex(globalRowIndex);
@@ -219,14 +236,25 @@ export function ImportPreviewDialog({
             </DialogDescription>
           </DialogHeader>
 
+          {tradeValidation.pending && (
+            <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-[1px]">
+              <div className="rounded-md border bg-card px-5 py-4 text-sm font-medium shadow-sm">Validando dados da importação...</div>
+            </div>
+          )}
+
           <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden">
             {config.key === "vendas_trocas" && (
               <div className="space-y-2 text-sm" aria-live="polite">
-                {tradeValidation.pending && <p>Validando saldos e correções das trocas...</p>}
+                {tradeValidation.pending && <p>Validando clientes, produtos, operações e saldos...</p>}
                 {tradeValidation.error && <p role="alert">{tradeValidation.error} <Button variant="outline" onClick={tradeValidation.retry}>Tentar novamente</Button></p>}
-                {tradeValidation.results.some(result => result.status === "error" || result.status === "confirmation") && <p role="alert" className="text-red-600">Existem trocas que precisam de revisão. Corrija, confirme ou desmarque os registros abaixo.</p>}
+                {selectedTradeErrors.length > 0 && (
+                  <div role="alert" className="flex flex-wrap items-center gap-2 text-red-600">
+                    <p>Existem registros que precisam de revisão. Corrija, confirme ou desmarque os registros abaixo.</p>
+                    <Button size="sm" variant="destructive" onClick={deselectAllInvalidRows}>Desmarcar todos os erros ({invalidSelectedIndexes.size})</Button>
+                  </div>
+                )}
                 <div className="max-h-28 overflow-y-auto space-y-1">
-                  {tradeValidation.results.filter(result => result.status === "error" || result.status === "confirmation").map(result => (
+                  {selectedTradeErrors.map(result => (
                     <div key={result.row_index} className="flex items-center gap-2">
                       <Button size="sm" variant="outline" onClick={() => openEditModal(result.row_index)}>Registro {result.row_index + 1}</Button>
                       <span>{result.message}</span>
@@ -253,9 +281,12 @@ export function ImportPreviewDialog({
               <div className="flex-1">
                 {hasRequiredFields && (
                   <div>
-                    <p className="text-sm text-red-500 font-medium">
-                      Existem campos obrigatórios não preenchidos nas linhas selecionadas.
-                    </p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-sm text-red-500 font-medium">Existem campos obrigatórios não preenchidos nas linhas selecionadas.</p>
+                      {selectedTradeErrors.length === 0 && (
+                        <Button size="sm" variant="destructive" onClick={deselectAllInvalidRows}>Desmarcar todos os erros ({invalidSelectedIndexes.size})</Button>
+                      )}
+                    </div>
                     <div className="flex gap-2 items-center mt-2">
                       <p className="text-xs text-red-500 font-medium">Linhas com erros (clique para editar):</p>
                       <div className="flex gap-1.5 items-center flex-wrap max-h-20 overflow-y-auto">
@@ -300,7 +331,7 @@ export function ImportPreviewDialog({
                       ),
                     },
                     ...(config.key === "vendas_trocas" ? [{
-                      id: "_validation", header: "Validação da troca", width: 300,
+                      id: "_validation", header: "Validação", width: 300,
                       renderCell: (_value: unknown, row: IndexedRow) => {
                         const result = tradeResults.get(Number(row._rowIndex));
                         return result ? <div className="whitespace-normal text-xs">
@@ -394,6 +425,16 @@ export function ImportPreviewDialog({
                         date={editingData[col.key] ? new Date(editingData[col.key]) : undefined}
                         onSelect={(date) => setEditingData({ ...editingData, [col.key]: dayjs(date).toISOString() })}
                       />
+                    ) : col.key === 'operacao' && config.key === 'vendas_trocas' ? (
+                      <Select value={value || undefined} onValueChange={(operacao) => setEditingData({ ...editingData, operacao })}>
+                        <SelectTrigger className="h-12 w-full"><SelectValue placeholder="Selecione a operação" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1">1 — Entrada</SelectItem>
+                          <SelectItem value="2">2 — Bonificação</SelectItem>
+                          <SelectItem value="5">5 — Troca</SelectItem>
+                          <SelectItem value="39">39 — Troca</SelectItem>
+                        </SelectContent>
+                      </Select>
                     ) : (
                       <Input
                         id={col.key}
