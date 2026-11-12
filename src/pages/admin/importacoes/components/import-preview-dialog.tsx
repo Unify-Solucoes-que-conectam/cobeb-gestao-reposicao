@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Pencil, UploadIcon } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -238,7 +239,13 @@ export function ImportPreviewDialog({
 
           {tradeValidation.pending && (
             <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-[1px]">
-              <div className="rounded-md border bg-card px-5 py-4 text-sm font-medium shadow-sm">Validando dados da importação...</div>
+              <div className="w-80 space-y-2 rounded-md border bg-card px-5 py-4 text-sm font-medium shadow-sm">
+                <p>Validando dados da importação...</p>
+                <Progress value={tradeValidation.progress.total ? (tradeValidation.progress.done / tradeValidation.progress.total) * 100 : 0} />
+                <p className="text-xs font-normal text-muted-foreground">
+                  {tradeValidation.progress.done} de {tradeValidation.progress.total} registros validados
+                </p>
+              </div>
             </div>
           )}
 
