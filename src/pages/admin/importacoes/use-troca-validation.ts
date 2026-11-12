@@ -12,6 +12,8 @@ export type TrocaValidation = {
   confirmation_token?: string;
 };
 
+const VALIDATION_BATCH_SIZE = 500;
+
 export function useTrocaValidation(enabled: boolean, rows: Record<string, string>[], selected: Set<string | number>, options: ImportOptions | null, revision: number) {
   // A validação pertence ao conteúdo do arquivo, não à seleção. Assim, desmarcar
   // linhas inválidas não dispara uma nova consulta para milhares de registros.
@@ -19,17 +21,33 @@ export function useTrocaValidation(enabled: boolean, rows: Record<string, string
   const key = JSON.stringify({ payload, action: options?.duplicateAction ?? 'ignore', revision });
   const [state, setState] = useState<{ key: string; results: TrocaValidation[]; error: string }>({ key: '', results: [], error: '' });
   const [retry, setRetry] = useState(0);
+  const [progress, setProgress] = useState({ done: 0, total: 0 });
   const active = enabled && payload.length > 0;
 
   useEffect(() => {
     if (!active) return;
     const controller = new AbortController();
+    setProgress({ done: 0, total: payload.length });
     const timer = setTimeout(async () => {
       try {
-        const response = await axios.post('/importar/validar-trocas', { records: payload.map(({ row }) => row), options }, { signal: controller.signal });
-        if (controller.signal.aborted) return;
-        if (!response.data.success || !Array.isArray(response.data.data)) throw new Error(response.data.message || 'Não foi possível validar os registros.');
-        setState({ key, error: '', results: response.data.data.map((result: TrocaValidation) => ({ ...result, row_index: payload[result.row_index].index })) });
+        // O arquivo pode ter milhares de linhas; enviar tudo de uma vez gera um corpo
+        // gigante. Validamos em lotes sequenciais, repassando o saldo já consumido.
+        const results: TrocaValidation[] = [];
+        let deltas: Record<string, number> = {};
+        for (let offset = 0; offset < payload.length; offset += VALIDATION_BATCH_SIZE) {
+          const batch = payload.slice(offset, offset + VALIDATION_BATCH_SIZE);
+          const response = await axios.post('/importar/validar-trocas',
+            { records: batch.map(({ row }) => row), options: options ?? {}, deltas },
+            { signal: controller.signal });
+          if (controller.signal.aborted) return;
+          if (!response.data.success || !Array.isArray(response.data.data)) throw new Error(response.data.message || 'Não foi possível validar os registros.');
+          deltas = response.data.deltas ?? {};
+          for (const result of response.data.data as TrocaValidation[]) {
+            results.push({ ...result, row_index: batch[result.row_index].index });
+          }
+          setProgress({ done: Math.min(offset + batch.length, payload.length), total: payload.length });
+        }
+        setState({ key, error: '', results });
       } catch (error) {
         if (!controller.signal.aborted) setState({ key, results: [], error: error instanceof Error ? error.message : 'Erro ao consultar saldos.' });
       }
@@ -41,6 +59,6 @@ export function useTrocaValidation(enabled: boolean, rows: Record<string, string
   const results = active && !pending ? state.results : [];
   const error = active && !pending ? state.error : '';
   const hasSelectedBlockingResult = results.some(row => selected.has(row.row_index) && ['error', 'confirmation'].includes(row.status));
-  return { results, pending, error, blocked: pending || !!error || hasSelectedBlockingResult,
+  return { results, pending, error, progress, blocked: pending || !!error || hasSelectedBlockingResult,
     retry: () => { setState({ key: '', results: [], error: '' }); setRetry(value => value + 1); } };
 }
