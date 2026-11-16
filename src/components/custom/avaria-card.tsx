@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 import VisualizarAvaria from '@/pages/admin/avarias/visualizar-avaria';
 import { avariaService } from '@/services/api.service';
 import { Avaria } from '@/types/consults';
-import { formatPhoneDisplay } from '@/utils/formatters';
+import { formatDocumento, formatPhoneDisplay } from '@/utils/formatters';
 import {
   AlertTriangleIcon,
   CalendarIcon,
@@ -20,6 +20,7 @@ import {
   LayersIcon,
   TrashIcon,
   TruckIcon,
+  UserIcon,
   SendIcon,
   XIcon
 } from 'lucide-react';
@@ -221,6 +222,25 @@ export default function AvariaCard(props: AvariaCardProps) {
               }
             </div>
           </CardTitle>
+          {
+            user?.role !== 'motorista' && props.data.cliente && (
+              <div className="flex items-center gap-2 border-b px-4 py-2 text-xs min-w-0">
+                <UserIcon size={14} className='text-slate-300 shrink-0' />
+                <span className="font-medium text-slate-600 dark:text-slate-300 truncate" title={props.data.cliente.razao_social}>
+                  {props.data.cliente.codigo && (
+                    <span className="text-slate-400 font-normal mr-1">[{props.data.cliente.codigo}]</span>
+                  )}
+                  {props.data.cliente.razao_social}
+                </span>
+                <span className="truncate hidden sm:inline">
+                  {formatDocumento(props.data.cliente.documento)}
+                  {(props.data.cliente.cidade || props.data.cliente.uf) && (
+                    <> • {props.data.cliente.endereco} - {[props.data.cliente.cidade, props.data.cliente.uf].filter(Boolean).join('/')}</>
+                  )}
+                </span>
+              </div>
+            )
+          }
           <CardDescription className='flex justify-between text-xs px-4 py-2'>
             <span className="flex gap-2">
               <FileTextIcon size={14} className='text-slate-300' />
