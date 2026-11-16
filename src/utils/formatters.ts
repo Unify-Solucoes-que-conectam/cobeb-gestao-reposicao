@@ -8,6 +8,14 @@ export function formatCPF(value: string | null | undefined) {
     .slice(0, 14);
 }
 
+/** Formata CPF (11 dígitos) ou CNPJ (14 dígitos); outros tamanhos retornam apenas os dígitos. */
+export function formatDocumento(value: string | null | undefined) {
+  const d = String(value ?? '').replace(/\D/g, '');
+  if (d.length === 11) return d.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+  if (d.length === 14) return d.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+  return d;
+}
+
 export function capitalizeName(nome: string) {
   const preposicoes = ['da', 'de', 'do', 'das', 'dos', 'e'];
 

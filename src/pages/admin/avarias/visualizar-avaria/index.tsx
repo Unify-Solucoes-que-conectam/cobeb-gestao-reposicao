@@ -21,14 +21,13 @@ import {
   CheckIcon,
   Clock3Icon,
   EyeIcon,
-  MapPinIcon,
   MessageCircleIcon,
   SendIcon,
-  UserIcon,
-  XIcon,
+  XIcon
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
+import CardCliente from './components/card-cliente'
 import CardContextoRota from './components/card-contexto-rota'
 import CardEvidencias from './components/card-evidencias'
 import CardHistorico from './components/card-historico'
@@ -100,12 +99,6 @@ export default function VisualizarAvaria({ avaria, reload }: VisualizarAvariaPro
     }
   }
 
-  const endereco = [
-    avaria.cliente?.endereco,
-    avaria.cliente?.bairro,
-    [avaria.cliente?.cidade, avaria.cliente?.uf].filter(Boolean).join('/'),
-  ].filter(Boolean).join(' • ')
-
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -123,10 +116,6 @@ export default function VisualizarAvaria({ avaria, reload }: VisualizarAvariaPro
               {statusLabels[avaria.status]}
             </Badge>
           </DialogTitle>
-          <DialogDescription className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
-            <span className="flex items-center gap-1 font-medium text-foreground"><UserIcon className="size-3.5 text-slate-400" />{avaria.cliente?.razao_social ?? 'Cliente não informado'}</span>
-            {endereco && <span className="flex items-center gap-1"><MapPinIcon className="size-3.5 text-rose-500" />{endereco}</span>}
-          </DialogDescription>
         </DialogHeader>
 
         <div className="overflow-y-auto p-4 md:p-5">
@@ -141,6 +130,7 @@ export default function VisualizarAvaria({ avaria, reload }: VisualizarAvariaPro
             />
 
             <div className="space-y-5">
+              {avaria.cliente && <CardCliente cliente={avaria.cliente} />}
               {avaria.motorista && <CardContextoRota motorista={avaria.motorista} dataRegistro={avaria.created_at ?? avaria.data_emissao} />}
               <CardEvidencias avaria={avaria} anexos={avaria.anexos} />
               <CardHistorico avaria={avaria} />

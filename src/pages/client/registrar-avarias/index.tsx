@@ -563,7 +563,6 @@ export default function ClientRegistrarAvarias() {
                             value={field.value || ''}
                             placeholder="0"
                             min={0}
-                            max={produtoEncontrado?.quantidade ?? 999}
                             inputMode="numeric"
                             onChange={(e) => {
                               const raw = e.target.value;
@@ -574,11 +573,10 @@ export default function ClientRegistrarAvarias() {
                                 return;
                               }
 
-                              const max = produtoEncontrado?.quantidade;
                               const parsed = Math.max(0, parseInt(raw, 10) || 0);
 
                               // Aplica o limite máximo se houver produto carregado
-                              field.onChange(max !== undefined && parsed > max ? max : parsed);
+                              field.onChange(parsed);
                             }}
                             onBlur={() => {
                               // Ao sair do campo vazio ou inválido, garante que o valor volte a ser 0
