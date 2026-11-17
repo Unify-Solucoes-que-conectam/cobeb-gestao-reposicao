@@ -32,13 +32,20 @@ export default function ClientAvariasRegistradas() {
   const [avarias, setAvarias] = useState<Avaria[]>([])
   const [selectedStatus, setSelectedStatus] = useState<string | undefined>(undefined)
   const [spinners, setSpinners] = useState({ geral: false })
+  const outbox = useOutbox()
+
+  // "Aguardando conexão" e "Sincronizando" não existem no servidor: filtramos aqui, na tela
+  const isSyncFilter = selectedStatus === 'aguardando_conexao' || selectedStatus === 'sincronizando'
+  const visibleAvarias = isSyncFilter
+    ? avarias.filter((a) => getSyncState(a, outbox) === selectedStatus)
+    : avarias
 
   /**
    * Consultar avarias do cliente selecionado, filtrando por status (opcional)
    */
   const fetchAvarias = async ({ signal, status }: { signal?: AbortSignal; status?: string } = {}) => {
     setSpinners({ ...spinners, geral: true })
-    const response = await clienteService.avarias({ id: cliente?.id || '', status: status === 'todos' ? undefined : status }, signal);
+    const response = await clienteService.avarias({ id: cliente?.id || '', status: status === 'todos' || status === 'aguardando_conexao' || status === 'sincronizando' ? undefined : status }, signal);
 
     if (response.success) {
       setAvarias(response.data);
@@ -73,7 +80,7 @@ export default function ClientAvariasRegistradas() {
   return (
     <div className='flex flex-1 flex-col min-h-0 w-full bg-slate-50'>
       <div className='flex justify-between items-center shrink-0 z-10'>
-        <h1 className='text-sm font-semibold'>Avarias Registradas ({avarias.length})</h1>
+        <h1 className='text-sm font-semibold'>Avarias Registradas ({visibleAvarias.length})</h1>
         <Select defaultValue='todos' onValueChange={(value) => setSelectedStatus(value)}>
           <SelectTrigger className='w-32 h-9 text-sm bg-white'>
             <SelectValue placeholder='Tipos de Avaria' />
@@ -85,6 +92,8 @@ export default function ClientAvariasRegistradas() {
               <SelectItem value='aguardando_aprovacao'>Aguardando Aprovação</SelectItem>
               <SelectItem value='aprovada'>Aprovadas</SelectItem>
               <SelectItem value='reprovada'>Reprovadas</SelectItem>
+              <SelectItem value='aguardando_conexao'>Aguardando conexão</SelectItem>
+              <SelectItem value='sincronizando'>Sincronizando</SelectItem>
             </SelectGroup>
           </SelectContent>
         </Select>
@@ -97,7 +106,7 @@ export default function ClientAvariasRegistradas() {
               <LoaderCircleIcon className='animate-spin' size={32} strokeWidth={2} />
               Carregando histórico de avarias...
             </div>
-          ) : avarias.length === 0 ? (
+          ) : visibleAvarias.length === 0 ? (
             <div className='flex flex-col items-center justify-center h-full gap-2 p-4'>
               <div className='bg-gray-200 p-8 rounded-xl border-gray-300 border-2'>
                 <FolderOpenIcon className='text-gray-500' size={32} strokeWidth={2} />
@@ -111,7 +120,7 @@ export default function ClientAvariasRegistradas() {
             </div>
           ) : (
             <div className='flex flex-col gap-4 mt-3'>
-              {avarias.map((avaria) => (
+              {visibleAvarias.map((avaria) => (
                 <AvariaCard key={avaria.id} data={avaria} reloadData={fetchAvarias} />
               ))}
             </div>
