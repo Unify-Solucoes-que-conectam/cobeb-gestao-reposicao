@@ -4,6 +4,21 @@ import axios from "@/lib/axios";
 import { ImportTypes } from "@/pages/admin/importacoes/config";
 import { ApiResponse, PaginationData } from "@/types/api-response";
 import { Avaria, Cliente, Cluster, Filial, ItemAvaria, Mapa, Motorista, NotaFiscal, Produto, TiposAvaria } from "@/types/consults";
+import { cacheGet, networkOrCache } from "@/lib/offline/cache";
+import { assertReachable, isUnreachable, REQUEST_TIMEOUT } from "@/lib/offline/network";
+import {
+  applyAvariasOverlay,
+  applyNotaOverlay,
+  enqueueCreate,
+  enqueueEnviar,
+  hasPendingOps,
+  isLocalId,
+  removeLocalAvaria,
+} from "@/lib/offline/outbox";
+
+const OFFLINE_REMOVE_MESSAGE = 'Sem conexão: só é possível remover esta avaria quando houver internet.';
+
+const normalize = (text?: string | null) => (text ?? '').toLowerCase();
 
 /**
  * TiposAvaria service
@@ -11,8 +26,9 @@ import { Avaria, Cliente, Cluster, Filial, ItemAvaria, Mapa, Motorista, NotaFisc
 export const tiposAvariaService = {
   read: async () => {
     try {
-      const response = await axios.get<ApiResponse<TiposAvaria[]>>('/tipos-avaria');
-      return response.data;
+      return await networkOrCache<TiposAvaria[]>('tipos-avaria', () =>
+        axios.get<ApiResponse<TiposAvaria[]>>('/tipos-avaria', { timeout: REQUEST_TIMEOUT })
+      );
     } catch (error) {
       console.error(error);
       throw error;
@@ -97,25 +113,62 @@ export const trocaService = {
  */
 export const avariaService = {
 
-  create: async (data: {
-    cliente_id: string
-    motorista_id: string
-    produtos: Array<{
-      produto_id: string
-      tipo_avaria_id: string
-      quantidade: number
-    }>
-    anexos: Array<{
-      nome: string
-      base64: string
-    }>
-  }) => {
-    try {
-      const response = await axios.post<ApiResponse>(`/avarias`, {
-        ...data,
+  create: async (
+    data: {
+      cliente_id: string
+      motorista_id: string
+      produtos: Array<{
+        produto_id: string
+        tipo_avaria_id: string
+        quantidade: number
+      }>
+      anexos: Array<{
+        nome: string
+        base64: string
+      }>
+    },
+    /** Dados usados para exibir a avaria localmente caso ela precise ser salva offline. */
+    context?: { notaFiscal: NotaFiscal; tiposAvaria: TiposAvaria[] }
+  ): Promise<ApiResponse> => {
+    const queue = async (): Promise<ApiResponse> => {
+      await enqueueCreate(data.cliente_id, data, {
+        notaFiscalId: context?.notaFiscal.id ?? '',
+        notaFiscalNumero: context?.notaFiscal.numero ?? '',
+        itens: data.produtos.map((p) => {
+          const produto = context?.notaFiscal.produtos.find((x) => x.id === p.produto_id);
+          const tipo = context?.tiposAvaria.find((t) => t.id === p.tipo_avaria_id);
+          return {
+            produtoId: p.produto_id,
+            codigo: produto?.codigo ?? '',
+            descricao: produto?.descricao ?? '',
+            quantidade: p.quantidade,
+            quantidadeTotal: (produto?.quantidade ?? 0) + (produto?.quantidade_avariada ?? 0),
+            tipoAvaria: {
+              id: p.tipo_avaria_id,
+              codigo: tipo?.codigo ?? '5',
+              nome: tipo?.nome ?? '',
+              descricao: tipo?.descricao ?? '',
+            },
+          };
+        }),
       });
+
+      return {
+        success: true,
+        queued: true,
+        data: null,
+        message: 'Sem conexão: avaria salva no aparelho e será enviada quando a internet voltar.',
+      };
+    };
+
+    // Já existem registros esperando sincronização: mantém a ordem e entra na fila.
+    if (await hasPendingOps()) return queue();
+
+    try {
+      const response = assertReachable(await axios.post<ApiResponse>(`/avarias`, { ...data }, { timeout: 60_000 }));
       return response.data;
     } catch (error) {
+      if (isUnreachable(error)) return queue();
       console.error(error);
       throw error;
     }
@@ -156,23 +209,44 @@ export const avariaService = {
     }
   },
 
-  enviar: async (id: string) => {
+  enviar: async (id: string, context?: { clienteId?: string; notaFiscalNumero?: string }): Promise<ApiResponse> => {
+    const queue = async (): Promise<ApiResponse> => {
+      await enqueueEnviar(context?.clienteId ?? '', context?.notaFiscalNumero ?? '', isLocalId(id) ? undefined : id);
+      return {
+        success: true,
+        queued: true,
+        data: null,
+        message: 'Sem conexão: o envio será feito quando a internet voltar.',
+      };
+    };
+
+    // Avaria que ainda só existe no aparelho (ou com itens na frente na fila): espera a sincronização.
+    if (isLocalId(id) || (await hasPendingOps())) return queue();
+
     try {
-      const response = await axios.put<ApiResponse>(`/avarias/${id}/status`, {
-        status: 'aguardando_aprovacao'
-      });
+      const response = assertReachable(
+        await axios.put<ApiResponse>(`/avarias/${id}/status`, { status: 'aguardando_aprovacao' }, { timeout: REQUEST_TIMEOUT })
+      );
       return response.data;
     } catch (error) {
+      if (isUnreachable(error)) return queue();
       console.error(error);
       throw error;
     }
   },
 
-  remover: async (id: string) => {
+  remover: async (id: string): Promise<ApiResponse> => {
+    // Avaria criada offline que ainda não subiu: basta cancelar o registro na fila.
+    if (isLocalId(id)) {
+      await removeLocalAvaria(id);
+      return { success: true, data: null, message: 'Avaria removida.' };
+    }
+
     try {
-      const response = await axios.delete<ApiResponse>(`/avarias/${id}`);
+      const response = assertReachable(await axios.delete<ApiResponse>(`/avarias/${id}`, { timeout: REQUEST_TIMEOUT }));
       return response.data;
     } catch (error) {
+      if (isUnreachable(error)) return { success: false, data: null, message: OFFLINE_REMOVE_MESSAGE };
       console.error(error);
       throw error;
     }
@@ -265,13 +339,29 @@ export const clienteService: ClienteService = {
 
   notasFiscais: async ({ id, search }) => {
     try {
-      const response = await axios.get<ApiResponse<NotaFiscal[]>>(`/clientes/${id}/notas-fiscais`, {
-        params: {
-          search,
-        }
-      });
+      // A API devolve objeto (1 nota), lista (várias) ou null (nenhuma): normalizamos para lista.
+      const asList = (d: NotaFiscal | NotaFiscal[] | null) => (Array.isArray(d) ? d : d ? [d] : []);
 
-      return response.data;
+      const response = await networkOrCache<NotaFiscal[]>(
+        `cliente:${id}:notas`,
+        async () => {
+          const res = await axios.get<ApiResponse<NotaFiscal | NotaFiscal[] | null>>(`/clientes/${id}/notas-fiscais`, {
+            params: { search },
+            timeout: REQUEST_TIMEOUT,
+          });
+          if (res.data?.success) res.data.data = asList(res.data.data) as never;
+          return res as never;
+        },
+        {
+          save: !search,
+          transform: (cached) => (search ? cached.filter((n) => normalize(n.numero).includes(normalize(search))) : cached),
+        }
+      );
+
+      if (response.success) {
+        response.data = await Promise.all(response.data.map((n) => applyNotaOverlay(id, n)));
+      }
+      return response;
     } catch (error) {
       console.error(error);
       throw error;
@@ -280,9 +370,30 @@ export const clienteService: ClienteService = {
 
   notaFiscal: async ({ id, search }) => {
     try {
-      const response = await axios.get<ApiResponse<NotaFiscal>>(`/clientes/${id}/notas-fiscais/${search}`);
+      try {
+        const response = assertReachable(
+          await axios.get<ApiResponse<NotaFiscal>>(`/clientes/${id}/notas-fiscais/${search}`, { timeout: REQUEST_TIMEOUT })
+        );
+        const body = response.data;
+        if (body.success) body.data = await applyNotaOverlay(id, body.data);
+        return body;
+      } catch (error) {
+        if (!isUnreachable(error)) throw error;
+      }
 
-      return response.data;
+      // Sem conexão: procura a nota na lista salva no aparelho.
+      const cached = await cacheGet<NotaFiscal[]>(`cliente:${id}:notas`);
+      if (!cached) {
+        return { success: false, message: 'Sem conexão e sem notas salvas neste aparelho.', data: null as never, offline: true };
+      }
+
+      const found = cached.value.find((n) => n.numero === search) ?? null;
+      return {
+        success: true,
+        message: '',
+        data: (await applyNotaOverlay(id, found)) as NotaFiscal,
+        offline: true,
+      };
     } catch (error) {
       console.error(error);
       throw error;
@@ -291,12 +402,19 @@ export const clienteService: ClienteService = {
 
   avarias: async ({ id, ...params }, signal) => {
     try {
-      const response = await axios.get<ApiResponse<Avaria[]>>(`/clientes/${id}/avarias`, {
-        params,
-        signal
-      });
+      const status = params.status;
 
-      return response.data;
+      const response = await networkOrCache<Avaria[]>(
+        `cliente:${id}:avarias`,
+        () => axios.get<ApiResponse<Avaria[]>>(`/clientes/${id}/avarias`, { params, signal, timeout: REQUEST_TIMEOUT }),
+        { save: !status }
+      );
+
+      // Mescla o que está na fila (avarias novas e envios pendentes) e aplica o filtro de status.
+      if (response.success) {
+        response.data = await applyAvariasOverlay(id, response.data, status);
+      }
+      return response;
     } catch (error) {
       console.error(error);
       throw error;
@@ -327,9 +445,25 @@ interface MapaService {
 export const mapaService: MapaService = {
   clientes: async ({ id, ...params }, signal) => {
     try {
-      const response = await axios.get<ApiResponse<Cliente[]>>(`/mapas/${id}/clientes`, { signal, params });
+      const search = params.search?.trim();
 
-      return response.data;
+      return await networkOrCache<Cliente[]>(
+        `mapa:${id}:clientes`,
+        () => axios.get<ApiResponse<Cliente[]>>(`/mapas/${id}/clientes`, { signal, params, timeout: REQUEST_TIMEOUT }),
+        {
+          save: !search,
+          transform: (cached) => {
+            if (!search) return cached;
+            const term = normalize(search);
+            return cached.filter(
+              (c) =>
+                normalize(c.codigo).includes(term) ||
+                normalize(c.nome_fantasia).includes(term) ||
+                normalize(c.razao_social).includes(term)
+            );
+          },
+        }
+      );
     } catch (error) {
       console.error(error);
       throw error;

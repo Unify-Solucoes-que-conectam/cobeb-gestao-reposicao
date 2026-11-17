@@ -13,6 +13,8 @@ import { mapaService } from '@/services/api.service'
 import ClienteCard from './components/cliente-card'
 import DetectClientCard from './components/detect-client-card'
 import { useNavigate } from 'react-router'
+import { useIsOnline, useOnSynced } from '@/hooks/use-offline'
+import { prefetchMapa } from '@/lib/offline/prefetch'
 
 export default function ClientHome() {
   // ============ HOOKS ===========
@@ -78,6 +80,19 @@ export default function ClientHome() {
 
     fetchClients({ signal });
   }, [])
+
+  // Baixa os dados do mapa (clientes, notas, avarias) para uso sem internet.
+  // Roda ao abrir a tela e sempre que a conexão voltar.
+  const online = useIsOnline()
+  useEffect(() => {
+    if (online) void prefetchMapa(user?.motorista?.mapa?.id)
+  }, [online])
+
+  // Quando a fila offline sincroniza, atualiza tela e dados salvos
+  useOnSynced(() => {
+    void prefetchMapa(user?.motorista?.mapa?.id, { force: true })
+    fetchClients()
+  })
 
   return (
     <div className='flex flex-col h-full space-y-3'>
