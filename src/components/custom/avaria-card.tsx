@@ -7,6 +7,7 @@ import { useAuth } from '@/hooks/use-auth';
 import dayjs from '@/lib/dayjs';
 import { cn } from '@/lib/utils';
 import VisualizarAvaria from '@/pages/admin/avarias/visualizar-avaria';
+import { isLocalId } from '@/lib/offline/outbox';
 import { avariaService } from '@/services/api.service';
 import { Avaria } from '@/types/consults';
 import { formatDocumento, formatPhoneDisplay } from '@/utils/formatters';
@@ -98,10 +99,14 @@ export default function AvariaCard(props: AvariaCardProps) {
    */
   const handleEnviar = async () => {
     setSpinners(prev => ({ ...prev, enviando: true }));
-    const response = await avariaService.enviar(props.data.id);
+    const response = await avariaService.enviar(props.data.id, {
+      clienteId: props.data.cliente?.id,
+      notaFiscalNumero: props.data.nota_fiscal?.numero,
+    });
     if (response.success) {
       // Atualizar o status localmente ou refetch os dados
-      toast.success('Avaria enviada com sucesso!');
+      if (response.queued) toast.warning(response.message);
+      else toast.success('Avaria enviada com sucesso!');
       props.reloadData?.();
     } else {
       toast.error(response.message || 'Erro ao enviar avaria');
@@ -159,7 +164,7 @@ export default function AvariaCard(props: AvariaCardProps) {
           <CardTitle className="flex items-center justify-between border-b px-4 py-2">
             <div className="flex items-center gap-2">
               <h1 className="text-base font-bold dark:text-slate-400 truncate flex gap-2 items-center">
-                Avaria #{props.data.id}
+                {isLocalId(props.data.id) ? 'Avaria (aguardando sincronização)' : `Avaria #${props.data.id}`}
                 {
                   copied ? (
                     <div className="flex items-center gap-1 text-emerald-500 text-xs">

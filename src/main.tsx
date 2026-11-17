@@ -10,6 +10,10 @@ import './index.css'
 import { AuthProvider } from './providers/AuthProvider'
 import ThemeProvider from './providers/ThemeProvider'
 import router from './routes'
+import { startOfflineSync } from './lib/offline/outbox'
+
+// Reenvia, quando a conexão voltar, o que o motorista registrou offline
+startOfflineSync()
 
 // Configura a StatusBar nativa no Capacitor
 if (Capacitor.isNativePlatform()) {

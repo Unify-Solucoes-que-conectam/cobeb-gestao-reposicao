@@ -7,6 +7,7 @@ import type { Schema as SignUpSchema } from '@/pages/auth/schemas'
 import { ApiResponse } from '@/types/api-response'
 import { Menu, Usuario } from '@/types/app'
 import { Schema as ChangePasswordSchema } from '@/components/custom/password-changer/schemas'
+import { cacheClear } from '@/lib/offline/idb'
 
 interface AuthState {
   user: Usuario | null
@@ -48,6 +49,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     localStorage.removeItem('auth_token')
     localStorage.removeItem('user')
     localStorage.removeItem('menus')
+
+    // dados de clientes/notas salvos para uso offline não devem ficar para o próximo usuário do aparelho
+    void cacheClear()
     
     setState({
       user: null,

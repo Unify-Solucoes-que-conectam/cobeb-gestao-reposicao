@@ -20,6 +20,7 @@ import { AlertTriangleIcon, CameraIcon, CheckIcon, FileTextIcon, MinusIcon, Note
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useLocation } from "react-router";
+import { useOnSynced } from "@/hooks/use-offline";
 import { toast } from "sonner";
 import { CadastrarAvariaSchema, initValues, schema } from "./schemas/avaria";
 
@@ -96,10 +97,14 @@ export default function ClientRegistrarAvarias() {
         quantidade: data.quantidade_avariada,
       })).filter(Boolean) || [],
       anexos: data.anexos
-    })
+    }, notaFiscalData ? { notaFiscal: notaFiscalData, tiposAvaria } : undefined)
 
     if (response.success) {
-      toast.success('Avaria registrada com sucesso!');
+      if (response.queued) {
+        toast.warning(response.message);
+      } else {
+        toast.success('Avaria registrada com sucesso!');
+      }
       form.reset({
         nota_fiscal: notaFiscalData?.numero,
         produto: '',
@@ -154,15 +159,30 @@ export default function ClientRegistrarAvarias() {
 
     setProgress([]);
 
+    let queued = false;
+    let falhas = 0;
+
     for (const avaria of avariasPendentes) {
-      const response = await avariaService.enviar(avaria.id);
+      const response = await avariaService.enviar(avaria.id, {
+        clienteId: cliente?.id,
+        notaFiscalNumero: avaria.nota_fiscal?.numero,
+      });
 
       if (response.success) {
+        queued = queued || !!response.queued;
         setProgress(prev => [...prev, avaria.id]);
+      } else {
+        falhas++;
       }
     }
 
-    toast.success('Todas as avarias foram enviadas com sucesso!');
+    if (falhas > 0) {
+      toast.error(`${falhas} avaria(s) não puderam ser enviadas. Tente novamente.`);
+    } else if (queued) {
+      toast.warning('Sem conexão: as avarias serão enviadas quando a internet voltar.');
+    } else {
+      toast.success('Todas as avarias foram enviadas com sucesso!');
+    }
     setProgress([]);
     setSpinners(prev => ({ ...prev, enviando: false }));
     fetchAvarias();
@@ -195,6 +215,12 @@ export default function ClientRegistrarAvarias() {
 
 
   }, [setPageTitle, setPageDescription, cliente]);
+
+  // Quando a fila offline sincroniza, atualiza avarias e nota carregada
+  useOnSynced(() => {
+    fetchAvarias();
+    if (notaFiscalWatcher) notaFiscalDebounced(notaFiscalWatcher);
+  });
 
   // =================================== Watchers ==================================
   const notaFiscalWatcher = form.watch('nota_fiscal');
@@ -231,7 +257,9 @@ export default function ClientRegistrarAvarias() {
         setNotaFiscalData(null);
         form.setError('nota_fiscal', {
           type: 'manual',
-          message: 'Nota Fiscal não encontrada.'
+          message: response.success
+            ? (response.offline ? 'Nota Fiscal não encontrada nos dados salvos neste aparelho.' : 'Nota Fiscal não encontrada.')
+            : (response.message || 'Nota Fiscal não encontrada.')
         });
       }
     } catch (error) {

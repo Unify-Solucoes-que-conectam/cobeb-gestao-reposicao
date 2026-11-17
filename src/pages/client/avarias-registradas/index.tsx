@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import { useHeader } from '@/hooks/mobile/use-header'
+import { useOnSynced } from '@/hooks/use-offline'
 import { clienteService } from '@/services/api.service'
 import { Avaria, Cliente } from '@/types/consults'
 
@@ -65,6 +66,9 @@ export default function ClientAvariasRegistradas() {
   useEffect(() => {
     fetchAvarias({ status: selectedStatus });
   }, [selectedStatus])
+
+  // Quando a fila offline sincroniza, recarrega a lista
+  useOnSynced(() => fetchAvarias({ status: selectedStatus }))
 
   return (
     <div className='flex flex-1 flex-col min-h-0 w-full bg-slate-50'>

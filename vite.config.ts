@@ -52,68 +52,41 @@ export default defineConfig({
       workbox: {
         // atualizar tamanho máximo de arquivo em cache
         maximumFileSizeToCacheInBytes: 10 * 1024 * 1024, // 10 MB
-        
-        // Cachear arquivos estáticos para abrir offline
-        globPatterns: ['**/*.{js,css,html,png,svg,woff2}'],
 
-        // Configuração de Background Sync para APIs
+        // Todo o "casco" do app é pré-cacheado: HTML, JS, CSS, imagens, fontes e sons.
+        // É isso que permite abrir o app sem internet.
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,jpg,jpeg,webp,woff,woff2,ttf,mp3,webmanifest}'],
+
+        // Navegação (inclusive F5 em /client/home etc.) sempre cai no index.html da SPA
+        navigateFallback: '/index.html',
+        navigateFallbackDenylist: [/^\/api\//],
+
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        skipWaiting: true,
+
+        // Apenas recursos de terceiros. As chamadas à API NÃO passam pelo service worker:
+        // os dados de consulta ficam no IndexedDB e as ações feitas offline na fila
+        // (src/lib/offline), que controla ordem, erros e reenvio.
         runtimeCaching: [
           {
-            // 1. Estratégia para buscar dados (GET)
-            urlPattern: /\/api\/.*$/,
-            method: 'GET',
-            handler: 'NetworkFirst', // Tenta a rede, se falhar ou demorar, busca no cache (útil para offline)
-            options: {
-              cacheName: 'api-get-cache',
-              expiration: {
-                maxEntries: 50,
-                maxAgeSeconds: 24 * 60 * 60 // Cache válido por 24h
-              },
-              // Opcional: define um tempo máximo de espera antes de recorrer ao cache
-              networkTimeoutSeconds: 5,
-            }
+            // CSS das fontes do Google
+            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+            handler: 'StaleWhileRevalidate',
+            options: { cacheName: 'google-fonts-stylesheets' },
           },
           {
-            urlPattern: /\/api\/.*$/,
-            method: 'POST',
-            handler: 'NetworkOnly',
+            // arquivos das fontes
+            urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
+            handler: 'CacheFirst',
             options: {
-              backgroundSync: {
-                name: 'sync-post-data',
-                options: {
-                  maxRetentionTime: 24 * 60 // Tenta reenviar por até 24 horas
-                }
-              }
-            }
+              cacheName: 'google-fonts-webfonts',
+              expiration: { maxEntries: 20, maxAgeSeconds: 365 * 24 * 60 * 60 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
           },
-          {
-            urlPattern: /\/api\/.*$/,
-            method: 'PUT',
-            handler: 'NetworkOnly',
-            options: {
-              backgroundSync: {
-                name: 'sync-update-data',
-                options: {
-                  maxRetentionTime: 24 * 60 // Tenta reenviar por até 24 horas
-                }
-              }
-            }
-          },
-          {
-            urlPattern: /\/api\/.*$/,
-            method: 'DELETE',
-            handler: 'NetworkOnly',
-            options: {
-              backgroundSync: {
-                name: 'sync-delete-data',
-                options: {
-                  maxRetentionTime: 24 * 60 // Tenta reenviar por até 24 horas
-                }
-              }
-            }
-          }
-        ]
-      }
+        ],
+      },
     })
   ],
   define: {
