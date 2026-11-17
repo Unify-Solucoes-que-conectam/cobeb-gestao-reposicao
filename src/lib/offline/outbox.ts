@@ -49,6 +49,8 @@ interface BaseOp {
   status: 'pending' | 'error'
   error?: string
   clienteId: string
+  /** Apenas em memória: true enquanto a sincronização está em andamento para este item. */
+  syncing?: boolean
 }
 
 export interface CreateOp extends BaseOp {
@@ -69,6 +71,7 @@ export type OutboxOp = CreateOp | EnviarOp
 // ------------------------------------------------------------------ estado
 
 let ops: OutboxOp[] = []
+let syncingIds = new Set<string>()
 const listeners = new Set<() => void>()
 
 const ready: Promise<void> = outboxAll<OutboxOp>().then((stored) => {
@@ -79,7 +82,7 @@ const ready: Promise<void> = outboxAll<OutboxOp>().then((stored) => {
 })
 
 function emit() {
-  ops = [...ops]
+  ops = ops.map((o) => ({ ...o, syncing: syncingIds.has(o.id) }))
   listeners.forEach((l) => l())
 }
 
@@ -101,7 +104,9 @@ function newId() {
 }
 
 async function persist(op: OutboxOp) {
-  await outboxPut(op)
+  // "syncing" é só estado de tela, não vai para o banco
+  const { syncing: _syncing, ...clean } = op
+  await outboxPut(clean as OutboxOp)
   ops = [...ops.filter((o) => o.id !== op.id), op].sort((a, b) => a.createdAt - b.createdAt)
   emit()
 }
@@ -278,6 +283,10 @@ export async function flushOutbox(): Promise<void> {
   flushing = true
   let synced = 0
 
+  // tudo que está na fila passa a "Sincronizando" enquanto o envio estiver em andamento
+  syncingIds = new Set(ops.filter((o) => o.status === 'pending').map((o) => o.id))
+  emit()
+
   try {
     for (const op of [...ops]) {
       if (op.status !== 'pending') continue
@@ -285,6 +294,8 @@ export async function flushOutbox(): Promise<void> {
       const result = op.type === 'create' ? await execCreate(op) : await execEnviar(op)
 
       if (result.kind === 'network') break
+
+      syncingIds.delete(op.id)
 
       if (result.kind === 'done') {
         await drop(op.id)
@@ -295,6 +306,9 @@ export async function flushOutbox(): Promise<void> {
     }
   } finally {
     flushing = false
+    // o que não foi enviado (sem conexão) volta a "Aguardando conexão"
+    syncingIds = new Set()
+    emit()
   }
 
   if (synced > 0) window.dispatchEvent(new CustomEvent(OFFLINE_SYNCED_EVENT, { detail: { synced } }))
@@ -318,6 +332,36 @@ export function startOfflineSync() {
   }, 30_000)
 
   void ready.then(trigger)
+}
+
+// ------------------------------------------------------- status de sincronização
+
+export type SyncState = 'aguardando_conexao' | 'sincronizando'
+
+/**
+ * Situação de uma avaria em relação à fila offline:
+ *  - 'sincronizando': há registro/envio dela sendo enviado agora;
+ *  - 'aguardando_conexao': há registro/envio dela na fila, esperando conexão;
+ *  - null: nada pendente (o status normal da avaria vale).
+ */
+export function getSyncState(
+  avaria: Pick<Avaria, 'id' | 'nota_fiscal'> & { cliente?: Pick<Cliente, 'id'> },
+  queue: OutboxOp[]
+): SyncState | null {
+  const related = queue.filter((o) => {
+    if (o.status !== 'pending') return false
+    if (o.id === avaria.id) return true
+    if (o.type !== 'enviar') return false
+    if (o.avariaId) return o.avariaId === avaria.id
+    return (
+      isLocalId(avaria.id) &&
+      o.clienteId === avaria.cliente?.id &&
+      o.notaFiscalNumero === avaria.nota_fiscal?.numero
+    )
+  })
+
+  if (related.length === 0) return null
+  return related.some((o) => o.syncing) ? 'sincronizando' : 'aguardando_conexao'
 }
 
 // ------------------------------------------------------------------- overlays
