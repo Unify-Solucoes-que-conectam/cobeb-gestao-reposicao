@@ -7,7 +7,8 @@ import { useAuth } from '@/hooks/use-auth';
 import dayjs from '@/lib/dayjs';
 import { cn } from '@/lib/utils';
 import VisualizarAvaria from '@/pages/admin/avarias/visualizar-avaria';
-import { isLocalId } from '@/lib/offline/outbox';
+import { useOutbox } from '@/hooks/use-offline';
+import { getSyncState, isLocalId } from '@/lib/offline/outbox';
 import { avariaService } from '@/services/api.service';
 import { Avaria } from '@/types/consults';
 import { formatDocumento, formatPhoneDisplay } from '@/utils/formatters';
@@ -15,7 +16,9 @@ import {
   AlertTriangleIcon,
   CalendarIcon,
   CheckIcon,
+  CloudOffIcon,
   ClockIcon,
+  RefreshCwIcon,
   CopyIcon,
   FileTextIcon,
   LayersIcon,
@@ -46,6 +49,7 @@ export default function AvariaCard(props: AvariaCardProps) {
 
   // ======================= Hooks ====================
   const { user } = useAuth();
+  const outbox = useOutbox();
 
   // ======================= States ===================
   const [spinners, setSpinners] = useState<Spinners>({
@@ -62,6 +66,9 @@ export default function AvariaCard(props: AvariaCardProps) {
 
   // ======================= Variáveis =================
   const items = props.data.itens;
+
+  // Só existe enquanto a avaria (ou o envio dela) ainda não chegou ao servidor
+  const syncState = getSyncState(props.data, outbox);
 
   const statusColors = {
     pendente: 'bg-gray-100 text-gray-500 border-gray-200 hover:bg-gray-200 hover:text-gray-500',
@@ -179,9 +186,27 @@ export default function AvariaCard(props: AvariaCardProps) {
             </div>
 
             <div className="flex items-center gap-2">
-              <Badge className={`text-xs font-semibold rounded-md ${statusColors[props.data.status]}`}>
-                {statusLabels[props.data.status]}
-              </Badge>
+              {syncState ? (
+                <Badge
+                  className={cn(
+                    'text-xs font-semibold rounded-md gap-1',
+                    syncState === 'sincronizando'
+                      ? 'bg-blue-100 text-blue-600 border-blue-200 hover:bg-blue-100'
+                      : 'bg-orange-100 text-orange-600 border-orange-200 hover:bg-orange-100'
+                  )}
+                >
+                  {syncState === 'sincronizando' ? (
+                    <RefreshCwIcon size={12} className='animate-spin' />
+                  ) : (
+                    <CloudOffIcon size={12} />
+                  )}
+                  {syncState === 'sincronizando' ? 'Sincronizando' : 'Aguardando conexão'}
+                </Badge>
+              ) : (
+                <Badge className={`text-xs font-semibold rounded-md ${statusColors[props.data.status]}`}>
+                  {statusLabels[props.data.status]}
+                </Badge>
+              )}
 
               {
                 props.data.status === 'pendente' && user?.role === 'motorista' && (

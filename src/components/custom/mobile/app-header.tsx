@@ -6,12 +6,15 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Button } from '@/components/ui/button'
 import { useHeader } from '@/hooks/mobile/use-header'
 import { useAuth } from '@/hooks/use-auth'
+import { useIsOnline } from '@/hooks/use-offline'
 
 export function AppHeader() {
   // =============== HOOKS =============
   const { pageTitle, pageDescription, showBackButton, showLogoutButton } = useHeader()
   const { signOut } = useAuth()
   const navigate = useNavigate()
+  // Sair exige internet: deslogado offline o motorista não conseguiria entrar de novo
+  const online = useIsOnline()
 
   return (
     <header
@@ -43,7 +46,7 @@ export function AppHeader() {
       </div>
 
       {
-        showLogoutButton && (
+        showLogoutButton && online && (
           <div className='flex gap-2'>
             <AlertDialog>
 

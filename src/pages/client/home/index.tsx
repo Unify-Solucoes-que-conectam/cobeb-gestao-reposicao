@@ -12,6 +12,7 @@ import { Cliente } from '@/types/consults'
 import { mapaService } from '@/services/api.service'
 import ClienteCard from './components/cliente-card'
 import DetectClientCard from './components/detect-client-card'
+import SyncStatusCard from './components/sync-status-card'
 import { useNavigate } from 'react-router'
 import { useIsOnline, useOnSynced } from '@/hooks/use-offline'
 import { prefetchMapa } from '@/lib/offline/prefetch'
@@ -96,6 +97,8 @@ export default function ClientHome() {
 
   return (
     <div className='flex flex-col h-full space-y-3'>
+      <SyncStatusCard mapaId={user?.motorista?.mapa?.id} />
+
       <DetectClientCard
         clientes={clientes}
         selected={clienteSelecionado}
