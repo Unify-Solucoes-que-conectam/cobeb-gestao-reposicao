@@ -5,7 +5,7 @@ import { ImportTypes } from "@/pages/admin/importacoes/config";
 import { ApiResponse, PaginationData } from "@/types/api-response";
 import { Avaria, Cliente, Cluster, Filial, ItemAvaria, Mapa, Motorista, NotaFiscal, Produto, TiposAvaria } from "@/types/consults";
 import { cacheGet, networkOrCache } from "@/lib/offline/cache";
-import { assertReachable, BULK_TIMEOUT, isUnreachable, REQUEST_TIMEOUT } from "@/lib/offline/network";
+import { assertReachable, isUnreachable, REQUEST_TIMEOUT } from "@/lib/offline/network";
 import {
   applyAvariasOverlay,
   applyNotaOverlay,
@@ -347,7 +347,7 @@ export const clienteService: ClienteService = {
         async () => {
           const res = await axios.get<ApiResponse<NotaFiscal | NotaFiscal[] | null>>(`/clientes/${id}/notas-fiscais`, {
             params: { search },
-            timeout: BULK_TIMEOUT,
+            timeout: REQUEST_TIMEOUT,
           });
           if (res.data?.success) res.data.data = asList(res.data.data) as never;
           return res as never;
@@ -406,7 +406,7 @@ export const clienteService: ClienteService = {
 
       const response = await networkOrCache<Avaria[]>(
         `cliente:${id}:avarias`,
-        () => axios.get<ApiResponse<Avaria[]>>(`/clientes/${id}/avarias`, { params, signal, timeout: BULK_TIMEOUT }),
+        () => axios.get<ApiResponse<Avaria[]>>(`/clientes/${id}/avarias`, { params, signal, timeout: REQUEST_TIMEOUT }),
         { save: !status }
       );
 

@@ -17,8 +17,7 @@ import {
 } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import { useHeader } from '@/hooks/mobile/use-header'
-import { useOnSynced, useOutbox } from '@/hooks/use-offline'
-import { getSyncState } from '@/lib/offline/outbox'
+import { useOnSynced } from '@/hooks/use-offline'
 import { clienteService } from '@/services/api.service'
 import { Avaria, Cliente } from '@/types/consults'
 

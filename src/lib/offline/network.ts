@@ -3,9 +3,6 @@ import vanillaAxios, { type AxiosResponse } from 'axios'
 /** Tempo máximo de espera por uma resposta antes de considerar a API inacessível. */
 export const REQUEST_TIMEOUT = 10_000
 
-/** Consultas pesadas (notas fiscais com todos os produtos): rede móvel lenta não pode virar "offline". */
-export const BULK_TIMEOUT = 60_000
-
 /** Lançado quando a API respondeu como "fora do ar" (proxy/gateway sem upstream). */
 export class UnreachableError extends Error {
   constructor() {
