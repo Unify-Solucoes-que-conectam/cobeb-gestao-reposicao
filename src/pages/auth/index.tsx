@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 
+import { APP_VERSION_LABEL } from '@/config/version'
 import { Field } from '@/components/ui/field'
 import {
   Form,
@@ -177,7 +178,8 @@ export default function AuthPage() {
       </div>
 
       <footer className='p-4 text-center text-xs text-muted-foreground'>
-        Powered by Unify Soluções
+        <p>Powered by Unify Soluções</p>
+        <p className='mt-1 opacity-70'>Versão {APP_VERSION_LABEL}</p>
       </footer>
     </div>
   )

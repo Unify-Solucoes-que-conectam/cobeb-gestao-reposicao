@@ -8,6 +8,9 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 const packageJson = JSON.parse(readFileSync(resolve(__dirname, 'package.json'), 'utf-8'))
 
+// Data/hora do build: identifica cada publicação mesmo sem alterar a versão do package.json
+const buildDate = new Date().toISOString()
+
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
@@ -15,7 +18,11 @@ export default defineConfig({
     svgr(),
     tailwindcss(),
     VitePWA({
-      registerType: 'autoUpdate', // Atualiza o SW automaticamente
+      // 'prompt': a nova versão é baixada em segundo plano e o usuário recebe um aviso
+      // para aplicar (src/lib/pwa-update.ts). Evita recarregar a tela no meio de um registro.
+      registerType: 'prompt',
+      // O registro do SW é feito manualmente em src/lib/pwa-update.ts
+      injectRegister: false,
       devOptions: {
         enabled: true
       },
@@ -56,6 +63,9 @@ export default defineConfig({
         // Todo o "casco" do app é pré-cacheado: HTML, JS, CSS, imagens, fontes e sons.
         // É isso que permite abrir o app sem internet.
         globPatterns: ['**/*.{js,css,html,ico,png,svg,jpg,jpeg,webp,woff,woff2,ttf,mp3,webmanifest}'],
+        // runtime-config.js é gerado quando o container inicia (docker-entrypoint.d),
+        // então não pode ir para o precache com o conteúdo do build. Ver runtimeCaching.
+        globIgnores: ['**/runtime-config.js'],
 
         // Navegação (inclusive F5 em /client/home etc.) sempre cai no index.html da SPA
         navigateFallback: '/index.html',
@@ -63,12 +73,24 @@ export default defineConfig({
 
         cleanupOutdatedCaches: true,
         clientsClaim: true,
-        skipWaiting: true,
+        // skipWaiting fica desligado: o novo SW aguarda o usuário confirmar a atualização
+        skipWaiting: false,
 
         // Apenas recursos de terceiros. As chamadas à API NÃO passam pelo service worker:
         // os dados de consulta ficam no IndexedDB e as ações feitas offline na fila
         // (src/lib/offline), que controla ordem, erros e reenvio.
         runtimeCaching: [
+          {
+            // Configuração do ambiente (URL da API etc.): sempre busca a versão do servidor,
+            // usando a cópia salva apenas quando estiver sem internet
+            urlPattern: ({ url }) => url.pathname === '/runtime-config.js',
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'runtime-config',
+              networkTimeoutSeconds: 3,
+              cacheableResponse: { statuses: [200] },
+            },
+          },
           {
             // CSS das fontes do Google
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
@@ -90,7 +112,8 @@ export default defineConfig({
     })
   ],
   define: {
-    'process.env.VITE_APP_VERSION': JSON.stringify(packageJson.version),
+    __APP_VERSION__: JSON.stringify(packageJson.version),
+    __APP_BUILD_DATE__: JSON.stringify(buildDate),
   },
   resolve: {
     alias: {
