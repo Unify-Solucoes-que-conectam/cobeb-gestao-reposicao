@@ -1,5 +1,3 @@
-import packageJson from "../../../package.json";
-
 import { EllipsisVerticalIcon, LogOutIcon, MoonIcon } from 'lucide-react';
 import { Skeleton } from '../ui/skeleton';
 
@@ -27,6 +25,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { formatCPF } from '@/utils/formatters';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Theme, useTheme } from "@/hooks/use-theme";
+import { APP_VERSION_LABEL } from '@/config/version';
 
 export function SidebarUser() {
   const { isMobile } = useSidebar()
@@ -69,7 +68,7 @@ export function SidebarUser() {
           >
             <DropdownMenuLabel className='p-0 font-normal'>
               <DropdownMenuGroup>
-                <DropdownMenuItem disabled>Versão atual: {packageJson.version}</DropdownMenuItem>
+                <DropdownMenuItem disabled>Versão atual: {APP_VERSION_LABEL}</DropdownMenuItem>
               </DropdownMenuGroup>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
