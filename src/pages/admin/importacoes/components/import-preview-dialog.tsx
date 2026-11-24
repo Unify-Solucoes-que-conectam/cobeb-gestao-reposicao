@@ -28,7 +28,7 @@ import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Pencil, UploadIcon } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { ImporterConfig } from "../config";
+import { ImporterConfig, isUnidadeMedidaValida, UNIDADES_MEDIDA } from "../config";
 import { getImportDuplicateKey } from "../duplicate-rows";
 import { useTrocaValidation, type TrocaValidation } from "../use-troca-validation";
 import dayjs from "@/lib/dayjs";
@@ -187,6 +187,7 @@ export function ImportPreviewDialog({
 
         return requiredKeys.some((key) => {
           const val = row[key];
+          if (key === "unidade_medida" && config.key === "vendas_trocas" && !isUnidadeMedidaValida(val)) return true;
           return val === undefined || val === null || String(val).trim() === "";
         });
       })
@@ -252,7 +253,28 @@ export function ImportPreviewDialog({
           <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden">
             {config.key === "vendas_trocas" && (
               <div className="space-y-2 text-sm" aria-live="polite">
-                {tradeValidation.pending && <p>Validando clientes, produtos, operações e saldos...</p>}
+                {renderedRows.some(row => !isUnidadeMedidaValida(row.unidade_medida)) && (
+                  <div className="flex flex-wrap items-center gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-amber-800">
+                    <span>
+                      {renderedRows.filter(row => !isUnidadeMedidaValida(row.unidade_medida)).length} registro(s) sem unidade de medida válida.
+                      Aplicar a unidade:
+                    </span>
+                    <Select
+                      value=""
+                      onValueChange={(unidade) => setRenderedRows(previous => previous.map(row =>
+                        isUnidadeMedidaValida(row.unidade_medida) ? row : { ...row, unidade_medida: unidade }
+                      ))}
+                    >
+                      <SelectTrigger className="h-8 w-52 bg-background"><SelectValue placeholder="Selecione a unidade" /></SelectTrigger>
+                      <SelectContent>
+                        {UNIDADES_MEDIDA.map(unidade => (
+                          <SelectItem key={unidade.id} value={unidade.id}>{unidade.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+                {tradeValidation.pending &&<p>Validando clientes, produtos, operações e saldos...</p>}
                 {tradeValidation.error && <p role="alert">{tradeValidation.error} <Button variant="outline" onClick={tradeValidation.retry}>Tentar novamente</Button></p>}
                 {selectedTradeErrors.length > 0 && (
                   <div role="alert" className="flex flex-wrap items-center gap-2 text-red-600">
@@ -440,6 +462,20 @@ export function ImportPreviewDialog({
                           <SelectItem value="2">2 — Bonificação</SelectItem>
                           <SelectItem value="5">5 — Troca</SelectItem>
                           <SelectItem value="39">39 — Troca</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    ) : col.key === 'unidade_medida' && config.key === 'vendas_trocas' ? (
+                      <Select
+                        value={isUnidadeMedidaValida(value) ? String(value).trim().toUpperCase() : undefined}
+                        onValueChange={(unidade_medida) => setEditingData({ ...editingData, unidade_medida })}
+                      >
+                        <SelectTrigger className={`h-12 w-full ${hasError || (value && !isUnidadeMedidaValida(value)) ? "border-red-500 bg-red-50/50" : ""}`}>
+                          <SelectValue placeholder="Selecione a unidade de medida" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {UNIDADES_MEDIDA.map((unidade) => (
+                            <SelectItem key={unidade.id} value={unidade.id}>{unidade.label}</SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     ) : (

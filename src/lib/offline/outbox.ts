@@ -39,6 +39,8 @@ export interface CreateMeta {
     descricao: string
     quantidade: number
     quantidadeTotal: number
+    /** Opcional: itens enfileirados antes desta versão não possuem. */
+    unidadeMedida?: string | null
     tipoAvaria: Pick<TiposAvaria, 'id' | 'codigo' | 'nome' | 'descricao'>
   }>
 }
@@ -381,6 +383,7 @@ function buildLocalAvaria(op: CreateOp, enviada: boolean): Avaria {
           descricao: it.descricao,
           quantidade_avariada: it.quantidade,
           quantidade_total: it.quantidadeTotal,
+          unidade_medida: it.unidadeMedida ?? null,
           tipo_avaria: it.tipoAvaria,
         },
       }) as unknown as ItemAvaria
