@@ -2,7 +2,7 @@ import { ColumnDef } from "@/components/custom/data-grid";
 import dayjs from "@/lib/dayjs";
 import { formatCurrency } from "@/utils/formatters";
 import { AlertCircle } from "lucide-react";
-import { SelectOption } from "../config";
+import { isUnidadeMedidaValida, SelectOption } from "../config";
 
 export type VendaTrocaRow = {
   nota_fiscal: string;
@@ -13,6 +13,7 @@ export type VendaTrocaRow = {
   emissao: string;
   produto: string;
   quantidade: string;
+  unidade_medida: string;
   desconto: string;
   adic_fina: string;
   total: string;
@@ -82,6 +83,21 @@ export const vendaTrocasColumns = (_depsOptions: Record<string, SelectOption<str
       id: "quantidade",
       header: "Quantidade",
       renderCell: (value) => renderValue(value, { key: "quantidade", required: true }),
+    },
+    {
+      id: "unidade_medida",
+      header: "Un. Medida",
+      renderCell: (value) =>
+        renderValue(value, { key: "unidade_medida", required: true }, (val) =>
+          isUnidadeMedidaValida(val) ? (
+            val.toUpperCase()
+          ) : (
+            <span className="inline-flex items-center gap-1 rounded border border-red-200 bg-red-50 px-1.5 py-0.5 text-xs font-medium text-red-600">
+              <AlertCircle className="h-3.5 w-3.5 text-red-500" />
+              {val} inválida
+            </span>
+          )
+        ),
     },
     {
       id: "desconto",

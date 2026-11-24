@@ -21,6 +21,21 @@ export function excelDateToISO(value: string | number | null | undefined): strin
   return str;
 }
 
+/** Unidades de medida aceitas no importador de Vendas e Trocas (manter em sincronia com App\Support\UnidadeMedida na API). */
+export const UNIDADES_MEDIDA: SelectOption[] = [
+  { id: "UN", label: "UN — Unidade" },
+  { id: "CX", label: "CX — Caixa" },
+  { id: "DZ", label: "DZ — Dúzia" },
+  { id: "FD", label: "FD — Fardo" },
+  { id: "PCT", label: "PCT — Pacote" },
+  { id: "GF", label: "GF — Garrafa" },
+  { id: "LT", label: "LT — Lata" },
+  { id: "KG", label: "KG — Quilograma" },
+];
+
+export const isUnidadeMedidaValida = (value: unknown) =>
+  UNIDADES_MEDIDA.some((u) => u.id === String(value ?? "").trim().toUpperCase());
+
 export type ImportTypes = "clientes" | "produtos" | "motoristas" | "mapas" | "vendas_trocas";
 
 export interface SelectOption<TId = string> {
@@ -35,7 +50,7 @@ export type DepsConfig = Record<string, AsyncOptionLoader>;
 export type ImporterConfig = {
   key: ImportTypes;
   label: string;
-  columns: { header: string; key: string; example?: string; required?: boolean }[];
+  columns: { header: string; key: string; example?: string; required?: boolean; aliases?: string[] }[];
   tableName: string;
   columnsDef: (depsOptions: Record<string, SelectOption<string>[]>) => ColumnDef<any>[];
   deps?: DepsConfig;
@@ -136,6 +151,13 @@ export const IMPORTER_CONFIGS: ImporterConfig[] = [
       { header: "Emissão", key: "emissao", example: "Data de emissão da nota fiscal", required: true },
       { header: "Produto", key: "produto", example: "Código do produto", required: true },
       { header: "Qtde", key: "quantidade", example: "Quantidade do produto", required: true },
+      {
+        header: "Un. Medida",
+        key: "unidade_medida",
+        example: `Unidade de medida (${["UN", "CX", "DZ", "FD", "PCT", "GF", "LT", "KG"].join(", ")})`,
+        required: true,
+        aliases: ["Unidade", "Unidade de Medida", "Unid", "Und", "UN", "UM"],
+      },
       { header: "Desconto", key: "desconto", example: "Desconto aplicado ao produto", required: true },
       { header: "Adic. Finan", key: "adic_fina", example: "Adicional financeiro aplicado ao produto", required: true },
       { header: "Total", key: "total", example: "Total do produto", required: true },
@@ -154,7 +176,17 @@ export function generateTemplate(config: ImporterConfig): void {
   ws["!cols"] = headers.map((h) => ({ wch: Math.max(h.length + 4, 15) }));
 
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, config.label);
+  // O Excel não aceita nomes de aba com : \ / ? * [ ] nem acima de 31 caracteres
+  const sheetName = config.label.replace(/[:\\/?*[\]]/g, "").trim().slice(0, 31);
+  XLSX.utils.book_append_sheet(wb, ws, sheetName);
+
+  // Aba de referência com as unidades de medida aceitas
+  if (config.columns.some((c) => c.key === "unidade_medida")) {
+    const unidades = XLSX.utils.aoa_to_sheet([["Sigla", "Descrição"], ...UNIDADES_MEDIDA.map((u) => [u.id, u.label.split("— ")[1] ?? u.label])]);
+    unidades["!cols"] = [{ wch: 10 }, { wch: 20 }];
+    XLSX.utils.book_append_sheet(wb, unidades, "Unidades de Medida");
+  }
+
   XLSX.writeFile(wb, `template_${config.key}.xlsx`);
 }
 
@@ -201,6 +233,9 @@ export function parseXlsxMapped(file: File, config: ImporterConfig): Promise<Rec
   config.columns.forEach((c) => {
     headerToKey[normalizeHeader(c.header)] = c.key;
     headerToKey[normalizeHeader(c.key)] = c.key;
+    c.aliases?.forEach((alias) => {
+      headerToKey[normalizeHeader(alias)] = c.key;
+    });
   });
 
   return new Promise((resolve, reject) => {
@@ -218,7 +253,7 @@ export function parseXlsxMapped(file: File, config: ImporterConfig): Promise<Rec
             const normalizedExcelHeader = normalizeHeader(excelHeader);
             const key = headerToKey[normalizedExcelHeader] ?? normalizedExcelHeader;
             const raw = String(value ?? "");
-            out[key] = CPF_KEYS.has(key) ? normalizeCPF(raw) : raw;
+            out[key] = CPF_KEYS.has(key) ? normalizeCPF(raw) : key === "unidade_medida" ? raw.trim().toUpperCase() : raw;
           }
           return out;
         });

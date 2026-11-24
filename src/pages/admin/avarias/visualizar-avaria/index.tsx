@@ -154,16 +154,36 @@ export default function VisualizarAvaria({ avaria, reload }: VisualizarAvariaPro
             </Button>
           </MotivoReprovacao>
 
-          <Button
-            onClick={handleAprovar}
-            color="success"
-            disabled={!canDecide || spinners.aprovando || spinners.reprovando}
-            loading={spinners.aprovando}
-            title={canDecide ? 'Aprovar avaria' : 'Esta avaria já foi analisada'}
-          >
-            {!spinners.aprovando && <CheckIcon className="size-4" />}
-            {spinners.aprovando ? 'Processando...' : 'Aprovar'}
-          </Button>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button
+                color="success"
+                disabled={!canDecide || spinners.aprovando || spinners.reprovando}
+                loading={spinners.aprovando}
+                title={canDecide ? 'Aprovar avaria' : 'Esta avaria já foi analisada'}
+              >
+                {!spinners.aprovando && <CheckIcon className="size-4" />}
+                {spinners.aprovando ? 'Processando...' : 'Aprovar'}
+              </Button>
+            </DialogTrigger>
+
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Aprovar Avaria</DialogTitle>
+                <DialogDescription>Tem certeza que deseja aprovar esta avaria?</DialogDescription>
+              </DialogHeader>
+
+              <DialogFooter>
+                <DialogClose asChild>
+                  <Button variant="outline">Cancelar</Button>
+                </DialogClose>
+                <Button onClick={handleAprovar} color="success" disabled={!canDecide || spinners.aprovando || spinners.reprovando} loading={spinners.aprovando}>
+                  {!spinners.aprovando && <CheckIcon className="size-4" />}
+                  {spinners.aprovando ? 'Processando...' : 'Aprovar'}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </DialogFooter>
       </DialogContent>
     </Dialog>

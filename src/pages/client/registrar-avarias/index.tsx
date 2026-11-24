@@ -276,6 +276,8 @@ export default function ClientRegistrarAvarias() {
    * Verifica se o produto informado está presente na nota fiscal
    */
   const produtoEncontrado = notaFiscalData?.produtos.find(produto => produto.codigo === form.getValues('produto') || produto.ean === form.getValues('produto'));
+  // Unidade de medida vinda do importador de Vendas e Trocas (CX, DZ, UN...). Registros antigos não possuem.
+  const unidadeMedida = produtoEncontrado?.unidade_medida?.trim().toUpperCase() || 'UN';
 
   /**
    * useDebounce para controlar campo produto
@@ -320,10 +322,7 @@ export default function ClientRegistrarAvarias() {
       produtoDebounced();
     }
 
-    if (produtoEncontrado && produtoEncontrado.quantidade === 0) {
-      toast.warning('Não há unidades disponíveis deste produto na nota fiscal. Verifique se o produto já foi registrado como avariado anteriormente.');
-    }
-  }, [produtoWatcher, notaFiscalData]);
+  },[produtoWatcher, notaFiscalData]);
 
   /**
    * useEffect para captar qualquer alteração nos campos do formulário
@@ -485,7 +484,7 @@ export default function ClientRegistrarAvarias() {
                             </CardTitle>
                             <CardDescription className="flex justify-between">
                               <span>Código: <strong>#{produtoEncontrado.codigo}</strong></span>
-                              <span>Unidades: {produtoEncontrado.quantidade}</span>
+                              <span>Quantidade: <strong>{produtoEncontrado.quantidade} {unidadeMedida}</strong></span>
                             </CardDescription>
                           </CardHeader>
                           {
@@ -493,7 +492,7 @@ export default function ClientRegistrarAvarias() {
                               <CardContent className="p-0 pt-2 border-t text-xs flex justify-between items-center text-amber-600">
                                 <div className="flex items-center gap-2">
                                   <PackageXIcon size={20} />
-                                  <span>{produtoEncontrado.quantidade_avariada} {produtoEncontrado.quantidade_avariada === 1 ? 'item avariado' : 'itens avariados'}</span>
+                                  <span>{produtoEncontrado.quantidade_avariada} {unidadeMedida} {produtoEncontrado.quantidade_avariada === 1 ? 'avariado' : 'avariados'}</span>
                                 </div>
 
                                 <AlertTriangleIcon size={20} />
@@ -556,7 +555,7 @@ export default function ClientRegistrarAvarias() {
                     <FormMessage />
                   </CardContent>
 
-                  <StepOverlay disabled={!produtoEncontrado || produtoEncontrado.quantidade === 0} />
+                  <StepOverlay disabled={!produtoEncontrado} />
                 </Card>
               </FormItem>
             )}
@@ -574,7 +573,7 @@ export default function ClientRegistrarAvarias() {
                       <FormLabel className="text-blue-700 font-bold text-lg" required>QUANTIDADE AVARIADA</FormLabel>
                     </CardTitle>
                     <CardDescription>
-                      Selecione a quantidade avariada
+                      Selecione a quantidade avariada{produtoEncontrado ? <> (em <strong>{unidadeMedida}</strong>)</> : null}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="p-2">
@@ -615,7 +614,7 @@ export default function ClientRegistrarAvarias() {
                             className="text-center flex-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                             disabled={!tipoAvariaWatcher}
                           />
-                          <Button variant="outline" type="button" className="flex-1 text-blue-700 bg-blue-500/20" disabled={(field.value || 0) >= (produtoEncontrado?.quantidade ?? 999) || !tipoAvariaWatcher} onClick={() => field.onChange(Math.min((field.value || 0) + 1, produtoEncontrado?.quantidade ?? 999))}>
+                          <Button variant="outline" type="button" className="flex-1 text-blue-700 bg-blue-500/20" disabled={!tipoAvariaWatcher} onClick={() => field.onChange((field.value || 0) + 1)}>
                             <PlusIcon />
                           </Button>
                         </div>

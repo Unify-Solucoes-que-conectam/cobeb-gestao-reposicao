@@ -164,32 +164,33 @@ export default function AvariaCard(props: AvariaCardProps) {
   }
 
   return (
-    <Card className="overflow-hidden">
+    <Card className="w-full min-w-0 overflow-hidden">
       {/* Header do Card */}
       <CardHeader className="p-0 border-b flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className='flex-1'>
-          <CardTitle className="flex items-center justify-between border-b px-4 py-2">
-            <div className="flex items-center gap-2">
-              <h1 className="text-base font-bold dark:text-slate-400 truncate flex gap-2 items-center">
-                {isLocalId(props.data.id) ? 'Avaria (aguardando sincronização)' : `Avaria #${props.data.id}`}
+          <CardTitle className="flex items-center justify-between gap-2 border-b px-4 py-2">
+            <div className="flex min-w-0 flex-1 items-center gap-2">
+              <h1 className="min-w-0 text-base font-bold dark:text-slate-400 flex gap-2 items-center">
+                {/* Avarias salvas offline ainda não têm ID do servidor; o badge ao lado indica o estado */}
+                <span className="truncate">{isLocalId(props.data.id) ? 'Nova avaria' : `Avaria #${props.data.id}`}</span>
                 {
-                  copied ? (
-                    <div className="flex items-center gap-1 text-emerald-500 text-xs">
+                  isLocalId(props.data.id) ? null : copied ? (
+                    <div className="flex shrink-0 items-center gap-1 text-emerald-500 text-xs">
                       <CheckIcon size={14} />
                       <p>Copiado!</p>
                     </div>
                   ) : (
-                    <CopyIcon size={14} onClick={handleCopyId} />
+                    <CopyIcon size={14} className="shrink-0" onClick={handleCopyId} />
                   )
                 }
               </h1>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex shrink-0 items-center gap-2">
               {syncState ? (
                 <Badge
                   className={cn(
-                    'text-xs font-semibold rounded-md gap-1',
+                    'text-xs font-semibold rounded-md gap-1 whitespace-nowrap',
                     syncState === 'sincronizando'
                       ? 'bg-blue-100 text-blue-600 border-blue-200 hover:bg-blue-100'
                       : 'bg-orange-100 text-orange-600 border-orange-200 hover:bg-orange-100'
@@ -203,7 +204,7 @@ export default function AvariaCard(props: AvariaCardProps) {
                   {syncState === 'sincronizando' ? 'Sincronizando' : 'Aguardando conexão'}
                 </Badge>
               ) : (
-                <Badge className={`text-xs font-semibold rounded-md ${statusColors[props.data.status]}`}>
+                <Badge className={`text-xs font-semibold rounded-md whitespace-nowrap ${statusColors[props.data.status]}`}>
                   {statusLabels[props.data.status]}
                 </Badge>
               )}
@@ -271,14 +272,14 @@ export default function AvariaCard(props: AvariaCardProps) {
               </div>
             )
           }
-          <CardDescription className='flex justify-between text-xs px-4 py-2'>
-            <span className="flex gap-2">
-              <FileTextIcon size={14} className='text-slate-300' />
+          <CardDescription className='flex flex-wrap justify-between gap-x-4 gap-y-1 text-xs px-4 py-2'>
+            <span className="flex min-w-0 gap-2">
+              <FileTextIcon size={14} className='text-slate-300 shrink-0' />
               Nota Fiscal: #{props.data.nota_fiscal.numero}
             </span>
 
-            <span className="flex gap-2">
-              <CalendarIcon size={14} className='text-slate-300' />
+            <span className="flex min-w-0 gap-2">
+              <CalendarIcon size={14} className='text-slate-300 shrink-0' />
               Registrada em: {dayjs(props.data.data_emissao).format('DD/MM/YYYY')}
             </span>
           </CardDescription>
@@ -297,17 +298,17 @@ export default function AvariaCard(props: AvariaCardProps) {
             <div className="space-y-1.5">
               {visibleProducts.map((p, index) => (
                 <div key={index} className="flex justify-between items-center text-sm gap-2">
-                  <span className="text-slate-500 truncate font-medium" title={p.descricao}>
+                  <span className="min-w-0 flex-1 text-slate-500 truncate font-medium" title={p.descricao}>
                     <span className="text-slate-400 font-normal mr-1">[{p.codigo}]</span>
                     {p.descricao}
                   </span>
 
-                  <div className="flex items-center gap-1.5">
-                    <Badge className={`text-xs font-semibold rounded-md ${produtoStatusColor[p.tipo_avaria.codigo]}`}>
+                  <div className="flex shrink-0 items-center gap-1.5">
+                    <Badge className={`text-xs font-semibold rounded-md whitespace-nowrap ${produtoStatusColor[p.tipo_avaria.codigo]}`}>
                       {produtoStatusLabels[p.tipo_avaria.codigo]}
                     </Badge>
-                    <Badge className="text-[10px] font-bold px-1.5 py-0.5 rounded shrink-0">
-                      {p.quantidade_avariada} un
+                    <Badge className="text-[10px] font-bold px-1.5 py-0.5 rounded shrink-0 whitespace-nowrap">
+                      {p.quantidade_avariada} {p.unidade_medida?.trim().toUpperCase() || 'UN'}
                     </Badge>
                   </div>
                 </div>
