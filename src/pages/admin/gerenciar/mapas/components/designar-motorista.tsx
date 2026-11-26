@@ -22,6 +22,8 @@ import { toast } from "sonner"
 interface DesignarMotoristaProps {
   mapa: Mapa
   reload: () => void
+  /** motivo pelo qual a ação está indisponível (o botão aparece desabilitado) */
+  bloqueio?: string
 }
 
 /**
@@ -109,6 +111,19 @@ export default function DesignarMotorista(props: DesignarMotoristaProps) {
     label: `[${motorista.codigo}] ${motorista.nome}${motorista.id === motoristaAtual?.id ? ' (atual)' : ''}`,
     value: motorista.id,
   }));
+
+  // botão desabilitado não dispara eventos: o span mantém o tooltip com o motivo
+  if (props.bloqueio) {
+    return (
+      <Tooltip content={props.bloqueio}>
+        <span tabIndex={0} className="inline-flex">
+          <Button color="warning" size="icon" disabled aria-label={trocando ? 'Trocar motorista' : 'Designar motorista'}>
+            {trocando ? <RefreshCwIcon /> : <UserPlusIcon />}
+          </Button>
+        </span>
+      </Tooltip>
+    )
+  }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

@@ -76,13 +76,13 @@ export default function AdminMapas() {
         : <Badge variant="outline" className="border-amber-300 text-amber-700 dark:text-amber-400">Não designado</Badge>,
     },
     {
-      // rotas valem só no dia da designação: às 00h são encerradas (o motorista fica como histórico)
-      id: 'status', header: 'Rota', width: 130,
+      // o mapa vale só no dia da designação: às 00h é encerrado (o motorista fica como histórico)
+      id: 'status', header: 'Status', width: 150,
       renderCell: (_, mapa) => mapa.status === 'em_andamento'
         ? <Badge variant="outline" className="border-emerald-300 text-emerald-700 dark:text-emerald-400">Em andamento</Badge>
         : mapa.status === 'encerrado'
-          ? <Badge variant="outline" className="text-muted-foreground" title={mapa.encerrado_em ? `Encerrada em ${dayjs(mapa.encerrado_em).format('DD/MM/YYYY HH:mm')}` : undefined}>Encerrada</Badge>
-          : null,
+          ? <Badge variant="outline" className="text-muted-foreground" title={mapa.encerrado_em ? `Encerrado em ${dayjs(mapa.encerrado_em).format('DD/MM/YYYY HH:mm')}` : undefined}>Encerrado</Badge>
+          : <Badge variant="outline" className="border-amber-300 text-amber-700 dark:text-amber-400">Aguardando motorista</Badge>,
     },
   ], [geral, consulta.recarregar]);
 
