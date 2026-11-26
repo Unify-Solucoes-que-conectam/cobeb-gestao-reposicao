@@ -1,123 +1,112 @@
 import axios from "@/lib/axios";
 import { ApiResponse } from "@/types/api-response";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
-import Loader from "@/components/custom/loader";
+import type { ColumnDef } from "@/components/custom/data-grid";
+import { ListPage } from "@/components/custom/list-page";
 import SearchPanel from "@/components/custom/search-panel";
+import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/hooks/use-auth";
 import { useHeader } from "@/hooks/use-header";
+import { usePaginatedQuery } from "@/hooks/use-paginated-query";
+import dayjs from "@/lib/dayjs";
 import { Filial, Mapa } from "@/types/consults";
-import MapaCard from "./components/mapa-card";
-import { mapaService } from "@/services/api.service";
+import MapaAcoes from "./components/mapa-acoes";
 
-export default function AdminUsuarios() {
+export default function AdminMapas() {
 
   // =============== STATES ===============
-  const [maps, setMaps] = useState<Mapa[]>([]);
-  const [spinners, setSpinners] = useState({ geral: true, filiais: false });
+  const [loadingFiliais, setLoadingFiliais] = useState(false);
+  const [filiais, setFiliais] = useState<Filial[]>([]);
 
   // =============== HOOKS  ===============
   const { setPageBreadcrumbs } = useHeader();
+  // o filtro (e a coluna) de filial só existem no tenant "Geral"; numa filial a API já restringe os dados
+  const { tenant } = useAuth();
+  const geral = !tenant || tenant.geral;
 
-  // =============== FILTERS  ===============
-  const [filters, setFilters] = useState({
-    busca: '',
-    filial: 'todas',
-  });
-
-  // =============== DATA ===============
-  const [filiais, setFiliais] = useState<Filial[]>([]);
+  // consulta paginada: o texto só é pesquisado ao clicar na lupa ou apertar Enter
+  const consulta = usePaginatedQuery<Mapa, { filial: string }>(
+    async ({ search, page, per_page, filial }, signal) => (
+      await axios.get<ApiResponse<Mapa[]>>('/mapas', {
+        signal,
+        params: { search, page, per_page, filial: filial !== 'todas' ? filial : undefined },
+      })
+    ).data,
+    { filial: 'todas' },
+    { errorMessage: 'Erro ao consultar mapas' },
+  );
 
   // =============== EFFECTS ===============
   useEffect(() => {
-
-    // setar título da página
     setPageBreadcrumbs([
       { title: "Gerenciar", href: "#" },
       { title: "Mapas", href: "/admin/gerenciar/mapas" }
     ]);
+
+    if (geral) fetchFiliais()
   }, []);
-
-  useEffect(() => {
-    fetchFiliais()
-  }, []);
-
-  useEffect(() => {
-    fetchMapas()
-  }, [filters]);
-
-  // =============== HANDLERS ===============
-  /**
-   * Consultar avarias do cliente selecionado, filtrando por status (opcional)
-   */
-  const fetchMapas = async ({ signal }: { signal?: AbortSignal } = {}) => {
-    setSpinners((prev) => ({ ...prev, geral: true }));
-    const response = await mapaService.read({ search: filters.busca, filial: filters.filial === 'todas' ? undefined : filters.filial }, signal);
-
-    if (response.success) {
-      setMaps(response.data);
-    } else {
-      toast.error(response.message || 'Erro ao consultar avarias');
-    }
-
-    setSpinners((prev) => ({ ...prev, geral: false }));
-  }
 
   const fetchFiliais = async () => {
     try {
-      setSpinners((prev) => ({ ...prev, filiais: true }));
+      setLoadingFiliais(true);
+      const { data } = await axios.get<ApiResponse<Filial[]>>('/filiais');
 
-      const response = await axios.get<ApiResponse<Filial[]>>('/filiais');
-      const { data } = response;
-
-      if (data.success) {
-        setFiliais(data.data);
-      } else {
-        toast.error(data.message || "Erro ao carregar filiais");
-      }
-    } catch (error) {
+      if (data.success) setFiliais(data.data);
+      else toast.error(data.message || "Erro ao carregar filiais");
+    } catch {
       toast.error("Erro ao carregar filiais");
-      console.error("Error loading filiais:", error);
     } finally {
-      setSpinners((prev) => ({ ...prev, filiais: false }));
+      setLoadingFiliais(false);
     }
   };
 
+  // =============== COLUMNS ===============
+  const columns = useMemo<ColumnDef<Mapa>[]>(() => [
+    { id: 'acoes', header: 'Ações', width: 120, renderCell: (_, mapa) => <MapaAcoes mapa={mapa} onChange={consulta.recarregar} /> },
+    { id: 'codigo', header: 'Mapa', width: 110 },
+    ...(geral ? [{ id: 'filial', header: 'Filial', width: 160, renderCell: (_: unknown, mapa: Mapa) => mapa.filial?.descricao }] : []),
+    { id: 'data_entrega', header: 'Entrega', width: 110, renderCell: (value) => dayjs(value as string).format('DD/MM/YYYY') },
+    { id: 'placa', header: 'Placa', width: 100 },
+    {
+      id: 'motorista', header: 'Motorista', width: 'minmax(200px, 1fr)',
+      renderCell: (_, mapa) => mapa.motorista
+        ? <span><span className="mr-1 text-muted-foreground">[{mapa.motorista.codigo}]</span>{mapa.motorista.nome}</span>
+        : <Badge variant="outline" className="border-amber-300 text-amber-700 dark:text-amber-400">Não designado</Badge>,
+    },
+  ], [geral, consulta.recarregar]);
+
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Mapas</h1>
-      </div>
-
-      <SearchPanel
-        total={maps.length}
-        placeholder="Pesquise mapas pelo nome ou código"
-        search={filters.busca}
-        onSearchChange={(search) => setFilters({ ...filters, busca: search })}
-        defaultFilter={"todas"}
-        filters={[
-          { label: "Todas as filiais", value: "todas" },
-          ...filiais.map(filial => ({ label: filial.descricao, value: filial.id }))
-        ]}
-        onFilterChange={(newFilters) => setFilters({ ...filters, filial: newFilters[0].value })}
-        fetchData={fetchMapas}
-      />
-
-      {
-        spinners.geral ? (
-          <Loader showMessage />
-        ) : (
-          <div className="space-y-4">
-            {
-              maps.length > 0 ? (
-                maps.map((mapa) => <MapaCard key={mapa.codigo} data={mapa} reload={fetchMapas} />)
-              ) : (
-                <div className="text-center py-8 text-muted-foreground">Nenhum mapa encontrado</div>
-              )
-            }
-          </div>
-        )
+    <ListPage
+      title="Mapas"
+      search={
+        <SearchPanel
+          placeholder="Pesquise mapas pelo código"
+          search={consulta.busca}
+          onSearchChange={consulta.setBusca}
+          defaultFilter={"todas"}
+          filters={geral && !loadingFiliais ? [
+            { label: "Todas as filiais", value: "todas" },
+            ...filiais.map(filial => ({ label: filial.descricao, value: filial.id }))
+          ] : undefined}
+          onFilterChange={geral ? (newFilters) => consulta.setFilter('filial', newFilters[0].value) : undefined}
+          fetchData={consulta.pesquisar}
+        />
       }
-    </div>
+      columns={columns}
+      data={consulta.items}
+      getRowId={(mapa) => mapa.id}
+      loading={consulta.loading}
+      emptyMessage="Nenhum mapa encontrado."
+      pagination={{
+        page: consulta.page,
+        pageSize: consulta.perPage,
+        total: consulta.total,
+        onPageChange: consulta.setPage,
+        onPageSizeChange: consulta.setPerPage,
+        label: `${consulta.total} mapa(s) encontrado(s).`,
+      }}
+    />
   );
 }

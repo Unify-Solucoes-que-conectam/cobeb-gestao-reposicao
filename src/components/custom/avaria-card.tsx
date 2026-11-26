@@ -48,7 +48,7 @@ export type Spinners = {
 export default function AvariaCard(props: AvariaCardProps) {
 
   // ======================= Hooks ====================
-  const { user } = useAuth();
+  const { user, can } = useAuth();
   const outbox = useOutbox();
 
   // ======================= States ===================
@@ -350,7 +350,7 @@ export default function AvariaCard(props: AvariaCardProps) {
         "justify-between": props.data.cliente?.contatos && user?.role === 'monitoramento'
       })}>
 
-        {user?.role === 'monitoramento' && props.data.whatsapp_notification_status === 'failed' && (
+        {can('avarias.reenviar_whatsapp') && props.data.whatsapp_notification_status === 'failed' && (
           <div role="alert" className="w-full rounded-md border border-red-200 bg-red-50 p-3 text-red-700">
             <div className="mb-2 flex gap-2 text-sm font-medium">
               <AlertTriangleIcon size={16} className="mt-0.5 shrink-0" />

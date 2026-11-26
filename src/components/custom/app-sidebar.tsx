@@ -1,26 +1,18 @@
 import * as React from 'react'
 
-import { Link } from 'react-router-dom'
-import { Skeleton } from '../ui/skeleton'
-
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
-  SidebarMenu,
-  SidebarMenuItem
 } from '@/components/ui/sidebar'
-import { useAuth } from '@/hooks/use-auth'
 
-import { Logo } from './logo'
 import { SidebarMain } from './sidebar-main'
 import { SidebarSecondary } from './sidebar-secondary'
 import { SidebarUser } from './sidebar-user'
+import { TenantSwitcher } from './tenant-switcher'
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-
-  const { loading } = useAuth()
 
   const data = {
     sidebarSecondary: [],
@@ -28,19 +20,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   return (
     <Sidebar collapsible='offcanvas' {...props}>
+      {/* a logo fica no header da página; aqui o topo é a filial conectada */}
       <SidebarHeader>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <Link to='/admin/avarias' className='flex flex-col gap-3'>
-              <Logo className='w-40' variant='light' />
-              {loading ? (
-                <Skeleton className='w-full p-2' />
-              ) : (
-                <p className='text-base font-semibold'>Gestão de Reposição</p>
-              )}
-            </Link>
-          </SidebarMenuItem>
-        </SidebarMenu>
+        <TenantSwitcher />
       </SidebarHeader>
       <SidebarContent>
         <SidebarMain />

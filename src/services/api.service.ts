@@ -303,7 +303,9 @@ export const itemAvariaService: ItemAvariaService = {
 export interface ClienteService {
   read: (params: {
     search?: string
-  }) => Promise<ApiResponse<Cliente[]>>
+    filial?: string
+    limit?: number
+  }, signal?: AbortSignal) => Promise<ApiResponse<Cliente[]>>
 
   notasFiscais: (params: {
     id: string
@@ -321,9 +323,10 @@ export interface ClienteService {
   }, signal?: AbortSignal) => Promise<ApiResponse<Avaria[]>>
 }
 export const clienteService: ClienteService = {
-  read: async (params) => {
+  read: async (params, signal) => {
     try {
       const response = await axios.get<ApiResponse<Cliente[]>>(`/clientes`, {
+        signal,
         params: {
           ...params,
           search: params.search,
@@ -441,6 +444,11 @@ interface MapaService {
     mapaId: string
     motoristaId: string
   }, signal?: AbortSignal) => Promise<ApiResponse>
+
+  atualizarClientes: (params: {
+    mapaId: string
+    clientes: string[]
+  }, signal?: AbortSignal) => Promise<ApiResponse<Mapa>>
 }
 export const mapaService: MapaService = {
   clientes: async ({ id, ...params }, signal) => {
@@ -499,7 +507,17 @@ export const mapaService: MapaService = {
 
   designarMotorista: async ({ mapaId, motoristaId }, signal) => {
     try {
-      const response = await axios.put<ApiResponse>(`/mapas/${mapaId}/designar-motorista/${motoristaId}`, { signal });
+      const response = await axios.put<ApiResponse>(`/mapas/${mapaId}/designar-motorista/${motoristaId}`, {}, { signal });
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  },
+
+  atualizarClientes: async ({ mapaId, clientes }, signal) => {
+    try {
+      const response = await axios.put<ApiResponse<Mapa>>(`/mapas/${mapaId}/clientes`, { clientes }, { signal });
       return response.data;
     } catch (error) {
       console.error(error);
@@ -513,9 +531,8 @@ export const mapaService: MapaService = {
  */
 export const motoristaService = {
   read: async (params: {
-    filial_id: string
+    filial: string
     status?: string
-    only_without_map?: boolean
   }, signal?: AbortSignal) => {
     try {
       const response = await axios.get<ApiResponse<Motorista[]>>(`/motoristas`, {

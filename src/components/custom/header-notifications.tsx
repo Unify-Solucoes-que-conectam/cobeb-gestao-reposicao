@@ -196,7 +196,7 @@ const HeaderNotifications = () => {
         </Tooltip>
       </PopoverTrigger>
 
-      <PopoverContent className='w-lg p-0 select-none' align='end'>
+      <PopoverContent className='w-lg max-w-[calc(100vw-2rem)] p-0 select-none' align='start'>
         {notifications.length > 0 ? (
           <>
             <div className='flex items-center justify-between border-b px-4 py-2'>

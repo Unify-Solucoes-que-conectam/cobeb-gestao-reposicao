@@ -1,3 +1,4 @@
+import { useAuth } from "@/hooks/use-auth";
 import { useHeader } from "@/hooks/use-header";
 import React, { useEffect, useState } from "react";
 
@@ -38,6 +39,9 @@ export default function AdminAvarias() {
 
   // =============== HOOKS   ===============
   const { setPageBreadcrumbs, notificationReceived } = useHeader();
+  // o filtro de filial só existe no tenant "Geral"; numa filial a API já restringe os dados
+  const { tenant } = useAuth();
+  const filtroFilial = !tenant || tenant.geral;
   const [searchParams] = useSearchParams();
   const avariaFromUrl = searchParams.get('avaria') ?? '';
 
@@ -64,7 +68,7 @@ export default function AdminAvarias() {
       { title: "Avarias", href: "/admin/avarias" }
     ]);
 
-    fetchFiliais();
+    if (filtroFilial) fetchFiliais();
   }, [])
 
   useEffect(() => {
@@ -156,12 +160,13 @@ export default function AdminAvarias() {
   }, [notificationReceived]);
 
   return (
-    <div className="flex flex-col gap-6 h-full">
-      <div className='flex items-center'>
+    // altura fixa da área útil: título, filtros e indicadores ficam parados e só a lista de cards rola
+    <div className="flex h-[calc(100dvh-var(--header-height)-6rem)] min-h-0 flex-col gap-6 overflow-hidden">
+      <div className='flex shrink-0 items-center'>
         <h1 className='text-2xl font-bold'>Gestão de Avarias</h1>
       </div>
 
-      <div className="flex justify-between items-center gap-3">
+      <div className="flex shrink-0 justify-between items-center gap-3">
         <InputGroup className="h-10">
           <InputGroupInput placeholder="Buscar cliente ou ID da avaria..." value={filters.busca} onChange={(e) => setFilters(prev => ({ ...prev, busca: e.target.value }))} />
           <InputGroupAddon>
@@ -188,6 +193,7 @@ export default function AdminAvarias() {
           </SelectContent>
         </Select>
 
+        {filtroFilial && (
         <Select defaultValue="todas" onValueChange={(value) => setFilters(prev => ({ ...prev, filial: value }))}>
           <SelectTrigger className="w-45">
             <Building2Icon size={18} className="text-muted-foreground" />
@@ -205,6 +211,7 @@ export default function AdminAvarias() {
             </SelectGroup>
           </SelectContent>
         </Select>
+        )}
 
         <Button
           size="icon"
@@ -218,7 +225,7 @@ export default function AdminAvarias() {
         </Button>
       </div>
 
-      <div className="flex gap-3">
+      <div className="flex shrink-0 gap-3">
         {
           dashboards.map((dash, index) => (
             <Card key={index} className="flex items-center w-full">
@@ -240,7 +247,7 @@ export default function AdminAvarias() {
         spinners.geral ? (
           <Loader />
         ) : orderedAvarias.length === 0 ? (
-          <div className='flex flex-col items-center justify-center h-full gap-2 p-4'>
+          <div className='flex min-h-0 flex-1 flex-col items-center justify-center gap-2 p-4'>
             <div className='bg-gray-200 p-8 rounded-xl border-gray-300 border-2'>
               <FolderOpenIcon className='text-gray-500' size={32} strokeWidth={2} />
             </div>
@@ -253,7 +260,11 @@ export default function AdminAvarias() {
             </div>
           </div>
         ) : (
-          <div className="flex flex-col gap-3">
+          // grade com scroll próprio: 1 coluna no celular, 2 a partir de telas médias.
+          // - gap (não space-y): margens nos itens da grade deslocam os cards e eles invadem a linha de baixo
+          // - content-start: as linhas ficam com a altura dos cards, sem esticar para preencher a área
+          // - cards da mesma linha ficam com a mesma altura (h-full no card + stretch padrão da grade)
+          <div className="min-h-0 content-start space-y-3 overflow-y-auto">
             {
               orderedAvarias.map((av) => (
                 <AvariaCard key={av.id} data={av} reloadData={fetchAvarias} />

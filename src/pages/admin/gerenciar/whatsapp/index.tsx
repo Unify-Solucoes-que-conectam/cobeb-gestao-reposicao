@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
+import { useAuth } from '@/hooks/use-auth'
 import { useHeader } from '@/hooks/use-header'
 import axios from '@/lib/axios'
 import type { ApiResponse } from '@/types/api-response'
@@ -100,6 +101,11 @@ export default function AdminWhatsApp() {
   const automaticQrRequests = useRef(new Set<string>())
 
   const selected = useMemo(() => entries.find((entry) => entry.filial.id === selectedId), [entries, selectedId])
+
+  // fora do tenant "Geral" só a filial conectada é listada e a instância global não pode ser alterada
+  const { tenant } = useAuth()
+  const geral = !tenant || tenant.geral
+  const bloqueado = !!selected && (selected.uses_global || (!geral && entries.some((entry) => entry.configuration?.is_global)))
 
   useEffect(() => {
     setPageBreadcrumbs([
@@ -245,14 +251,14 @@ export default function AdminWhatsApp() {
 
   useEffect(() => {
     const configuration = selected?.configuration
-    if (!configuration || configuration.provider !== 'baileys' || configuration.status !== 'waiting_qr' || qrCode) return
+    if (!configuration || configuration.provider !== 'baileys' || configuration.status !== 'waiting_qr' || qrCode || bloqueado) return
 
     const requestKey = `${selectedId}:${configuration.instance_name}`
     if (automaticQrRequests.current.has(requestKey)) return
 
     automaticQrRequests.current.add(requestKey)
     void refreshQrCode()
-  }, [selectedId, selected?.configuration, qrCode])
+  }, [selectedId, selected?.configuration, qrCode, bloqueado])
 
   const reconnect = async () => {
     try {
@@ -404,8 +410,8 @@ export default function AdminWhatsApp() {
               {selected.configuration && (
                 <CardContent className="flex flex-wrap gap-2">
                   <Button variant="outline" onClick={() => void refreshConnection()} disabled={saving}><RefreshCw /> Atualizar estado</Button>
-                  <Button variant="outline" onClick={() => void reconnect()} disabled={saving}><Power /> Reconectar</Button>
-                  <Button variant="destructive" onClick={() => void remove()} disabled={saving || selected.uses_global}><Trash2 /> Excluir</Button>
+                  <Button variant="outline" onClick={() => void reconnect()} disabled={saving || bloqueado}><Power /> Reconectar</Button>
+                  <Button variant="destructive" onClick={() => void remove()} disabled={saving || bloqueado}><Trash2 /> Excluir</Button>
                   {selected.configuration.connected_phone && <span className="self-center text-sm">Telefone: {selected.configuration.connected_phone}</span>}
                   {selected.configuration.last_checked_at && <span className="self-center text-xs text-muted-foreground">Verificado em {new Date(selected.configuration.last_checked_at).toLocaleString('pt-BR')}</span>}
                 </CardContent>
@@ -420,17 +426,18 @@ export default function AdminWhatsApp() {
                     {selected.uses_global
                       ? `Esta filial usa a instância geral configurada por ${selected.configuration_owner?.descricao || 'outra filial'}.`
                       : 'Quando ativada, esta mesma conexão será utilizada nos envios de todas as filiais.'}
+                    {!geral && ' A instância geral só pode ser configurada no tenant Geral.'}
                   </p>
                 </div>
-                <Switch
+                {geral && <Switch
                   checked={selected.configuration?.is_global ?? useAsGlobal}
-                  disabled={saving || selected.uses_global}
+                  disabled={saving || bloqueado}
                   onCheckedChange={(enabled) => {
                     if (selected.configuration) void changeGlobalScope(enabled)
                     else setUseAsGlobal(enabled)
                   }}
                   aria-label="Usar esta instância em todas as filiais"
-                />
+                />}
               </CardContent>
             </Card>
 
@@ -464,7 +471,7 @@ export default function AdminWhatsApp() {
                   <CardContent className="space-y-4">
                     <Button
                       onClick={() => void (selected.configuration?.provider === 'baileys' ? refreshQrCode() : configureBaileys())}
-                      disabled={saving || selected.uses_global}
+                      disabled={saving || bloqueado}
                     >
                       {selected.configuration?.provider === 'baileys' ? 'Gerar novo QR Code' : 'Criar instância e gerar QR Code'}
                     </Button>
@@ -478,10 +485,10 @@ export default function AdminWhatsApp() {
                 <Card>
                   <CardHeader><CardTitle>Credenciais da Meta</CardTitle><CardDescription>Use um token permanente de usuário do sistema. O Phone Number ID não é o número do telefone.</CardDescription></CardHeader>
                   <CardContent className="grid gap-4 md:grid-cols-2">
-                    <div className="space-y-2 md:col-span-2"><Label>Token de acesso</Label><PasswordInput disabled={selected.uses_global} value={accessToken} onChange={(event) => setAccessToken(event.target.value)} placeholder={selected.configuration?.token_configured ? 'Token configurado — deixe vazio para preservar' : 'Cole o token permanente'} /></div>
-                    <div className="space-y-2"><Label>Phone Number ID</Label><Input disabled={selected.uses_global} value={phoneNumberId} onChange={(event) => setPhoneNumberId(event.target.value)} /></div>
-                    <div className="space-y-2"><Label>WhatsApp Business Account ID</Label><Input disabled={selected.uses_global} value={businessAccountId} onChange={(event) => setBusinessAccountId(event.target.value)} /></div>
-                    <Button className="md:col-span-2" onClick={() => void configureOfficial()} disabled={saving || selected.uses_global}>Validar e criar instância oficial</Button>
+                    <div className="space-y-2 md:col-span-2"><Label>Token de acesso</Label><PasswordInput disabled={bloqueado} value={accessToken} onChange={(event) => setAccessToken(event.target.value)} placeholder={selected.configuration?.token_configured ? 'Token configurado — deixe vazio para preservar' : 'Cole o token permanente'} /></div>
+                    <div className="space-y-2"><Label>Phone Number ID</Label><Input disabled={bloqueado} value={phoneNumberId} onChange={(event) => setPhoneNumberId(event.target.value)} /></div>
+                    <div className="space-y-2"><Label>WhatsApp Business Account ID</Label><Input disabled={bloqueado} value={businessAccountId} onChange={(event) => setBusinessAccountId(event.target.value)} /></div>
+                    <Button className="md:col-span-2" onClick={() => void configureOfficial()} disabled={saving || bloqueado}>Validar e criar instância oficial</Button>
                   </CardContent>
                 </Card>
 
@@ -500,9 +507,9 @@ export default function AdminWhatsApp() {
                       <CardContent className="space-y-4">
                         <Button variant="outline" onClick={() => void loadTemplates()} disabled={saving}><RefreshCw /> Buscar na Meta</Button>
                         {(Object.keys(eventLabels) as WhatsAppEvent[]).map((event) => (
-                          <div key={event} className="grid gap-2 md:grid-cols-[220px_1fr]"><div><Label>{eventLabels[event]}</Label><p className="mt-1 text-xs text-muted-foreground">{eventVariableHints[event]}</p></div><Select disabled={selected.uses_global} value={templateMappings[event] || ''} onValueChange={(value) => setTemplateMappings((current) => ({ ...current, [event]: value }))}><SelectTrigger><SelectValue placeholder="Selecione um template aprovado" /></SelectTrigger><SelectContent>{remoteTemplates.map((template) => <SelectItem key={`${template.name}-${template.language_code}`} value={`${template.name}|${template.language_code}`}>{template.name} ({template.language_code})</SelectItem>)}</SelectContent></Select></div>
+                          <div key={event} className="grid gap-2 md:grid-cols-[220px_1fr]"><div><Label>{eventLabels[event]}</Label><p className="mt-1 text-xs text-muted-foreground">{eventVariableHints[event]}</p></div><Select disabled={bloqueado} value={templateMappings[event] || ''} onValueChange={(value) => setTemplateMappings((current) => ({ ...current, [event]: value }))}><SelectTrigger><SelectValue placeholder="Selecione um template aprovado" /></SelectTrigger><SelectContent>{remoteTemplates.map((template) => <SelectItem key={`${template.name}-${template.language_code}`} value={`${template.name}|${template.language_code}`}>{template.name} ({template.language_code})</SelectItem>)}</SelectContent></Select></div>
                         ))}
-                        <Button onClick={() => void saveTemplates()} disabled={saving || selected.uses_global || !remoteTemplates.length}>Salvar associações</Button>
+                        <Button onClick={() => void saveTemplates()} disabled={saving || bloqueado || !remoteTemplates.length}>Salvar associações</Button>
                       </CardContent>
                     </Card>
                   </div>

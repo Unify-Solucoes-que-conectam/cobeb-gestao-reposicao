@@ -6,10 +6,11 @@ export function getImportDuplicateKey(type: ImportTypes, row: Record<string, str
   let parts: string[];
 
   switch (type) {
-    case "clientes": parts = [value("cod_pdv")]; break;
+    // Clientes, motoristas e mapas são únicos por filial (revenda).
+    case "clientes": parts = [value("cod_pdv"), value("filial")]; break;
     case "produtos": parts = [value("codigo")]; break;
-    case "motoristas": parts = [value("codmotorista")]; break;
-    case "mapas": parts = [value("nro_do_mapa")]; break;
+    case "motoristas": parts = [value("codmotorista"), value("codfilial")]; break;
+    case "mapas": parts = [value("nro_do_mapa"), value("unb")]; break;
     case "vendas_trocas": {
       parts = [value("nota_fiscal"), value("produto")];
       const operation = Number(value("operacao"));
@@ -27,5 +28,11 @@ export function getImportDuplicateKey(type: ImportTypes, row: Record<string, str
   }
 
   // Campos ausentes são tratados pela validação de obrigatoriedade da prévia.
-  return parts.some(part => part === "") ? null : JSON.stringify(parts);
+  if (parts.some(part => part === "")) return null;
+
+  // O número da nota é único por filial (revenda): a mesma nota em clientes/filiais
+  // diferentes não é duplicidade. A coluna Filial é opcional.
+  if (type === "vendas_trocas") parts.unshift(value("cliente"), value("filial"));
+
+  return JSON.stringify(parts);
 }

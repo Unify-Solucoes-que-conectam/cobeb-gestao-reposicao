@@ -1,9 +1,12 @@
 import Loader from '@/components/custom/loader'
 import { useAuth } from '@/hooks/use-auth'
+import type { Permissao } from '@/types/app'
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
 
 interface ProtectedRouteProps {
   allowedRoles?: Array<'administrador' | 'monitoramento' | 'motorista'>
+  /** Ação que o grupo do usuário precisa ter liberada */
+  permission?: Permissao
 }
 
 /**
@@ -12,8 +15,8 @@ interface ProtectedRouteProps {
  * - Se autenticado mas sem permissão de role: redireciona para a home do seu role
  * - Se autenticado e autorizado: renderiza a rota
  */
-export function ProtectedRoute({ allowedRoles }: ProtectedRouteProps) {
-  const { isAuthenticated, loading, user } = useAuth()
+export function ProtectedRoute({ allowedRoles, permission }: ProtectedRouteProps) {
+  const { isAuthenticated, loading, user, can } = useAuth()
   const location = useLocation()
 
   if (loading) {
@@ -39,6 +42,10 @@ export function ProtectedRoute({ allowedRoles }: ProtectedRouteProps) {
       ? '/admin/avarias'
       : '/client/home'
     return <Navigate to={redirectPath} replace />
+  }
+
+  if (permission && user && !can(permission)) {
+    return <Navigate to='/admin/avarias' replace />
   }
 
   return <Outlet />

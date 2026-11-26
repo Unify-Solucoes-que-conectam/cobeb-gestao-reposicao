@@ -7,6 +7,8 @@ export type Usuario = {
   cpf: string;
   role: 'administrador' | 'monitoramento' | 'motorista';
   primeiro_acesso: boolean;
+  grupo?: { id: string; nome: string; perfil: Usuario['role'] } | null;
+  acesso_geral?: boolean;
   motorista: {
     id: string
     codigo: string
@@ -16,6 +18,36 @@ export type Usuario = {
     mapa: Mapa
     filial: Filial
   }
+}
+
+/** Tenant = filial em que o usuário está conectado. "geral" dá acesso a todas. */
+export type Tenant = {
+  id: string // 'geral' ou id da filial
+  nome: string
+  codigo: string | null
+  geral: boolean
+}
+
+/** Chaves das ações liberadas por grupo (catálogo em config/permissoes.php da API). */
+export type Permissao =
+  | 'avarias.registrar'
+  | 'avarias.aprovar'
+  | 'avarias.editar_quantidade'
+  | 'avarias.reenviar_whatsapp'
+  | 'importacoes.importar'
+  | 'mapas.designar_motorista'
+  | 'mapas.alterar_clientes'
+  | 'motoristas.gerenciar'
+  | 'trocas.exportar'
+  | 'usuarios.gerenciar'
+  | 'whatsapp.gerenciar'
+  | 'permissoes.gerenciar'
+
+export type Sessao = {
+  usuario: Usuario
+  menus: Menu[]
+  permissoes: Permissao[]
+  tenants: Tenant[]
 }
 
 export type Notificacao = {

@@ -12,6 +12,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip } from "@/components/ui/tooltip";
+import { useAuth } from '@/hooks/use-auth';
 import { useTheme } from "@/hooks/use-theme";
 import axios from "@/lib/axios";
 import dayjs from "@/lib/dayjs";
@@ -34,6 +35,7 @@ export default function GerenciarMotorista({ driver, onSubmit }: GerenciarMotori
   // ============== HOOKS ==============
   const [open, setOpen] = useState(false);
   const { theme } = useTheme();
+  const { tenant } = useAuth();
 
   // ============== STATES ==============
   const [loading, setLoading] = useState({
@@ -131,8 +133,12 @@ export default function GerenciarMotorista({ driver, onSubmit }: GerenciarMotori
 
     // verificar se a requisição foi bem sucedida
     if (res.data.success) {
-      // reload data
-      setFiliais(res.data.data);
+      // fora do tenant "Geral", o motorista só pode ser cadastrado na filial conectada
+      const permitidas = tenant && !tenant.geral ? res.data.data.filter((f) => f.id === tenant.id) : res.data.data;
+      setFiliais(permitidas);
+      if (permitidas.length === 1 && !form.getValues('filial_id')) {
+        form.setValue('filial_id', String(permitidas[0].id), { shouldValidate: true });
+      }
     } else {
       // toast de erro
       toast.error(res.data.message);

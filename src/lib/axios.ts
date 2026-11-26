@@ -1,6 +1,7 @@
 import vanillaAxios, { type AxiosRequestHeaders } from 'axios'
 import { toast } from 'sonner'
 import { runtimeConfig } from '@/config/runtime'
+import { getTenantId, setTenantId } from '@/lib/tenant'
 
 const appMode = runtimeConfig.APP_MODE
 const apiBaseUrl = runtimeConfig.API_URL
@@ -23,6 +24,10 @@ axios.interceptors.request.use((config) => {
   config.headers = config.headers || ({} as AxiosRequestHeaders)
 
   if (token) config.headers.Authorization = `Bearer ${token}`
+
+  // filial (tenant) em que o usuário está conectado
+  const tenant = getTenantId()
+  if (tenant) config.headers['X-Tenant'] = tenant
 
   return config
 })
@@ -48,6 +53,14 @@ function showToastOnce(key: string, message: string, type: 'error' | 'warning' =
 }
 
 axios.interceptors.response.use((response) => {
+  // acesso à filial selecionada foi removido: volta para o tenant padrão
+  if (response.status === 403 && response.data?.code === 'tenant_forbidden') {
+    if (showToastOnce('tenant-forbidden', response.data?.message, 'warning')) {
+      setTenantId(null)
+      setTimeout(() => window.location.reload(), 1500)
+    }
+  }
+
   if (response.status === 401) {
     // armazenar papel atual do usuário antes de limpar o localStorage
     const shouldRedirect = showToastOnce('401-error', response.data?.message)

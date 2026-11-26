@@ -39,6 +39,27 @@ export type ImporterConfig = {
   tableName: string;
   columnsDef: (depsOptions: Record<string, SelectOption<string>[]>) => ColumnDef<any>[];
   deps?: DepsConfig;
+  /** Coluna com o código da filial. Fora do tenant "Geral" é preenchida automaticamente. */
+  filialKey?: string;
+}
+
+/**
+ * Ajusta o importador ao tenant conectado: fora do "Geral" a coluna de filial
+ * deixa de ser obrigatória (a API aplica a filial conectada).
+ */
+export function configForTenant(config: ImporterConfig, geral: boolean): ImporterConfig {
+  if (geral || !config.filialKey) return config;
+  return {
+    ...config,
+    columns: config.columns.map((c) => (c.key === config.filialKey ? { ...c, required: false } : c)),
+  };
+}
+
+/** Preenche a filial conectada nos registros sem filial (apenas fora do "Geral"). */
+export function fillTenantFilial(config: ImporterConfig, rows: Record<string, string>[], codigo: string | null) {
+  if (!config.filialKey || !codigo) return rows;
+  const key = config.filialKey;
+  return rows.map((row) => (String(row[key] ?? '').trim() === '' ? { ...row, [key]: codigo } : row));
 }
 
 export const IMPORTER_CONFIGS: ImporterConfig[] = [
@@ -64,6 +85,7 @@ export const IMPORTER_CONFIGS: ImporterConfig[] = [
       { header: "Telefone(s)", key: "telefones", example: "Telefone(s) do cliente (separados por | )" },
     ],
     columnsDef: clienteColumns,
+    filialKey: "filial",
     deps: {
       filial: (): Promise<SelectOption<string>[]> =>
         filialService.read({}).then(res => (res.data.map(f => ({ id: f.codigo, label: f.descricao })))),
@@ -98,6 +120,7 @@ export const IMPORTER_CONFIGS: ImporterConfig[] = [
       { header: "Status", key: "status", example: "Status do motorista" },
     ],
     columnsDef: motoristaColumns,
+    filialKey: "codfilial",
     deps: {
       cluster: (): Promise<SelectOption<string>[]> =>
         clusterService.read({}).then(res => (res.data.map(c => ({ id: c.codigo, label: c.descricao })))),
@@ -118,6 +141,7 @@ export const IMPORTER_CONFIGS: ImporterConfig[] = [
       { header: "Clientes", key: "clientes", example: "Códigos dos clientes (separados por /)", required: true },
     ],
     columnsDef: mapaColumns,
+    filialKey: "unb",
     deps: {
       clientes: (): Promise<SelectOption<string>[]> =>
         clienteService.read({}).then(res => (res.data.map(c => ({ id: c.codigo, label: c.razao_social })))),
@@ -139,8 +163,10 @@ export const IMPORTER_CONFIGS: ImporterConfig[] = [
       { header: "Desconto", key: "desconto", example: "Desconto aplicado ao produto", required: true },
       { header: "Adic. Finan", key: "adic_fina", example: "Adicional financeiro aplicado ao produto", required: true },
       { header: "Total", key: "total", example: "Total do produto", required: true },
+      { header: "Filial", key: "filial", example: "Código da filial do cliente (no Geral, necessário se o código do cliente existir em mais de uma filial)" },
     ],
-    columnsDef: vendaTrocasColumns
+    columnsDef: vendaTrocasColumns,
+    filialKey: "filial"
   },
 ];
 
