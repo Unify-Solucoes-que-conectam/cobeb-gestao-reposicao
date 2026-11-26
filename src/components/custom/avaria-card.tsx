@@ -49,6 +49,8 @@ export default function AvariaCard(props: AvariaCardProps) {
 
   // ======================= Hooks ====================
   const { user, can } = useAuth();
+  // usuários do painel (administrador e monitoramento) veem os detalhes; o motorista vê o fluxo do app
+  const painel = !!user && user.role !== 'motorista';
   const outbox = useOutbox();
 
   // ======================= States ===================
@@ -347,7 +349,7 @@ export default function AvariaCard(props: AvariaCardProps) {
 
       {/* Footer / Ações */}
       <CardFooter className={cn("px-4 py-3 flex flex-wrap items-center gap-2 border-t justify-end", {
-        "justify-between": props.data.cliente?.contatos && user?.role === 'monitoramento'
+        "justify-between": props.data.cliente?.contatos && painel
       })}>
 
         {can('avarias.reenviar_whatsapp') && props.data.whatsapp_notification_status === 'failed' && (
@@ -367,7 +369,7 @@ export default function AvariaCard(props: AvariaCardProps) {
           </div>
         )}
 
-        {user?.role === 'monitoramento' && props.data.whatsapp_notification_status === 'pending' && (
+        {painel && props.data.whatsapp_notification_status === 'pending' && (
           <div role="status" className="w-full rounded-md border border-blue-200 bg-blue-50 p-3 text-sm text-blue-700">
             <div className="flex items-center gap-2 font-medium">
               <SendIcon size={16} className="shrink-0" />
@@ -377,7 +379,7 @@ export default function AvariaCard(props: AvariaCardProps) {
         )}
 
         {
-          user?.role === 'monitoramento' && props.data.cliente?.contatos && (
+          painel && props.data.cliente?.contatos && (
             <p className="text-sm text-muted-foreground">Notificações enviadas para o número: {formatPhoneDisplay(props.data.cliente?.contatos.find(contato => contato.isWhatsapp)?.telefone ?? '')}</p>
           )
         }
@@ -423,8 +425,8 @@ export default function AvariaCard(props: AvariaCardProps) {
           </>
         )}
 
-        {/* Botão de Monitoramento (Exclusivo para Monitoramento) */}
-        {user?.role === 'monitoramento' && (
+        {/* Detalhes e edição da avaria (administrador e monitoramento) */}
+        {painel && (
           <VisualizarAvaria avaria={props.data} reload={() => props.reloadData?.()} />
         )}
       </CardFooter>
