@@ -12,9 +12,10 @@ import {
 } from "@/components/ui/dialog"
 import { Field, FieldGroup } from "@/components/ui/field"
 import { Label } from "@/components/ui/label"
+import { Tooltip } from "@/components/ui/tooltip"
 import { mapaService, motoristaService } from "@/services/api.service"
 import { Mapa, Motorista } from "@/types/consults"
-import { UserPlusIcon } from "lucide-react"
+import { RefreshCwIcon, UserPlusIcon } from "lucide-react"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 
@@ -23,32 +24,44 @@ interface DesignarMotoristaProps {
   reload: () => void
 }
 
+/**
+ * Designa um motorista ao mapa ou troca o motorista já designado.
+ * Lista apenas motoristas ativos da mesma filial (revenda) do mapa.
+ */
 export default function DesignarMotorista(props: DesignarMotoristaProps) {
+
+  const motoristaAtual = props.mapa.motorista
+  const trocando = !!motoristaAtual
 
   // =============== STATES ===============
   const [motoristas, setMotoristas] = useState<Motorista[]>([])
-  const [motoristaSelecionado, setMotoristaSelecionado] = useState<string | undefined>(props.mapa.motorista?.id)
+  const [motoristaSelecionado, setMotoristaSelecionado] = useState<string | undefined>(motoristaAtual?.id)
   const [spinners, setSpinners] = useState({ geral: false, designando: false })
   const [open, setOpen] = useState(false)
 
   /**
-   * Consultar avarias do cliente selecionado, filtrando por status (opcional)
+   * Consultar motoristas ativos da filial do mapa
    */
-  const fetchMotoristas = async ({ signal, status }: { signal?: AbortSignal; status?: string } = {}) => {
+  const fetchMotoristas = async ({ signal }: { signal?: AbortSignal } = {}) => {
     setSpinners((prev) => ({ ...prev, geral: true }));
-    const response = await motoristaService.read({ filial_id: props.mapa.filial.id, status, only_without_map: true }, signal);
 
-    if (response.success) {
-      setMotoristas(response.data);
-    } else {
-      toast.error(response.message || 'Erro ao consultar motoristas');
+    try {
+      const response = await motoristaService.read({ filial: props.mapa.filial.id, status: 'ativo' }, signal);
+
+      if (response.success) {
+        setMotoristas(response.data);
+      } else {
+        toast.error(response.message || 'Erro ao consultar motoristas');
+      }
+    } catch {
+      if (!signal?.aborted) toast.error('Erro ao consultar motoristas');
+    } finally {
+      setSpinners((prev) => ({ ...prev, geral: false }));
     }
-
-    setSpinners((prev) => ({ ...prev, geral: false }));
   }
 
   /**
-   * Função para designar o motorista ao mapa selecionado
+   * Função para designar (ou trocar) o motorista do mapa selecionado
    */
   const handleSubmit = async () => {
 
@@ -58,45 +71,61 @@ export default function DesignarMotorista(props: DesignarMotoristaProps) {
     }
 
     setSpinners((prev) => ({ ...prev, designando: true }));
-    const response = await mapaService.designarMotorista({ mapaId: props.mapa.id, motoristaId: motoristaSelecionado });
 
-    if (response.success) {
-      toast.success('Motorista designado com sucesso');
-      setOpen(false);
-      props.reload()
-    } else {
-      toast.error(response.message || 'Erro ao designar motorista');
+    try {
+      const response = await mapaService.designarMotorista({ mapaId: props.mapa.id, motoristaId: motoristaSelecionado });
+
+      if (response.success) {
+        toast.success(response.message || (trocando ? 'Motorista alterado com sucesso' : 'Motorista designado com sucesso'));
+        setOpen(false);
+        props.reload()
+      } else {
+        toast.error(response.message || 'Erro ao designar motorista');
+      }
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || 'Erro ao designar motorista');
+    } finally {
+      setSpinners((prev) => ({ ...prev, designando: false }));
     }
-
-    setSpinners((prev) => ({ ...prev, designando: false }));
   }
 
   // ============= Effects ===============
   useEffect(() => {
-    
-    if (open) {
-      fetchMotoristas();
-    }
+    if (!open) return;
 
-    // limpar motorista selecionado ao fechar o modal
-    if (!open) {
-      setMotoristaSelecionado(undefined);
-    }
+    // ao abrir, parte do motorista atual (se houver)
+    setMotoristaSelecionado(motoristaAtual?.id);
+
+    const controller = new AbortController();
+    fetchMotoristas({ signal: controller.signal });
+    return () => controller.abort();
   }, [props.mapa.filial.id, open]);
+
+  // garante que o motorista atual apareça na lista mesmo se estiver inativo
+  const opcoes = [
+    ...(motoristaAtual && !motoristas.some((m) => m.id === motoristaAtual.id) ? [motoristaAtual] : []),
+    ...motoristas,
+  ].map((motorista) => ({
+    label: `[${motorista.codigo}] ${motorista.nome}${motorista.id === motoristaAtual?.id ? ' (atual)' : ''}`,
+    value: motorista.id,
+  }));
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button color="warning" disabled={props.mapa.motorista != undefined}>
-          <UserPlusIcon size={20} />
-          Designar motorista
-        </Button>
-      </DialogTrigger>
+      <Tooltip content={trocando ? 'Trocar motorista' : 'Designar motorista'} color="warning">
+        <DialogTrigger asChild>
+          <Button color="warning" size="icon" aria-label={trocando ? 'Trocar motorista' : 'Designar motorista'}>
+            {trocando ? <RefreshCwIcon /> : <UserPlusIcon />}
+          </Button>
+        </DialogTrigger>
+      </Tooltip>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Designar Motorista</DialogTitle>
+          <DialogTitle>{trocando ? 'Trocar Motorista' : 'Designar Motorista'}</DialogTitle>
           <DialogDescription>
-            Designar um motorista para o mapa selecionado.
+            {trocando
+              ? `O mapa ${props.mapa.codigo} está com ${motoristaAtual?.nome}. Selecione o novo motorista responsável.`
+              : 'Designar um motorista para o mapa selecionado.'}
           </DialogDescription>
         </DialogHeader>
         <FieldGroup>
@@ -106,11 +135,8 @@ export default function DesignarMotorista(props: DesignarMotoristaProps) {
               onChange={(value) => setMotoristaSelecionado(value[0])}
               value={motoristaSelecionado ? [motoristaSelecionado] : []}
               disabled={spinners.geral}
-              options={motoristas.map((motorista) => ({
-                label: motorista.nome,
-                value: motorista.id,
-                disabled: motorista.status !== 'ativo',
-              }))}
+              emptyMessage="Nenhum motorista ativo nesta filial."
+              options={opcoes}
             />
           </Field>
         </FieldGroup>
@@ -120,8 +146,10 @@ export default function DesignarMotorista(props: DesignarMotoristaProps) {
               Cancelar
             </Button>
           </DialogClose>
-          <Button onClick={handleSubmit} className="bg-emerald-500 hover:bg-emerald-500" disabled={!motoristaSelecionado || props.mapa.motorista?.id === motoristaSelecionado || spinners.geral || spinners.designando} loading={spinners.designando}>
-            { spinners.designando ? 'Designando motorista...' : 'Designar motorista' }
+          <Button onClick={handleSubmit} className="bg-emerald-500 hover:bg-emerald-500" disabled={!motoristaSelecionado || motoristaAtual?.id === motoristaSelecionado || spinners.geral || spinners.designando} loading={spinners.designando}>
+            {spinners.designando
+              ? (trocando ? 'Trocando motorista...' : 'Designando motorista...')
+              : (trocando ? 'Trocar motorista' : 'Designar motorista')}
           </Button>
         </DialogFooter>
       </DialogContent>

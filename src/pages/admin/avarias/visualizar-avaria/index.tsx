@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { useAuth } from '@/hooks/use-auth'
 import { avariaService } from '@/services/api.service'
 import { Avaria } from '@/types/consults'
 import {
@@ -61,7 +62,10 @@ const statusLabels = {
 export default function VisualizarAvaria({ avaria, reload }: VisualizarAvariaProps) {
   const [open, setOpen] = useState(false)
   const [spinners, setSpinners] = useState<Spinners>({ aprovando: false, reprovando: false })
-  const canDecide = avaria.status === 'aguardando_aprovacao'
+  const { can } = useAuth()
+  const aguardando = avaria.status === 'aguardando_aprovacao'
+  const podeAprovar = can('avarias.aprovar')
+  const canDecide = aguardando && podeAprovar
 
   const handleAprovar = async () => {
     if (!canDecide) return
@@ -126,7 +130,7 @@ export default function VisualizarAvaria({ avaria, reload }: VisualizarAvariaPro
               avariaId={avaria.id}
               notaFiscal={avaria.nota_fiscal}
               itens={avaria.itens}
-              canEdit={canDecide}
+              canEdit={aguardando && can('avarias.editar_quantidade')}
             />
 
             <div className="space-y-5">
@@ -143,6 +147,7 @@ export default function VisualizarAvaria({ avaria, reload }: VisualizarAvariaPro
             <Button variant="outline">Fechar</Button>
           </DialogClose>
 
+          {podeAprovar && (<>
           <MotivoReprovacao loading={spinners.reprovando} handleConfirm={handleReprovar}>
             <Button
               color="destructive"
@@ -154,36 +159,17 @@ export default function VisualizarAvaria({ avaria, reload }: VisualizarAvariaPro
             </Button>
           </MotivoReprovacao>
 
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button
-                color="success"
-                disabled={!canDecide || spinners.aprovando || spinners.reprovando}
-                loading={spinners.aprovando}
-                title={canDecide ? 'Aprovar avaria' : 'Esta avaria já foi analisada'}
-              >
-                {!spinners.aprovando && <CheckIcon className="size-4" />}
-                {spinners.aprovando ? 'Processando...' : 'Aprovar'}
-              </Button>
-            </DialogTrigger>
-
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Aprovar Avaria</DialogTitle>
-                <DialogDescription>Tem certeza que deseja aprovar esta avaria?</DialogDescription>
-              </DialogHeader>
-
-              <DialogFooter>
-                <DialogClose asChild>
-                  <Button variant="outline">Cancelar</Button>
-                </DialogClose>
-                <Button onClick={handleAprovar} color="success" disabled={!canDecide || spinners.aprovando || spinners.reprovando} loading={spinners.aprovando}>
-                  {!spinners.aprovando && <CheckIcon className="size-4" />}
-                  {spinners.aprovando ? 'Processando...' : 'Aprovar'}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          <Button
+            onClick={handleAprovar}
+            color="success"
+            disabled={!canDecide || spinners.aprovando || spinners.reprovando}
+            loading={spinners.aprovando}
+            title={canDecide ? 'Aprovar avaria' : 'Esta avaria já foi analisada'}
+          >
+            {!spinners.aprovando && <CheckIcon className="size-4" />}
+            {spinners.aprovando ? 'Processando...' : 'Aprovar'}
+          </Button>
+          </>)}
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -191,6 +177,7 @@ export default function VisualizarAvaria({ avaria, reload }: VisualizarAvariaPro
 }
 
 function NotificationPanel({ avaria, reload }: { avaria: Avaria, reload: () => void }) {
+  const { can } = useAuth()
   const isLegacy = avaria.whatsapp_notification_status === null && ['aprovada', 'reprovada'].includes(avaria.status)
 
   if (avaria.whatsapp_notification_status === 'failed' || isLegacy) {
@@ -203,7 +190,7 @@ function NotificationPanel({ avaria, reload }: { avaria: Avaria, reload: () => v
             <p className="mt-1 text-xs leading-relaxed text-red-700">{avaria.whatsapp_notification_error || 'Confira o número do cliente e reenvie a mensagem pelo WhatsApp.'}</p>
           </div>
         </div>
-        <CorrigirWhatsAppDialog avaria={avaria} reload={reload} />
+        {can('avarias.reenviar_whatsapp') && <CorrigirWhatsAppDialog avaria={avaria} reload={reload} />}
       </div>
     )
   }

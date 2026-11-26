@@ -1,8 +1,10 @@
-import { DataGrid, type ColumnDef } from '@/components/custom/data-grid';
-import { Paginacao } from '@/components/custom/paginacao';
+import type { ColumnDef } from '@/components/custom/data-grid';
+import { ListPage } from '@/components/custom/list-page';
 import SearchPanel from '@/components/custom/search-panel';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/hooks/use-auth';
 import { useHeader } from '@/hooks/use-header';
+import { usePaginatedQuery } from '@/hooks/use-paginated-query';
 import dayjs from '@/lib/dayjs';
 import { downloadBlob } from '@/lib/utils';
 import { MovimentoVendaTroca, trocaService } from '@/services/api.service';
@@ -26,38 +28,22 @@ const toApiDate = (value: Date | undefined): string =>
 
 export default function AdminVendasTrocas() {
   const { setPageBreadcrumbs } = useHeader();
-  const [rows, setRows] = useState<MovimentoVendaTroca[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(20);
-  const [pagination, setPagination] = useState({ total: 0, last_page: 1 });
-  const [filters, setFilters] = useState({ search: '', dataInicial: '', dataFinal: '' });
-  const [reloadKey, setReloadKey] = useState(0);
+  const { can } = useAuth();
   const [exportOpen, setExportOpen] = useState(false);
   const [exportDates, setExportDates] = useState({ inicial: '', final: '' });
   const [exporting, setExporting] = useState(false);
 
   useEffect(() => setPageBreadcrumbs([{ title: 'Vendas e Trocas', href: '/admin/vendas-trocas' }]), [setPageBreadcrumbs]);
 
-  useEffect(() => {
-    const controller = new AbortController();
-    const timer = setTimeout(async () => {
-      try {
-        setLoading(true);
-        const result = await trocaService.read({
-          page, per_page: perPage, search: filters.search || undefined,
-          data_inicial: filters.dataInicial || undefined, data_final: filters.dataFinal || undefined,
-        }, controller.signal);
-        setRows(result.data);
-        setPagination(result.pagination);
-      } catch (error) {
-        if (!controller.signal.aborted) toast.error('Não foi possível carregar os movimentos.');
-      } finally {
-        if (!controller.signal.aborted) setLoading(false);
-      }
-    }, 350);
-    return () => { controller.abort(); clearTimeout(timer); };
-  }, [page, perPage, filters, reloadKey]);
+  // consulta paginada: o texto só é pesquisado ao clicar na lupa ou apertar Enter; as datas aplicam na hora
+  const consulta = usePaginatedQuery<MovimentoVendaTroca, { dataInicial: string; dataFinal: string }>(
+    ({ search, page, per_page, dataInicial, dataFinal }, signal) => trocaService.read({
+      page, per_page, search,
+      data_inicial: dataInicial || undefined, data_final: dataFinal || undefined,
+    }, signal),
+    { dataInicial: '', dataFinal: '' },
+    { errorMessage: 'Não foi possível carregar os movimentos.' },
+  );
 
   const columns = useMemo<ColumnDef<MovimentoVendaTroca>[]>(() => [
     { id: 'data_operacao', header: 'Data', width: 120, renderCell: value => new Date(`${value}T00:00:00`).toLocaleDateString('pt-BR') },
@@ -69,8 +55,6 @@ export default function AdminVendasTrocas() {
     { id: 'quantidade', header: 'Quantidade', width: 120 },
   ], []);
 
-  const updateFilter = (key: keyof typeof filters, value: string) => { setFilters(current => ({ ...current, [key]: value })); setPage(1); };
-
   const exportTrades = async () => {
     if (!exportDates.inicial || !exportDates.final) return;
     try {
@@ -81,53 +65,51 @@ export default function AdminVendasTrocas() {
     finally { setExporting(false); }
   };
 
-  return <div className="flex h-[calc(100dvh-var(--header-height)-6rem)] min-h-0 flex-col gap-6 overflow-hidden">
-    <div className="flex shrink-0 flex-wrap items-center justify-between gap-3">
-      <h1 className="text-2xl font-bold">Vendas e Trocas</h1>
-      <Button onClick={() => setExportOpen(true)}><DownloadIcon className="mr-2 h-4 w-4" />
-        Exportar trocas
-      </Button>
-    </div>
-    <SearchPanel
-      className="shrink-0"
-      placeholder="Pesquise por cliente, nota ou produto"
-      search={filters.search}
-      onSearchChange={value => updateFilter('search', value)}
-      fetchData={() => setReloadKey(value => value + 1)}
-      dateRange={{ initial: toDate(filters.dataInicial), final: toDate(filters.dataFinal) }}
-      onDateRangeChange={range => {
-        setFilters(current => ({ ...current, dataInicial: toApiDate(range.initial), dataFinal: toApiDate(range.final) }));
-        setPage(1);
-      }}
-    />
-    <div className="min-h-0 flex-1">
-      <DataGrid
-        data={rows}
+  return (
+    <>
+      <ListPage
+        title="Vendas e Trocas"
+        actions={can('trocas.exportar') && (
+          <Button onClick={() => setExportOpen(true)}>
+            <DownloadIcon className="mr-2 h-4 w-4" />
+            Exportar trocas
+          </Button>
+        )}
+        search={
+          <SearchPanel
+            placeholder="Pesquise por cliente, nota ou produto"
+            search={consulta.busca}
+            onSearchChange={consulta.setBusca}
+            fetchData={consulta.pesquisar}
+            dateRange={{ initial: toDate(consulta.filters.dataInicial), final: toDate(consulta.filters.dataFinal) }}
+            onDateRangeChange={range => {
+              consulta.setFilter('dataInicial', toApiDate(range.initial));
+              consulta.setFilter('dataFinal', toApiDate(range.final));
+            }}
+          />
+        }
         columns={columns}
+        data={consulta.items}
         getRowId={row => `${row.origem}-${row.id}`}
-        isLoading={loading}
-        height="100%"
+        loading={consulta.loading}
         emptyMessage="Nenhum movimento encontrado."
+        pagination={{
+          page: consulta.page,
+          pageSize: consulta.perPage,
+          total: consulta.total,
+          onPageChange: consulta.setPage,
+          onPageSizeChange: consulta.setPerPage,
+          label: `${consulta.total} movimento(s) encontrado(s).`,
+        }}
       />
-    </div>
-    <div className="shrink-0">
-      <Paginacao
-        page={page}
-        pageSize={perPage}
-        total={pagination.total}
-        onPageChange={setPage}
-        onPageSizeChange={size => { setPerPage(size); setPage(1); }}
-      >
-        {pagination.total} movimento(s) encontrado(s).
-      </Paginacao>
-    </div>
-    <ExportarTrocas
-      exportOpen={exportOpen}
-      setExportOpen={setExportOpen}
-      exportDates={exportDates}
-      setExportDates={setExportDates}
-      exporting={exporting}
-      exportTrades={exportTrades}
-    />
-  </div>;
+      <ExportarTrocas
+        exportOpen={exportOpen}
+        setExportOpen={setExportOpen}
+        exportDates={exportDates}
+        setExportDates={setExportDates}
+        exporting={exporting}
+        exportTrades={exportTrades}
+      />
+    </>
+  );
 }

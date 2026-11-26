@@ -14,13 +14,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { downloadBlob } from "@/lib/utils";
 import { importerModelService, importerService } from "@/services/api.service";
 import { UploadIcon } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
-import { ImporterConfig, parseXlsxMapped } from "../config";
+import { configForTenant, fillTenantFilial, ImporterConfig, parseXlsxMapped } from "../config";
 import { ImportPreviewDialog } from "./import-preview-dialog";
 
 export function ImporterCard({
-  config,
+  config: baseConfig,
   initialBatch,
   onBatchChange,
 }: {
@@ -28,6 +29,11 @@ export function ImporterCard({
   initialBatch?: ImportBatch | null;
   onBatchChange?: (type: string, batch: ImportBatch) => void;
 }) {
+  const { tenant } = useAuth();
+  const geral = !tenant || tenant.geral;
+  // fora do "Geral" a filial não é obrigatória no arquivo: a filial conectada é aplicada
+  const config = useMemo(() => configForTenant(baseConfig, geral), [baseConfig, geral]);
+
   const [importing, setImporting] = useState(false);
   const [batch, setBatch] = useState<ImportBatch | null>(initialBatch ?? null);
   const [previewRows, setPreviewRows] = useState<Record<string, string>[]>([]);
@@ -71,7 +77,8 @@ export function ImporterCard({
     const selectedFile = file[0];
 
     try {
-      const allRows = await parseXlsxMapped(selectedFile, config);
+      const parsedRows = await parseXlsxMapped(selectedFile, config);
+      const allRows = geral ? parsedRows : fillTenantFilial(config, parsedRows, tenant?.codigo ?? null);
 
       const nonEmpty = allRows.filter((row) =>
         Object.values(row).some((v) => v !== null && String(v).trim() !== ""),
@@ -85,8 +92,8 @@ export function ImporterCard({
       // Obtém as chaves encontradas na primeira linha do arquivo
       const rowKeys = new Set(Object.keys(nonEmpty[0]));
 
-      // Identifica se falta alguma coluna obrigatória
-      const missingColumns = config.columns.filter((col) => !rowKeys.has(col.key));
+      // Identifica se falta alguma coluna obrigatória (colunas opcionais podem não existir no arquivo)
+      const missingColumns = config.columns.filter((col) => col.required && !rowKeys.has(col.key));
 
       if (missingColumns.length > 0) {
         const missingNames = missingColumns.map((c) => c.header).join(", ");
@@ -119,7 +126,10 @@ export function ImporterCard({
       });
 
       if (!response.success) {
-        toast.error(response.message || "Erro ao iniciar importação");
+        const filialErrors: string[] = (response as { errors?: { filial?: string[] } }).errors?.filial ?? [];
+        toast.error(response.message || "Erro ao iniciar importação", {
+          description: filialErrors.length ? filialErrors.slice(0, 3).join(" ") : undefined,
+        });
         setValidationRevision(value => value + 1);
         setImporting(false);
         return;
@@ -168,7 +178,12 @@ export function ImporterCard({
           <CardTitle className="text-base">{config.label}</CardTitle>
           <CardDescription className="text-xs">
             O arquivo de importação deve conter obrigatoriamente as colunas: <br />
-            <strong>{config.columns.map((c) => c.header).join(", ")}</strong>
+            <strong>{config.columns.filter((c) => c.required).map((c) => c.header).join(", ")}</strong>
+            {!geral && config.filialKey && (
+              <span className="mt-1 block text-emerald-700 dark:text-emerald-400">
+                Filial preenchida automaticamente: {tenant?.nome}.
+              </span>
+            )}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">

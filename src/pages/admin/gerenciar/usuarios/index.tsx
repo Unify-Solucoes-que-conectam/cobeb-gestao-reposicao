@@ -1,106 +1,91 @@
 import axios from "@/lib/axios";
 import { ApiResponse } from "@/types/api-response";
 import { Usuario } from "@/types/app";
-import { useEffect, useState } from "react";
-import { toast } from "sonner";
+import { useEffect, useMemo } from "react";
 
-import Loader from "@/components/custom/loader";
+import type { ColumnDef } from "@/components/custom/data-grid";
+import { ListPage } from "@/components/custom/list-page";
 import SearchPanel from "@/components/custom/search-panel";
+import { Badge } from "@/components/ui/badge";
 import { useHeader } from "@/hooks/use-header";
+import { usePaginatedQuery } from "@/hooks/use-paginated-query";
+import { capitalizeName, formatCPF } from "@/utils/formatters";
 import GerenciarUsuario from "./components/gerenciar-usuario";
-import UserCard from "./components/usuario-card";
+import UsuarioAcoes from "./components/usuario-acoes";
+
+const PERFIS: Record<Usuario['role'], string> = {
+  administrador: 'Administrador',
+  monitoramento: 'Monitoramento',
+  motorista: 'Motorista',
+};
 
 export default function AdminUsuarios() {
-
-  // =============== STATES ===============
-  const [users, setUsers] = useState<Usuario[]>([]);
-  const [loading, setLoading] = useState(true);
 
   // =============== HOOKS  ===============
   const { setPageBreadcrumbs } = useHeader();
 
-  // =============== FILTERS  ===============
-  const [filters, setFilters] = useState({
-    busca: '',
-    role: 'todos'
-  });
+  // consulta paginada: o texto só é pesquisado ao clicar na lupa ou apertar Enter
+  const consulta = usePaginatedQuery<Usuario, { role: string }>(
+    async ({ search, page, per_page, role }, signal) => (
+      await axios.get<ApiResponse<Usuario[]>>('/usuarios', {
+        signal,
+        params: { search, page, per_page, role: role !== 'todos' ? role : undefined },
+      })
+    ).data,
+    { role: 'todos' },
+    { errorMessage: 'Erro ao carregar usuários' },
+  );
 
   // =============== EFFECTS ===============
-
   useEffect(() => {
-
-    // setar título da página
     setPageBreadcrumbs([
       { title: "Gerenciar", href: "#" },
       { title: "Usuários", href: "/admin/gerenciar/usuarios" }
     ]);
   }, []);
 
-  useEffect(() => { fetchUsers() }, [filters.role]);
-
-  const fetchUsers = async () => {
-    try {
-      setLoading(true);
-
-      const response = await axios.get<ApiResponse<Usuario[]>>('/usuarios', {
-        params: {
-          search: filters.busca,
-          role: filters.role === 'todos' ? undefined : filters.role
-        }
-      });
-      const { data } = response;
-
-      if (data.success) {
-        setUsers(data.data);
-      } else {
-        toast.error(data.message || "Erro ao carregar usuários");
-      }
-    } catch (error) {
-      toast.error("Erro ao carregar usuários");
-      console.error("Error loading users:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // =============== COLUMNS ===============
+  const columns = useMemo<ColumnDef<Usuario>[]>(() => [
+    { id: 'acoes', header: 'Ações', width: 160, renderCell: (_, user) => <UsuarioAcoes user={user} onChange={consulta.recarregar} /> },
+    { id: 'nome', header: 'Nome', width: 'minmax(240px, 2fr)', renderCell: (value) => capitalizeName(value as string) },
+    { id: 'cpf', header: 'CPF', width: 140, renderCell: (value) => formatCPF(value as string) },
+    { id: 'role', header: 'Perfil', width: 150, renderCell: (value) => <Badge variant="secondary">{PERFIS[value as Usuario['role']] ?? String(value)}</Badge> },
+    { id: 'grupo', header: 'Grupo', width: 'minmax(160px, 1fr)', renderCell: (_, user) => user.grupo?.nome },
+  ], [consulta.recarregar]);
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Usuários</h1>
-        <GerenciarUsuario onSubmit={fetchUsers} />
-      </div>
-
-      <SearchPanel
-        total={users.length}
-        placeholder="Pesquise usuários pelo nome ou cpf"
-        search={filters.busca}
-        onSearchChange={(search) => setFilters({ ...filters, busca: search })}
-        defaultFilter={filters.role}
-        filters={[
-          { label: "Todos", value: "todos" },
-          { label: "Administradores", value: "administrador" },
-          { label: "Monitoramento", value: "monitoramento" },
-          { label: "Motoristas", value: "motorista" }
-        ]}
-        onFilterChange={(newFilters) => setFilters({ ...filters, role: newFilters[0].value })}
-        fetchData={fetchUsers}
-      />
-
-      {
-        loading ? (
-          <Loader showMessage />
-        ) : (
-          <div className="space-y-4">
-            {
-              users.length > 0 ? (
-                users.map((user) => <UserCard key={user.id} user={user} fetchUsers={fetchUsers} />)
-              ) : (
-                <div className="text-center py-8 text-muted-foreground">Nenhum usuário encontrado</div>
-              )
-            }
-          </div>
-        )
+    <ListPage
+      title="Usuários"
+      actions={<GerenciarUsuario onSubmit={consulta.recarregar} />}
+      search={
+        <SearchPanel
+          placeholder="Pesquise usuários pelo nome ou CPF"
+          search={consulta.busca}
+          onSearchChange={consulta.setBusca}
+          defaultFilter={consulta.filters.role}
+          filters={[
+            { label: "Todos", value: "todos" },
+            { label: "Administradores", value: "administrador" },
+            { label: "Monitoramento", value: "monitoramento" },
+            { label: "Motoristas", value: "motorista" }
+          ]}
+          onFilterChange={(newFilters) => consulta.setFilter('role', newFilters[0].value)}
+          fetchData={consulta.pesquisar}
+        />
       }
-    </div>
+      columns={columns}
+      data={consulta.items}
+      getRowId={(user) => user.id}
+      loading={consulta.loading}
+      emptyMessage="Nenhum usuário encontrado."
+      pagination={{
+        page: consulta.page,
+        pageSize: consulta.perPage,
+        total: consulta.total,
+        onPageChange: consulta.setPage,
+        onPageSizeChange: consulta.setPerPage,
+        label: `${consulta.total} usuário(s) encontrado(s).`,
+      }}
+    />
   );
 }

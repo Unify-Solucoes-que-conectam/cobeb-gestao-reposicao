@@ -1,11 +1,12 @@
-import { createContext, useState, type ReactNode } from 'react'
+import { createContext, useCallback, useEffect, useState, type ReactNode } from 'react'
 
 import { toast } from 'sonner'
 
 import axios from '@/lib/axios'
 import type { Schema as SignUpSchema } from '@/pages/auth/schemas'
 import { ApiResponse } from '@/types/api-response'
-import { Menu, Usuario } from '@/types/app'
+import { Menu, Permissao, Sessao, Tenant, Usuario } from '@/types/app'
+import { resolveTenant, setTenantId } from '@/lib/tenant'
 import { Schema as ChangePasswordSchema } from '@/components/custom/password-changer/schemas'
 import { cacheClear } from '@/lib/offline/idb'
 
@@ -14,6 +15,9 @@ interface AuthState {
   token: string | null
   loading: boolean
   menus: Menu[],
+  permissoes: Permissao[]
+  tenants: Tenant[]
+  tenant: Tenant | null
 }
 
 interface AuthContextType extends AuthState {
@@ -23,7 +27,28 @@ interface AuthContextType extends AuthState {
   signOut: () => Promise<void>
   changePassword: (changePasswordData: ChangePasswordSchema) => Promise<{ success: boolean; message: string }>
   checkSession: () => Promise<boolean>
+  refreshSession: () => Promise<void>
+  /** Verifica se o grupo do usuário libera a ação. */
+  can: (permissao: Permissao) => boolean
+  /** Troca a filial (tenant) conectada e recarrega os dados da tela. */
+  setTenant: (tenantId: string) => void
   isAuthenticated: boolean
+}
+
+const readJson = <T,>(key: string, fallback: T): T => {
+  try {
+    return JSON.parse(localStorage.getItem(key) || 'null') ?? fallback
+  } catch {
+    return fallback
+  }
+}
+
+/** Persiste os dados da sessão (login ou /auth/me). */
+const persistSession = (sessao: Sessao) => {
+  localStorage.setItem('user', JSON.stringify(sessao.usuario))
+  localStorage.setItem('menus', JSON.stringify(sessao.menus))
+  localStorage.setItem('permissoes', JSON.stringify(sessao.permissoes ?? []))
+  localStorage.setItem('tenants', JSON.stringify(sessao.tenants ?? []))
 }
 
 export const AuthContext = createContext<AuthContextType | null>(null)
@@ -34,12 +59,46 @@ interface AuthProviderProps {
 
 export function AuthProvider({ children }: AuthProviderProps) {
 
-  const [state, setState] = useState<AuthState>({
-    user: JSON.parse(localStorage.getItem('user') || 'null'),
-    token: localStorage.getItem('auth_token'),
-    loading: false,
-    menus: JSON.parse(localStorage.getItem('menus') || '[]')
+  const [state, setState] = useState<AuthState>(() => {
+    const tenants = readJson<Tenant[]>('tenants', [])
+    return {
+      user: readJson<Usuario | null>('user', null),
+      token: localStorage.getItem('auth_token'),
+      loading: false,
+      menus: readJson<Menu[]>('menus', []),
+      permissoes: readJson<Permissao[]>('permissoes', []),
+      tenants,
+      tenant: resolveTenant(tenants),
+    }
   })
+
+  const applySession = (sessao: Sessao) => {
+    persistSession(sessao)
+    const tenant = resolveTenant(sessao.tenants ?? [])
+    setState((prev) => ({
+      ...prev,
+      user: sessao.usuario,
+      menus: sessao.menus,
+      permissoes: sessao.permissoes ?? [],
+      tenants: sessao.tenants ?? [],
+      tenant,
+    }))
+  }
+
+  /** Atualiza menus, permissões e filiais liberadas sem exigir novo login. */
+  const refreshSession = useCallback(async () => {
+    if (!localStorage.getItem('auth_token')) return
+    try {
+      const response = await axios.get<ApiResponse<Sessao>>('/auth/me')
+      if (response.data.success) applySession(response.data.data)
+    } catch {
+      // offline: mantém a sessão salva
+    }
+  }, [])
+
+  useEffect(() => {
+    void refreshSession()
+  }, [refreshSession])
 
   const setLoading = (loading: boolean) => {
     setState((prev) => ({ ...prev, loading }))
@@ -49,6 +108,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     localStorage.removeItem('auth_token')
     localStorage.removeItem('user')
     localStorage.removeItem('menus')
+    localStorage.removeItem('permissoes')
+    localStorage.removeItem('tenants')
+    setTenantId(null)
 
     // dados de clientes/notas salvos para uso offline não devem ficar para o próximo usuário do aparelho
     void cacheClear()
@@ -57,7 +119,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
       user: null,
       token: null,
       loading: false,
-      menus: []
+      menus: [],
+      permissoes: [],
+      tenants: [],
+      tenant: null,
     })
   }
 
@@ -67,7 +132,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   ): Promise<{ success: boolean; message: string }> => {
     try {
       const response = await axios.post<
-        ApiResponse<{ usuario: Usuario; token: string; menus: Menu[] }>
+        ApiResponse<Sessao & { token: string }>
       >('/auth/login', {
         cpf,
         senha
@@ -80,16 +145,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // Salvando no localStorage para persistência
       localStorage.setItem('auth_token', data.token)
 
-      // armazenando o usuário no localStorage para persistência
-      localStorage.setItem('user', JSON.stringify(data.usuario))
-      localStorage.setItem('menus', JSON.stringify(data.menus))
-
-      setState({
-        user: data.usuario,
-        token: data.token,
-        loading: false,
-        menus: data.menus,
-      })
+      // armazenando usuário, menus, permissões e filiais para persistência
+      applySession(data)
+      setState((prev) => ({ ...prev, token: data.token, loading: false }))
 
       return { success: true, message: 'Login realizado com sucesso!' }
     } catch (error: any) {
@@ -161,8 +219,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }
 
+  const can = (permissao: Permissao) =>
+    state.user?.role === 'administrador' || state.permissoes.includes(permissao)
+
+  const setTenant = (tenantId: string) => {
+    if (tenantId === state.tenant?.id) return
+    setTenantId(tenantId)
+    // recarrega para que todas as telas busquem os dados da nova filial
+    window.location.reload()
+  }
+
   const value: AuthContextType = {
     ...state,
+    refreshSession,
+    can,
+    setTenant,
     setLoading,
     signIn,
     signUp,

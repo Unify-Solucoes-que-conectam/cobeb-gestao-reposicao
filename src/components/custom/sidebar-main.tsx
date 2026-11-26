@@ -112,7 +112,7 @@ export const SidebarMain = () => {
 
   const managementRoot = menus.find((menu) => menu.titulo === 'Gerenciar')
   const operationalMenus = menus.filter((menu) => menu.id !== managementRoot?.id)
-  const administrativeTitles = new Set(['Usuários', 'WhatsApp'])
+  const administrativeTitles = new Set(['Usuários', 'WhatsApp', 'Permissões'])
   const managementMenus =
     managementRoot?.sub_menus.filter((menu) => !administrativeTitles.has(menu.titulo)) ?? []
   const administrativeMenus =

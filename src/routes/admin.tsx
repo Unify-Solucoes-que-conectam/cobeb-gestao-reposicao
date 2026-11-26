@@ -7,6 +7,7 @@ import AdminUsuarios from '@/pages/admin/gerenciar/usuarios'
 import AdminImportacoes from '@/pages/admin/importacoes'
 import AdminWhatsApp from '@/pages/admin/gerenciar/whatsapp'
 import AdminVendasTrocas from '@/pages/admin/vendas-trocas'
+import AdminPermissoes from '@/pages/admin/gerenciar/permissoes'
 import { ProtectedRoute } from './guards'
 
 export const adminRoutes: RouteObject[] = [
@@ -31,10 +32,15 @@ export const adminRoutes: RouteObject[] = [
     element: <AdminMotoristas />,
   },
   {
-    element: <ProtectedRoute allowedRoles={['administrador']} />,
-    children: [
-      { path: 'gerenciar/usuarios', element: <AdminUsuarios /> },
-      { path: 'gerenciar/whatsapp', element: <AdminWhatsApp /> },
-    ],
+    element: <ProtectedRoute permission='usuarios.gerenciar' />,
+    children: [{ path: 'gerenciar/usuarios', element: <AdminUsuarios /> }],
+  },
+  {
+    element: <ProtectedRoute permission='whatsapp.gerenciar' />,
+    children: [{ path: 'gerenciar/whatsapp', element: <AdminWhatsApp /> }],
+  },
+  {
+    element: <ProtectedRoute permission='permissoes.gerenciar' />,
+    children: [{ path: 'gerenciar/permissoes', element: <AdminPermissoes /> }],
   },
 ]
