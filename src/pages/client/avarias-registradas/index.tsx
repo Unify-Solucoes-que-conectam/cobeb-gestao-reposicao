@@ -101,7 +101,9 @@ export default function ClientAvariasRegistradas() {
       </div>
 
       <div className='flex-1 flex flex-col min-h-0 w-full'>
-        <ScrollArea className='h-full w-full [&>[data-radix-scroll-area-viewport]>div]:h-full'>
+        {/* O Radix aplica display:table no conteúdo do viewport, o que deixa textos longos
+            (ex.: avarias aguardando conexão) estourarem a largura da tela no celular. */}
+        <ScrollArea className='h-full w-full [&>[data-radix-scroll-area-viewport]>div]:h-full [&>[data-radix-scroll-area-viewport]>div]:!block [&>[data-radix-scroll-area-viewport]>div]:!min-w-0'>
           {spinners.geral ? (
             <div className='flex flex-col items-center justify-center h-full gap-2 p-4'>
               <LoaderCircleIcon className='animate-spin' size={32} strokeWidth={2} />

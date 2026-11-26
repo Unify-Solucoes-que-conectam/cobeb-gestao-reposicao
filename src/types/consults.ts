@@ -126,6 +126,7 @@ export type TiposAvaria = Base & {
 export type ProdutoNotaFiscal = Base & {
   quantidade: number
   quantidade_avariada?: number
+  unidade_medida?: string | null
   valor_total: string
 }
 
@@ -136,6 +137,7 @@ export type ItemAvaria = Base & {
     descricao: string
     quantidade_avariada: number
     quantidade_total: number
+    unidade_medida?: string | null
     tipo_avaria: TiposAvaria
   }
   trocas?: TrocaAvaria[]

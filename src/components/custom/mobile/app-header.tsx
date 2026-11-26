@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { useHeader } from '@/hooks/mobile/use-header'
 import { useAuth } from '@/hooks/use-auth'
 import { useIsOnline } from '@/hooks/use-offline'
+import { APP_VERSION_LABEL } from '@/config/version'
 
 export function AppHeader() {
   // =============== HOOKS =============
@@ -33,7 +34,12 @@ export function AppHeader() {
         )}
 
         <div className='flex flex-col'>
-          {!showBackButton && <Logo variant='light' className='w-40' />}
+          {!showBackButton && (
+            <>
+              <Logo variant='light' className='w-40' />
+              <span className='text-[10px] text-white/60 mt-0.5'>{APP_VERSION_LABEL}</span>
+            </>
+          )}
 
           {pageTitle && (
             <span className='text-md text-white uppercase font-semibold mt-1'>{pageTitle}</span>

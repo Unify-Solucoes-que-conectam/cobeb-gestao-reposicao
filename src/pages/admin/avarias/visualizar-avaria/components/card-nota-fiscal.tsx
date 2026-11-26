@@ -70,6 +70,7 @@ function CardItemAvaria({ item, avariaId, canEdit }: CardItemAvariaProps) {
   const exchangedQuantity = item.trocas?.reduce((total, troca) => total + troca.quantidade, 0) ?? 0
   const typeCode = item.produto.tipo_avaria.codigo
   const isDamage = typeCode === '5'
+  const unidadeMedida = item.produto.unidade_medida?.trim().toUpperCase() || 'UN'
 
   const fetchItem = async () => {
     const response = await itemAvariaService.read({ id: avariaId })
@@ -115,10 +116,10 @@ function CardItemAvaria({ item, avariaId, canEdit }: CardItemAvariaProps) {
                 <Badge className={isDamage ? 'border border-amber-200 bg-amber-50 text-amber-700' : 'border border-violet-200 bg-violet-50 text-violet-700'}>
                   {item.produto.tipo_avaria.nome}
                 </Badge>
-                <span className="text-xs text-muted-foreground"><strong className="text-foreground">{currentQuantity}</strong> un. de {item.produto.quantidade_total} na nota</span>
+                <span className="text-xs text-muted-foreground"><strong className="text-foreground">{currentQuantity} {unidadeMedida}</strong> de {item.produto.quantidade_total} {unidadeMedida} na nota</span>
                 {exchangedQuantity > 0 && (
                   <Badge className="border border-violet-200 bg-violet-50 text-violet-700">
-                    {exchangedQuantity} un. atendida{exchangedQuantity === 1 ? '' : 's'} na troca
+                    {exchangedQuantity} {unidadeMedida} atendida{exchangedQuantity === 1 ? '' : 's'} na troca
                   </Badge>
                 )}
               </div>
@@ -128,14 +129,10 @@ function CardItemAvaria({ item, avariaId, canEdit }: CardItemAvariaProps) {
                   <Input
                     type="number"
                     min={1}
-                    max={item.produto.quantidade_total}
                     value={newQuantity ?? ''}
                     onChange={(event) => {
-                      const quantity = Math.max(0, Number.parseInt(event.target.value, 10) || 0)
-                      if (quantity > item.produto.quantidade_total) {
-                        toast.warning(`A quantidade avariada não pode ser maior que a quantidade da nota (${item.produto.quantidade_total}).`)
-                      }
-                      setNewQuantity(Math.min(quantity, item.produto.quantidade_total))
+                      // Sem limite pela quantidade da nota fiscal
+                      setNewQuantity(Math.max(0, Number.parseInt(event.target.value, 10) || 0))
                     }}
                     className="h-8 w-20 text-center"
                   />

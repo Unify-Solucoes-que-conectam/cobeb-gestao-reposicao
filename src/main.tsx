@@ -11,9 +11,13 @@ import { AuthProvider } from './providers/AuthProvider'
 import ThemeProvider from './providers/ThemeProvider'
 import router from './routes'
 import { startOfflineSync } from './lib/offline/outbox'
+import { startPwaUpdater } from './lib/pwa-update'
 
 // Reenvia, quando a conexão voltar, o que o motorista registrou offline
 startOfflineSync()
+
+// Registra o service worker e verifica periodicamente se há uma versão nova publicada
+startPwaUpdater()
 
 // Configura a StatusBar nativa no Capacitor
 if (Capacitor.isNativePlatform()) {

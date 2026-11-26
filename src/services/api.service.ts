@@ -143,6 +143,7 @@ export const avariaService = {
             descricao: produto?.descricao ?? '',
             quantidade: p.quantidade,
             quantidadeTotal: (produto?.quantidade ?? 0) + (produto?.quantidade_avariada ?? 0),
+            unidadeMedida: produto?.unidade_medida ?? null,
             tipoAvaria: {
               id: p.tipo_avaria_id,
               codigo: tipo?.codigo ?? '5',
