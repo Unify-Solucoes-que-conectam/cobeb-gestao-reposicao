@@ -109,6 +109,11 @@ export type Mapa = {
   id: string
   codigo: string
   data_entrega: string
+  /** quando o motorista foi designado (a rota vale só neste dia) */
+  designado_em?: string | null
+  /** rotas são encerradas às 00h do dia seguinte à designação */
+  encerrado_em?: string | null
+  status?: 'nao_designado' | 'em_andamento' | 'encerrado'
   placa: string
   filial: Filial
   motorista: Motorista | null

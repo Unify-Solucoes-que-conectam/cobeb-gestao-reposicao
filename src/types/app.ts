@@ -15,7 +15,8 @@ export type Usuario = {
     status: string
     data_admissao: string
     data_inativacao: string | null
-    mapa: Mapa
+    /** rota em andamento (null quando não há ou já foi encerrada às 00h) */
+    mapa: Mapa | null
     filial: Filial
   }
 }

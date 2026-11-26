@@ -10,21 +10,24 @@ interface MapaAcoesProps {
 }
 
 /**
- * Ações da linha do mapa. Mapas de hoje ou futuros podem ter o motorista
- * designado/trocado e os clientes alterados (conforme as ações do grupo).
+ * Ações da linha do mapa. Os botões sempre aparecem; quando a ação não pode ser
+ * usada (entrega já passou ou o grupo não tem a ação liberada), ficam desabilitados
+ * e o tooltip explica o motivo.
  */
 export default function MapaAcoes({ mapa, onChange }: MapaAcoesProps) {
   const { can } = useAuth();
-  const podeDesignar = can('mapas.designar_motorista');
-  const podeAlterarClientes = can('mapas.alterar_clientes');
-  const editavel = !dayjs(mapa.data_entrega).isBefore(dayjs(), 'day');
+  const entregaPassou = dayjs(mapa.data_entrega).isBefore(dayjs(), 'day');
+  const motivoEntrega = entregaPassou ? 'Indisponível: a data de entrega deste mapa já passou' : undefined;
 
-  if (!editavel || (!podeDesignar && !podeAlterarClientes)) return null;
+  const bloqueioClientes = motivoEntrega
+    ?? (can('mapas.alterar_clientes') ? undefined : 'Seu grupo não tem permissão para alterar clientes');
+  const bloqueioMotorista = motivoEntrega
+    ?? (can('mapas.designar_motorista') ? undefined : 'Seu grupo não tem permissão para designar motoristas');
 
   return (
     <div className="flex gap-2">
-      {podeAlterarClientes && <GerenciarClientesMapa mapa={mapa} reload={onChange} />}
-      {podeDesignar && <DesignarMotorista mapa={mapa} reload={onChange} />}
+      <GerenciarClientesMapa mapa={mapa} reload={onChange} bloqueio={bloqueioClientes} />
+      <DesignarMotorista mapa={mapa} reload={onChange} bloqueio={bloqueioMotorista} />
     </div>
   );
 }

@@ -22,6 +22,8 @@ import { toast } from "sonner"
 interface GerenciarClientesMapaProps {
   mapa: Mapa
   reload: () => void
+  /** motivo pelo qual a ação está indisponível (o botão aparece desabilitado) */
+  bloqueio?: string
 }
 
 type ClienteMapa = Pick<Cliente, "id" | "codigo" | "nome_fantasia" | "razao_social">
@@ -100,6 +102,19 @@ export default function GerenciarClientesMapa(props: GerenciarClientesMapaProps)
     } finally {
       setSalvando(false)
     }
+  }
+
+  // botão desabilitado não dispara eventos: o span mantém o tooltip com o motivo
+  if (props.bloqueio) {
+    return (
+      <Tooltip content={props.bloqueio}>
+        <span tabIndex={0} className="inline-flex">
+          <Button variant="outline" size="icon" disabled aria-label="Alterar clientes">
+            <UsersIcon />
+          </Button>
+        </span>
+      </Tooltip>
+    )
   }
 
   return (

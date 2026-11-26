@@ -16,12 +16,15 @@ import SyncStatusCard from './components/sync-status-card'
 import { useNavigate } from 'react-router'
 import { useIsOnline, useOnSynced } from '@/hooks/use-offline'
 import { prefetchMapa } from '@/lib/offline/prefetch'
+import { useMapaAtual } from '@/hooks/use-mapa-atual'
 
 export default function ClientHome() {
   // ============ HOOKS ===========
   const { setShowBackButton, setPageDescription, setPageTitle, setShowLogoutButton } = useHeader()
   const { user, checkSession } = useAuth()
   const navigate = useNavigate()
+  // rota do dia: deixa de valer às 00h (mesmo com o app aberto ou offline)
+  const mapaId = useMapaAtual()?.id
 
   // verifica se é a primeira vez que o usuário está acessando a tela de clientes
   if (user?.primeiro_acesso) {
@@ -57,13 +60,16 @@ export default function ClientHome() {
 
     
     // validar se os dados necessários estão disponíveis
-    if (!user?.motorista?.mapa.id) {
+    if (!mapaId) {
+      setClients([])
+      setClienteSelecionado(null)
+      setClienteDetectado(null)
       checkSession()
       return
     }
 
     setSpinners({ ...spinners, geral: true })
-    const response = await mapaService.clientes({ id: user?.motorista.mapa.id || '', ...filters }, signal);
+    const response = await mapaService.clientes({ id: mapaId, ...filters }, signal);
 
     if (response.success) {
       setClients(response.data);
@@ -80,24 +86,25 @@ export default function ClientHome() {
     const signal = controller.signal;
 
     fetchClients({ signal });
-  }, [])
+    return () => controller.abort();
+  }, [mapaId])
 
   // Baixa os dados do mapa (clientes, notas, avarias) para uso sem internet.
   // Roda ao abrir a tela e sempre que a conexão voltar.
   const online = useIsOnline()
   useEffect(() => {
-    if (online) void prefetchMapa(user?.motorista?.mapa?.id)
-  }, [online])
+    if (online) void prefetchMapa(mapaId)
+  }, [online, mapaId])
 
   // Quando a fila offline sincroniza, atualiza tela e dados salvos
   useOnSynced(() => {
-    void prefetchMapa(user?.motorista?.mapa?.id, { force: true })
+    void prefetchMapa(mapaId, { force: true })
     fetchClients()
   })
 
   return (
     <div className='flex flex-col h-full space-y-3'>
-      <SyncStatusCard mapaId={user?.motorista?.mapa?.id} />
+      <SyncStatusCard mapaId={mapaId} />
 
       <DetectClientCard
         clientes={clientes}
