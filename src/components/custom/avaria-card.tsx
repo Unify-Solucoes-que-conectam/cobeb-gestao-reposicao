@@ -310,7 +310,7 @@ export default function AvariaCard(props: AvariaCardProps) {
                       {produtoStatusLabels[p.tipo_avaria.codigo]}
                     </Badge>
                     <Badge className="text-[10px] font-bold px-1.5 py-0.5 rounded shrink-0 whitespace-nowrap">
-                      {p.quantidade_avariada} {p.unidade_medida?.trim().toUpperCase() || 'UN'}
+                      {p.quantidade_avariada} UN
                     </Badge>
                   </div>
                 </div>

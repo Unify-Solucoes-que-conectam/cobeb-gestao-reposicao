@@ -35,6 +35,14 @@ interface Filters {
   filial: string
 }
 
+/** Ordena avarias pela data de criação (fallback: data de emissão). */
+const sortByCreatedAt = (list: Avaria[], sortOrder: "asc" | "desc") =>
+  [...list].sort((a, b) => {
+    const dateA = new Date(a.created_at ?? a.data_emissao ?? 0).getTime() || 0;
+    const dateB = new Date(b.created_at ?? b.data_emissao ?? 0).getTime() || 0;
+    return sortOrder === "asc" ? dateA - dateB : dateB - dateA;
+  });
+
 export default function AdminAvarias() {
 
   // =============== HOOKS   ===============
@@ -54,7 +62,8 @@ export default function AdminAvarias() {
 
   // ============= STATES ===============
   const [spinners, setSpinners] = useState({ geral: true });
-  const [currentOrdenation, setCurrentOrdenation] = useState<"asc" | "desc">("asc");
+  // ordenação por data de criação: padrão mais recentes primeiro
+  const [currentOrdenation, setCurrentOrdenation] = useState<"asc" | "desc">("desc");
 
   // =============== DADOS ===============
   const [avarias, setAvarias] = useState<Avaria[]>([]);
@@ -103,7 +112,7 @@ export default function AdminAvarias() {
 
     if (response.success) {
       setAvarias(response.data);
-      setOrderedAvarias(response.data);
+      setOrderedAvarias(sortByCreatedAt(response.data, currentOrdenation));
     } else {
       toast.error(response.message || 'Erro ao consultar avarias');
     }
@@ -132,14 +141,7 @@ export default function AdminAvarias() {
   // ============== FUNCTIONS ===============
 
   const order = (sortOrder: "asc" | "desc") => {
-    setOrderedAvarias(prev => [...prev].sort((a, b) => {
-      const dateA = a.created_at ?? a.data_emissao ?? "";
-      const dateB = b.created_at ?? b.data_emissao ?? "";
-
-      return sortOrder === "asc"
-        ? dateA.localeCompare(dateB)
-        : dateB.localeCompare(dateA);
-    }))
+    setOrderedAvarias(prev => sortByCreatedAt(prev, sortOrder))
   }
 
   // ============== Effects ===============
