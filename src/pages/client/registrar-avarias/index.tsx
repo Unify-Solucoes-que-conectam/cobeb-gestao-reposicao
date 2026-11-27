@@ -276,7 +276,8 @@ export default function ClientRegistrarAvarias() {
    * Verifica se o produto informado está presente na nota fiscal
    */
   const produtoEncontrado = notaFiscalData?.produtos.find(produto => produto.codigo === form.getValues('produto') || produto.ean === form.getValues('produto'));
-  // Unidade de medida vinda do importador de Vendas e Trocas (CX, DZ, UN...). Registros antigos não possuem.
+  // Unidade de medida do produto na nota (CX, DZ, UN...), vinda do importador de Vendas e Trocas. Registros antigos não possuem.
+  // É apenas informativa: a quantidade avariada é SEMPRE informada e exibida em unidades (UN).
   const unidadeMedida = produtoEncontrado?.unidade_medida?.trim().toUpperCase() || 'UN';
 
   /**
@@ -492,7 +493,7 @@ export default function ClientRegistrarAvarias() {
                               <CardContent className="p-0 pt-2 border-t text-xs flex justify-between items-center text-amber-600">
                                 <div className="flex items-center gap-2">
                                   <PackageXIcon size={20} />
-                                  <span>{produtoEncontrado.quantidade_avariada} {unidadeMedida} {produtoEncontrado.quantidade_avariada === 1 ? 'avariado' : 'avariados'}</span>
+                                  <span>{produtoEncontrado.quantidade_avariada} UN {produtoEncontrado.quantidade_avariada === 1 ? 'avariado' : 'avariados'}</span>
                                 </div>
 
                                 <AlertTriangleIcon size={20} />
@@ -573,7 +574,7 @@ export default function ClientRegistrarAvarias() {
                       <FormLabel className="text-blue-700 font-bold text-lg" required>QUANTIDADE AVARIADA</FormLabel>
                     </CardTitle>
                     <CardDescription>
-                      Selecione a quantidade avariada{produtoEncontrado ? <> (em <strong>{unidadeMedida}</strong>)</> : null}
+                      Selecione a quantidade avariada em <strong>unidades (UN)</strong>
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="p-2">
@@ -618,9 +619,12 @@ export default function ClientRegistrarAvarias() {
                             <PlusIcon />
                           </Button>
                         </div>
-                        <Button type="button" className="flex-1" disabled={!tipoAvariaWatcher} onClick={() => field.onChange(produtoEncontrado?.quantidade ?? 999)}>
-                          SELECIONAR TUDO
-                        </Button>
+                        {/* Só faz sentido quando a nota já está em UN; em CX/DZ/etc. não há como converter para unidades */}
+                        {unidadeMedida === 'UN' && (
+                          <Button type="button" className="flex-1" disabled={!tipoAvariaWatcher} onClick={() => field.onChange(produtoEncontrado?.quantidade ?? 999)}>
+                            SELECIONAR TUDO
+                          </Button>
+                        )}
                       </div>
                     </FormControl>
 

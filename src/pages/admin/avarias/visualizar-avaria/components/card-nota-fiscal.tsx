@@ -70,6 +70,7 @@ function CardItemAvaria({ item, avariaId, canEdit }: CardItemAvariaProps) {
   const exchangedQuantity = item.trocas?.reduce((total, troca) => total + troca.quantidade, 0) ?? 0
   const typeCode = item.produto.tipo_avaria.codigo
   const isDamage = typeCode === '5'
+  // Unidade do produto na nota (CX, DZ...) é só informativa; quantidade avariada/trocada é sempre em UN
   const unidadeMedida = item.produto.unidade_medida?.trim().toUpperCase() || 'UN'
 
   const fetchItem = async () => {
@@ -116,10 +117,10 @@ function CardItemAvaria({ item, avariaId, canEdit }: CardItemAvariaProps) {
                 <Badge className={isDamage ? 'border border-amber-200 bg-amber-50 text-amber-700' : 'border border-violet-200 bg-violet-50 text-violet-700'}>
                   {item.produto.tipo_avaria.nome}
                 </Badge>
-                <span className="text-xs text-muted-foreground"><strong className="text-foreground">{currentQuantity} {unidadeMedida}</strong> de {item.produto.quantidade_total} {unidadeMedida} na nota</span>
+                <span className="text-xs text-muted-foreground"><strong className="text-foreground">{currentQuantity} UN</strong> de {item.produto.quantidade_total} {unidadeMedida} na nota</span>
                 {exchangedQuantity > 0 && (
                   <Badge className="border border-violet-200 bg-violet-50 text-violet-700">
-                    {exchangedQuantity} {unidadeMedida} atendida{exchangedQuantity === 1 ? '' : 's'} na troca
+                    {exchangedQuantity} UN atendida{exchangedQuantity === 1 ? '' : 's'} na troca
                   </Badge>
                 )}
               </div>
